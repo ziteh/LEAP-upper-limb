@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  rospy_tutorials
 )
 
 ## System dependencies are found with CMake's conventions
@@ -108,6 +109,15 @@ catkin_package(
 #  CATKIN_DEPENDS roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
+
+add_executable(helloWorld.exe src/helloWorld.cpp)
+target_link_libraries(helloWorld.exe ${catkin_LIBRARIES})
+
+add_executable(serverTest src/serverTest.cpp)
+target_link_libraries(serverTest ${catkin_LIBRARIES})
+
+add_executable(clientTest src/clientTest.cpp)
+target_link_libraries(clientTest ${catkin_LIBRARIES})
 
 ###########
 ## Build ##

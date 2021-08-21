@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.autoSave": "afterDelay",
+		"C_Cpp.default.includePath": ["/opt/ros/noetic/include/"]
+	}
+}

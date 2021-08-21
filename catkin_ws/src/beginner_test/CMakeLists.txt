@@ -110,15 +110,6 @@ catkin_package(
 #  DEPENDS system_lib
 )
 
-add_executable(helloWorld.exe src/helloWorld.cpp)
-target_link_libraries(helloWorld.exe ${catkin_LIBRARIES})
-
-add_executable(serverTest src/serverTest.cpp)
-target_link_libraries(serverTest ${catkin_LIBRARIES})
-
-add_executable(clientTest src/clientTest.cpp)
-target_link_libraries(clientTest ${catkin_LIBRARIES})
-
 ###########
 ## Build ##
 ###########
@@ -159,6 +150,15 @@ include_directories(
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
+
+add_executable(helloWorld.exe src/helloWorld.cpp)
+target_link_libraries(helloWorld.exe ${catkin_LIBRARIES})
+
+add_executable(serverTest src/serverTest.cpp)
+target_link_libraries(serverTest ${catkin_LIBRARIES})
+
+add_executable(clientTest src/clientTest.cpp)
+target_link_libraries(clientTest ${catkin_LIBRARIES})
 
 #############
 ## Install ##

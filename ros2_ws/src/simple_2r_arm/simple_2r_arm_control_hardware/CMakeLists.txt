@@ -17,12 +17,42 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+find_package(hardware_interface REQUIRED)
+find_package(pluginlib REQUIRED)
+find_package(rclcpp REQUIRED)
+
+add_library(
+  ${PROJECT_NAME}
+  SHARED
+  src/rrbot_system_position_only.cpp
+)
+target_include_directories(
+  ${PROJECT_NAME}
+  PRIVATE
+  include
+)
+ament_target_dependencies(
+  ${PROJECT_NAME}
+  hardware_interface
+  pluginlib
+  rclcpp
+)
+
+pluginlib_export_plugin_description_file(hardware_interface simple_2r_arm_control_hardware.xml)
+
+# INSTALL
+install(
+  TARGETS ${PROJECT_NAME}
+  DESTINATION lib
+)
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
+    find_package(ament_cmake_gtest REQUIRED)
   # the following line skips the linter which checks for copyrights
   # uncomment the line when a copyright and license is not present in all source files
   #set(ament_cmake_copyright_FOUND TRUE)
@@ -31,5 +61,18 @@ if(BUILD_TESTING)
   #set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
+
+## EXPORTS
+ament_export_include_directories(
+  include
+)
+ament_export_libraries(
+  ${PROJECT_NAME}
+)
+ament_export_dependencies(
+  hardware_interface
+  pluginlib
+  rclcpp
+)
 
 ament_package()

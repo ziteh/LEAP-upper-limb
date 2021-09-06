@@ -1,6 +1,11 @@
 <?xml version="1.0"?>
 <robot>
 
+<!--
+Copied and modified from ros2_control Demos -
+https://github.com/ros-controls/ros2_control_demos
+-->
+
   <material name="black">
     <color rgba="0.0 0.0 0.0 1.0"/>
   </material>

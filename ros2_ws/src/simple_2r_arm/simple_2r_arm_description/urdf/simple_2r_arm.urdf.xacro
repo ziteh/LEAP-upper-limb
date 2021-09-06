@@ -1,6 +1,11 @@
 <?xml version="1.0"?>
 <!-- Simple 2-Revolute Arm -->
 
+<!--
+Copied and modified from ros2_control Demos -
+https://github.com/ros-controls/ros2_control_demos
+-->
+
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="2dof_robot">
   <xacro:arg name="prefix" default="" />
 

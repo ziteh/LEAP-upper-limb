@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef simple_2r_arm_control_HARDWARE__RRBOT_SYSTEM_POSITION_ONLY_HPP_
-#define simple_2r_arm_control_HARDWARE__RRBOT_SYSTEM_POSITION_ONLY_HPP_
+#ifndef simple_2r_arm_control_HARDWARE__simple_2r_arm_SYSTEM_POSITION_ONLY_HPP_
+#define simple_2r_arm_control_HARDWARE__simple_2r_arm_SYSTEM_POSITION_ONLY_HPP_
 
 #include <memory>
 #include <string>
@@ -30,11 +30,11 @@
 
 namespace simple_2r_arm_control_hardware
 {
-class RRBotSystemPositionOnlyHardware
+class simple_2r_armSystemPositionOnlyHardware
 : public hardware_interface::BaseInterface<hardware_interface::SystemInterface>
 {
 public:
-  RCLCPP_SHARED_PTR_DEFINITIONS(RRBotSystemPositionOnlyHardware);
+  RCLCPP_SHARED_PTR_DEFINITIONS(simple_2r_armSystemPositionOnlyHardware);
 
   simple_2r_arm_control_HARDWARE_PUBLIC
   hardware_interface::return_type configure(const hardware_interface::HardwareInfo & info) override;
@@ -58,7 +58,7 @@ public:
   hardware_interface::return_type write() override;
 
 private:
-  // Parameters for the RRBot simulation
+  // Parameters for the simple_2r_arm simulation
   double hw_start_sec_;
   double hw_stop_sec_;
   double hw_slowdown_;
@@ -70,4 +70,4 @@ private:
 
 }  // namespace simple_2r_arm_control_hardware
 
-#endif  // simple_2r_arm_control_HARDWARE__RRBOT_SYSTEM_POSITION_ONLY_HPP_
+#endif  // simple_2r_arm_control_HARDWARE__simple_2r_arm_SYSTEM_POSITION_ONLY_HPP_

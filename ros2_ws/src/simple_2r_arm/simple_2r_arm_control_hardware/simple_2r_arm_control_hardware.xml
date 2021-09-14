@@ -1,6 +1,6 @@
 <library path="simple_2r_arm_control_hardware">
-  <class name="simple_2r_arm_control_hardware/RRBotSystemPositionOnlyHardware"
-         type="simple_2r_arm_control_hardware::RRBotSystemPositionOnlyHardware"
+  <class name="simple_2r_arm_control_hardware/simple_2r_armSystemPositionOnlyHardware"
+         type="simple_2r_arm_control_hardware::simple_2r_armSystemPositionOnlyHardware"
          base_class_type="hardware_interface::SystemInterface">
     <description>
       The ROS2 Control minimal robot protocol. This is example for start porting the robot from ROS 1.

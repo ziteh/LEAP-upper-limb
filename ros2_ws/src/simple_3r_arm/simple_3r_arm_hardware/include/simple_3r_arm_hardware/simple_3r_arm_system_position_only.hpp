@@ -28,7 +28,7 @@
 #include "rclcpp/macros.hpp"
 #include "simple_3r_arm_hardware/visibility_control.h"
 
-namespace simple_3r_arm_control_hardware
+namespace simple_3r_arm_hardware
 {
 class simple_3r_armSystemPositionOnlyHardware
 : public hardware_interface::BaseInterface<hardware_interface::SystemInterface>

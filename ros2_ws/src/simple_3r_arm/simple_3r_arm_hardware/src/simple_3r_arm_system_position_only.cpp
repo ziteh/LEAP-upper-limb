@@ -23,7 +23,7 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-namespace simple_3r_arm_control_hardware
+namespace simple_3r_arm_hardware
 {
 hardware_interface::return_type simple_3r_armSystemPositionOnlyHardware::configure(
   const hardware_interface::HardwareInfo & info)
@@ -202,4 +202,4 @@ hardware_interface::return_type simple_3r_armSystemPositionOnlyHardware::write()
 #include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS(
-  simple_3r_arm_control_hardware::simple_3r_armSystemPositionOnlyHardware, hardware_interface::SystemInterface)
+  simple_3r_arm_hardware::simple_3r_armSystemPositionOnlyHardware, hardware_interface::SystemInterface)

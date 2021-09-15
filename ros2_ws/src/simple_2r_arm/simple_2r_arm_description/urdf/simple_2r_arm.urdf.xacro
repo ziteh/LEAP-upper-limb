@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!-- Simple 2-Revolute Arm -->
+
+<!--
+Copied and modified from ros2_control Demos -
+https://github.com/ros-controls/ros2_control_demos
+-->
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="2dof_robot">
+  <xacro:arg name="prefix" default="" />
+
+  <!-- Import simple_2r_arm macro -->
+  <xacro:include filename="$(find simple_2r_arm_description)/urdf/simple_2r_arm_description.urdf.xacro" />
+
+  <!-- Import Rviz colors -->
+  <xacro:include filename="$(find simple_2r_arm_description)/gazebo/simple_2r_arm.materials.xacro" />
+
+  <!-- Import simple_2r_arm ros2_control description -->
+  <xacro:include filename="$(find simple_2r_arm_description)/ros2_control/simple_2r_arm.ros2_control.xacro" />
+
+  <!-- Used for fixing robot -->
+  <link name="world"/>
+  <gazebo reference="world">
+    <static>true</static>
+  </gazebo>
+
+  <xacro:simple_2r_arm parent="world" prefix="$(arg prefix)">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+  </xacro:simple_2r_arm>
+
+  <xacro:simple_2r_arm_ros2_control
+    name="simple_2r_arm" prefix="$(arg prefix)" />
+
+</robot>

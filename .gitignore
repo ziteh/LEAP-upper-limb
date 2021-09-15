@@ -51,6 +51,10 @@ qtcreator-*
 # Catkin custom files
 CATKIN_IGNORE
 
+### ROS 2 ###
+install/
+log/
+
 ### MATLAB ###
 # Windows default autosave extension
 *.asv

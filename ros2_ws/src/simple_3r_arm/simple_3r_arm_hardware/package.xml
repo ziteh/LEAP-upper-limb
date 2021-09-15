@@ -4,11 +4,16 @@
   <name>simple_3r_arm_hardware</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="honmonoh@gmail.com">irs-lab-ros</maintainer>
+  <maintainer email="honmonoh@gmail.com">ziteh</maintainer>
   <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <depend>hardware_interface</depend>
+  <depend>pluginlib</depend>
+  <depend>rclcpp</depend>
+
+  <test_depend>ament_cmake_gtest</test_depend>
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
 

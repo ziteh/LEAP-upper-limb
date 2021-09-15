@@ -1,6 +1,6 @@
 # L.E.A.P upper limb
 
-"Lightweight Exoskeleton with Assistive Power, Upper Limb (L.E.A.P Upper Limb)" is my master's thesis. It's a upper-limb powered exoskeleton based on the experience of develop [L.E.A.P](https://github.com/ziteh/LEAP).  
+"Lightweight Exoskeleton with Assistive Power, Upper Limb (L.E.A.P Upper Limb)" is my master's thesis. It's an upper-limb powered exoskeleton based on the experience of develop [L.E.A.P](https://github.com/ziteh/LEAP).  
 
 It is still at an early stage of development.
 

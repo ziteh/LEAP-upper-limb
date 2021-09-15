@@ -11,7 +11,7 @@ rosdep install --from-paths <packages_path>
 ```
 
 - Build:
-```cam
+```cmd
 colcon build
 ```
 

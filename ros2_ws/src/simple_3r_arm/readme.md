@@ -5,7 +5,17 @@ Here are three ROS2 packages:
 - simple_3r_arm_launch
 
 # Usage
-> Do not forget to source `setup.bash` from the `install` folder after build.
+- Install dependencies:
+```cmd
+rosdep install --from-paths <packages_path>
+```
+
+- Build:
+```cam
+colcon build
+```
+
+Do not forget to source `setup.bash` from the `install` folder.
 
 ## Show in RViz
 Only one command:  

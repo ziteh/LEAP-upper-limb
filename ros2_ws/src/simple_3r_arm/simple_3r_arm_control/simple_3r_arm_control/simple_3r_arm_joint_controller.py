@@ -1,6 +1,4 @@
-from _typeshed import Self
 import rclpy
-from rclpy import publisher
 from rclpy.node import Node
 from std_msgs.msg import Float64MultiArray
 

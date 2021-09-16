@@ -23,7 +23,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "simple_3r_arm_joint_controller = simple_3r_arm_control.simple_3r-arm_joint_controller:main",
+            "simple_3r_arm_joint_controller = simple_3r_arm_control.simple_3r_arm_joint_controller:main",
         ],
     },
 )

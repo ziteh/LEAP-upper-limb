@@ -1,8 +1,9 @@
 # simple_3r_arm
-Here are five ROS2 packages:
+Here are some ROS2 packages:
 - simple_3r_arm_control
 - simple_3r_arm_description
 - simple_3r_arm_hardware
+- simple_3r_arm_interface
 - simple_3r_arm_launch
 - ros2_control_test_nodes (From [ros2_control_demos/ros2_control_test_nodes](https://github.com/ros-controls/ros2_control_demos/tree/master/ros2_control_test_nodes))
 
@@ -55,7 +56,7 @@ Start:
 ros2 launch simple_3r_arm_launch simple_3r_arm.launch_with_kinematics.py
 ```
 
-Control end-position of simple_3r_arm by inverse kinematics:
+Control position of simple_3r_arm by inverse kinematics:
 ```cmd
 ros2 topic pub /ik3r std_msgs/msg/Float64MultiArray "data:
 - 0.4
@@ -63,7 +64,7 @@ ros2 topic pub /ik3r std_msgs/msg/Float64MultiArray "data:
 - 0.2"
 ```
 
-Get end-position of simple_3r_arm by forward kinematics:
+Get position of simple_3r_arm by forward kinematics:
 ```cmd
 ros2 service call /fk3r simple_3r_arm_interface/srv/FK
 ```

@@ -14,4 +14,6 @@ It is still at an early stage of development.
 
 # Environment
 - Ubuntu 20.04.3 'Focal Fossa' LTS (64-bit)
-- ROS 2 Foxy Fitzroy
+  - ROS 2 Foxy Fitzroy
+- MATLAB R2020a
+  - Robotics Toolboox for MATLAB Ver. 10.4

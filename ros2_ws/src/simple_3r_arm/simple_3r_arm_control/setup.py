@@ -25,6 +25,7 @@ setup(
         'console_scripts': [
             "simple_3r_arm_joint_controller = simple_3r_arm_control.simple_3r_arm_joint_controller:main",
             "ik = simple_3r_arm_control.simple_3r_arm_inverse_kinematics:main",
+            "fk = simple_3r_arm_control.simple_3r_arm_forward_kinematics_server:main",
         ],
     },
 )

@@ -31,7 +31,7 @@ ros2 launch simple_3r_arm_launch simple_3r_arm.launch.py
 ```  
 
 Control by the following commands:
-1. ROS CLI
+### A. ROS CLI
 ```cmd
 ros2 topic pub /forward_position_controller/commands std_msgs/msg/Float64MultiArray "data:
 - 1
@@ -39,12 +39,31 @@ ros2 topic pub /forward_position_controller/commands std_msgs/msg/Float64MultiAr
 - 2"
 ```
 
-2. Using `ros2_control_test_nodes`:
+### B. Using `ros2_control_test_nodes`:
 ```cmd
 ros2 launch simple_3r_arm_launch test_forward_position_controller.launch.py
 ```
 
-3. Using `simple_3r_arm_joint_controller` node:
+### C. Using `simple_3r_arm_joint_controller` node:
 ```cmd
 ros2 run simple_3r_arm_control simple_3r_arm_joint_controller --ros-args -p goal:=[1.0,1.5,2.0] -p frequency:=2
+```
+
+### D. Using with forward/inverse kinematics:
+Start:
+```cmd
+ros2 launch simple_3r_arm_launch simple_3r_arm.launch_with_kinematics.py
+```
+
+Control end-position of simple_3r_arm by inverse kinematics:
+```cmd
+ros2 topic pub /ik3r std_msgs/msg/Float64MultiArray "data:
+- 0.4
+- 0.1
+- 0.2"
+```
+
+Get end-position of simple_3r_arm by forward kinematics:
+```cmd
+ros2 service call /fk3r simple_3r_arm_interface/srv/FK
 ```

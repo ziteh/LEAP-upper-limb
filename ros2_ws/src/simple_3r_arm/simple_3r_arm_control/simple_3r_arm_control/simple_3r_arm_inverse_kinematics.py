@@ -30,22 +30,23 @@ class Simple3RArmInverseKinematicsSubscriber(Node):
         fMsg = Float64MultiArray()
         fMsg.data = msg.data
         self.get_logger().info(f'Get: {msg.data}')
-        x = msg.data[0]
-        y = msg.data[1]
+        rho = msg.data[0]
+        phi = msg.data[1]
         z = -msg.data[2]
 
         theta2 = 2*math.atan2(
-            math.sqrt(math.pow(self.l2+self.l3,2)-(math.pow(x,2)+math.pow(z,2))),
-            math.sqrt((math.pow(x,2)+math.pow(z,2))-math.pow(self.l2-self.l3,2))
+            math.sqrt(math.pow(self.l2+self.l3,2)-(math.pow(rho,2)+math.pow(z,2))),
+            math.sqrt((math.pow(rho,2)+math.pow(z,2))-math.pow(self.l2-self.l3,2))
             )
-        theta1 = math.atan2(z,x)+math.atan2(
+        theta1 = math.atan2(z,rho)+math.atan2(
             self.l3*math.sin(theta2),
             self.l2 + self.l3*math.cos(theta2)
         )
-        goal = []
-        goal.append(y)
-        goal.append(theta1 + (math.pi/2))
-        goal.append(-theta2)
+        goal = [
+            phi,
+            theta1 + (math.pi/2),
+            -theta2
+        ]
 
         pubTopic = "/" + self.controller_name + "/" + "commands"
         self.publisher_ = self.create_publisher(Float64MultiArray, pubTopic, 1)

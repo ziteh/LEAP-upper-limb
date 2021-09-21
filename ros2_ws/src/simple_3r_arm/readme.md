@@ -50,8 +50,8 @@ ros2 launch simple_3r_arm_launch test_forward_position_controller.launch.py
 ros2 run simple_3r_arm_control simple_3r_arm_joint_controller --ros-args -p goal:=[1.0,1.5,2.0] -p frequency:=2
 ```
 
-### D. Using with forward/inverse kinematics:
-Start:
+## Using with forward/inverse kinematics
+Start
 ```cmd
 ros2 launch simple_3r_arm_launch simple_3r_arm.launch_with_kinematics.py
 ```

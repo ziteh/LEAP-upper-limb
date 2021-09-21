@@ -31,17 +31,18 @@ class Simple3RArmForwardKinematicsServer(Node):
         self.srv = self.create_service(FK,serviceFK,self.fk_callback)
 
     def fk_callback(self, request, response):
-        response.rho = self.l3 * math.cos(self.theta[1])+self.l2*math.cos(self.theta[1]+self.theta[2])
-        response.z = self.l3 * math.sin(self.theta[1])+self.l2*math.sin(self.theta[1]+self.theta[2])
+        response.rho = self.l2 * math.cos(self.theta[1])+self.l3*math.cos(self.theta[1]+self.theta[2])
+        response.z = self.l2 * math.sin(self.theta[1])+self.l3*math.sin(self.theta[1]+self.theta[2])
         response.phi = self.theta[0]
+        response.z = -response.z
 
         return response
 
     def joint_state_callback(self, msg):
-        self.get_logger().info(f'Get: {msg.position}')
+        #self.get_logger().info(f'Get: {msg.position}')
         self.theta = [
             msg.position[0],
-            msg.position[1],
+            msg.position[1] - (math.pi/2),
             msg.position[2]
         ]
     

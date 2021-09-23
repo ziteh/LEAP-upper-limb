@@ -44,7 +44,7 @@ class Simple3RArmInverseKinematicsSubscriber(Node):
         )
         goal = [
             phi,
-            theta1 + (math.pi/2),
+            theta1,
             -theta2
         ]
 

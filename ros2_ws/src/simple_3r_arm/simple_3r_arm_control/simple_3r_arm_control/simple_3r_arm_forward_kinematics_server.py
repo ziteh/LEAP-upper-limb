@@ -42,7 +42,7 @@ class Simple3RArmForwardKinematicsServer(Node):
         #self.get_logger().info(f'Get: {msg.position}')
         self.theta = [
             msg.position[0],
-            msg.position[1] - (math.pi/2),
+            msg.position[1],
             msg.position[2]
         ]
     

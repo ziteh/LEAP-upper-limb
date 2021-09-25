@@ -45,6 +45,8 @@ class Simple3RArmForwardKinematicsServer(Node):
             msg.position[1],
             msg.position[2]
         ]
+        # rate=self.create_rate(2)
+        # rate.sleep()
     
 def main(args=None):
     rclpy.init(args=args)

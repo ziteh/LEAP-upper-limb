@@ -45,7 +45,7 @@ class Simple3RArmRelativeController(Node):
         
     
     def publish(self):
-        pubTopic = "ik3r"
+        pubTopic = "/ik3r"
         self.publisher_ = self.create_publisher(Float64MultiArray, pubTopic, 1)
         pubMsg = Float64MultiArray()
         pubMsg.data = self.goal

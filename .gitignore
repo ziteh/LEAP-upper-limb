@@ -87,3 +87,6 @@ codegen/
 
 # Octave session info
 octave-workspace
+
+### TrueSTUDIO for STM32 ###
+/stm32/Debug/

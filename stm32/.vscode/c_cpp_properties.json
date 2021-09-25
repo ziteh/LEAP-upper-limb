@@ -1,0 +1,32 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/src/**",
+                "${workspaceFolder}/Libraries/STM32F10x_StdPeriph_Driver/inc/**",
+                "${workspaceFolder}/Libraries/CMSIS/Device/ST/STM32F10x/Include/**",
+                "${workspaceFolder}/Libraries/CMSIS/Include/**",
+                "${workspaceFolder}/Utilities/STM32F103_Nucleo/**",
+                "C:\\Program Files (x86)\\Atollic\\TrueSTUDIO for STM32 9.3.0\\ARMTools\\arm-atollic-eabi\\include\\**",
+                "C:\\Program Files (x86)\\Atollic\\TrueSTUDIO for STM32 9.3.0\\ARMTools\\arm-atollic-eabi\\include\\c++\\6.3.1\\**",
+                "C:\\Program Files (x86)\\Atollic\\TrueSTUDIO for STM32 9.3.0\\ARMTools\\arm-atollic-eabi\\include\\c++\\6.3.1\\arm-atollic-eabi\\armv7-m\\**",
+                "C:\\Program Files (x86)\\Atollic\\TrueSTUDIO for STM32 9.3.0\\ARMTools\\arm-atollic-eabi\\include\\c++\\6.3.1\\backward\\**",
+                "C:\\Program Files (x86)\\Atollic\\TrueSTUDIO for STM32 9.3.0\\ARMTools\\lib\\gcc\\arm-atollic-eabi\\6.3.1\\include\\**",
+                "C:\\Program Files (x86)\\Atollic\\TrueSTUDIO for STM32 9.3.0\\ARMTools\\lib\\gcc\\arm-atollic-eabi\\6.3.1\\include-fixed\\**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "windowsSdkVersion": "10.0.17763.0",
+            "compilerPath": "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC\\Tools\\MSVC\\14.16.27023\\bin\\Hostx64\\x64\\cl.exe",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-msvc-x64"
+        }
+    ],
+    "version": 4
+}

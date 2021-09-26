@@ -17,3 +17,4 @@ It is still at an early stage of development.
   - ROS 2 Foxy Fitzroy
 - MATLAB R2020a
   - Robotics Toolbox for MATLAB `Ver. 10.4`
+- Atollic TrueSTUDIO for STM32 `Ver. 9.3.0`

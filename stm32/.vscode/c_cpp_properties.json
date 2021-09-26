@@ -3,11 +3,7 @@
         {
             "name": "STM32F103RB",
             "includePath": [
-                "${workspaceFolder}\\src\\**",
-                "${workspaceFolder}\\Libraries\\STM32F10x_StdPeriph_Driver\\inc\\**",
-                "${workspaceFolder}\\Libraries\\CMSIS\\Device\\ST\\STM32F10x\\Include\\**",
-                "${workspaceFolder}\\Libraries/CMSIS/Include\\**",
-                "${workspaceFolder}\\Utilities/STM32F103_Nucleo\\**",
+                "${workspaceFolder}/**",
                 "C:\\Program Files (x86)\\Atollic\\TrueSTUDIO for STM32 9.3.0\\ARMTools\\arm-atollic-eabi\\include\\**",
                 "C:\\Program Files (x86)\\Atollic\\TrueSTUDIO for STM32 9.3.0\\ARMTools\\arm-atollic-eabi\\include\\c++\\6.3.1\\**",
                 "C:\\Program Files (x86)\\Atollic\\TrueSTUDIO for STM32 9.3.0\\ARMTools\\arm-atollic-eabi\\include\\c++\\6.3.1\\arm-atollic-eabi\\armv7-m\\**",

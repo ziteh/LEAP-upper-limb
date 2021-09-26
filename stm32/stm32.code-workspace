@@ -4,5 +4,12 @@
 			"path": "."
 		}
   ],
-  "settings": {}
+  "settings": {
+    "files.autoSave": "afterDelay"
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-vscode.cpptools"
+    ]
+  }
 }

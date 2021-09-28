@@ -81,7 +81,7 @@ int main(void)
     {
       /*LED2 Toggle each 50ms*/
       STM_EVAL_LEDToggle(LED2);
-      Delay(50);      
+      Delay(50);
     }      
     else if(BlinkSpeed == 1)
     {

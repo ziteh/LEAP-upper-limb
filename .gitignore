@@ -90,7 +90,12 @@ octave-workspace
 
 ### TrueSTUDIO for STM32 ###
 /stm32/Debug/
+/stm32/Release/
 /stm32/Libraries/
 /stm32/Utilities/
-/stm32/stm32.elf.launch
+/stm32/src/startup_stm32f10x_md.s
+/stm32/src/system_stm32f10x.c
+/stm32/src/tiny_printf.c
+/stm32/src/stm32f10x_conf.h
+/stm32/leap-up-stm32.elf.launch
 /stm32/stm32_flash.ld

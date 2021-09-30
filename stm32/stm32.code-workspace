@@ -5,7 +5,10 @@
 		}
   ],
   "settings": {
-    "files.autoSave": "afterDelay"
+    "files.autoSave": "afterDelay",
+    "files.associations": {
+      "string": "cpp"
+    }
   },
   "extensions": {
     "recommendations": [

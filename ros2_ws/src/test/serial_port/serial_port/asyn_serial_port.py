@@ -39,6 +39,7 @@ class SerialPortSubscriber(Node):
         loop.run_forever()
         loop.close()
     
+# Source: https://pyserial-asyncio.readthedocs.io/en/latest/shortintro.html#protocol-example
 class OutputProtocol(asyncio.Protocol):
     def connection_made(self, transport):
         self.transport = transport

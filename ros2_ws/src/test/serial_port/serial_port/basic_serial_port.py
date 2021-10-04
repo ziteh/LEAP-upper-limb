@@ -7,7 +7,7 @@ class SerialPortSubscriber(Node):
     def __init__(self):
         super().__init__("serial_port_subscriber")
 
-        self.declare_parameter("port", "dev/ttyACM0")
+        self.declare_parameter("port", "/dev/ttyACM0")
         self.declare_parameter("baudrate", "9600")
 
         self.port = self.get_parameter("port").value
@@ -23,13 +23,24 @@ class SerialPortSubscriber(Node):
             10
         )
 
+        self.ser = serial.Serial(self.port, self.baudrate)
+        self.serial_port_send()
+
     def subsrciber_callback(self, msg):
-        ser = serial.Serial()
-        ser.baudrate = self.baudrate
-        ser.port = self.port
-        ser.open()
-        ser.write(b'hello')
-        ser.close()
+        self.get_logger().info(f'{msg}')
+        self.ser.write(msg)
+
+    def serial_port_send(self):
+        try:
+            while True:
+                count = self.ser.inWaiting();
+                if count > 0:
+                    data = self.ser.readline()
+                    self.get_logger().info(f'From {self.port}: {data}')
+
+        except KeyboardInterrupt:
+            if self.ser != None:
+                self.ser.close()
     
 def main(args=None):
     rclpy.init(args=args)

@@ -12,7 +12,7 @@ class SerialPortSubscriber(Node):
 
         self.declare_parameter("port", "/dev/ttyACM0")
         self.declare_parameter("baudrate", "9600")
-        self.declare_parameter("receive_delay", 1)
+        self.declare_parameter("receive_delay", 0.01)
 
         self.port = self.get_parameter("port").value
         self.baudrate = self.get_parameter("baudrate").value
@@ -44,8 +44,6 @@ class SerialPortSubscriber(Node):
 
 
 class SerialPort:
-    latestMessage = '<NEVER RECEIVE>'
-
     def __init__(self, timesleep ,port, baudrate, rosPub):
         self.timeSleep = timesleep
         self.publisher = rosPub
@@ -66,10 +64,10 @@ class SerialPort:
     def read(self):
         try:
             while True:
-                self.latestMessage = self.sp.readline().decode('utf-8').splitlines()[0]
-                if self.latestMessage != '':
+                if self.sp.in_waiting > 0:
+                    spMsg = self.sp.readline().decode('ascii').splitlines()[0]
                     pubMsg = String()
-                    pubMsg.data = self.latestMessage 
+                    pubMsg.data = spMsg 
                     self.publisher.publish(pubMsg)
                     time.sleep(self.timeSleep)
 

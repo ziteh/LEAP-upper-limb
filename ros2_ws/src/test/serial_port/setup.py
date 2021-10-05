@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             "basic_serial_port = serial_port.basic_serial_port:main",
+            "asyn_serial_port = serial_port.asyn_serial_port:main",
         ],
     },
 )

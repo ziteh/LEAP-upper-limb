@@ -60,7 +60,7 @@ class SerialPort:
     def read(self):
         try:
             while True:
-                self.latestMessage = self.sp.readline()
+                self.latestMessage = self.sp.readline().decode('utf-8').splitlines()[0]
                 print(self.latestMessage)
                 time.sleep(self.timeSleep)
 

@@ -1,4 +1,0 @@
-gthr-default.h:229:1:int __gthread_key_delete(__gthread_key_t)	16	static
-usart.cpp:9:1:USART::USART()	48	static
-usart.cpp:41:6:void USART::send(uint8_t*)	24	static
-usart.cpp:56:6:void USART::send(std::__cxx11::string)	24	static

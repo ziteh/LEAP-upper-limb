@@ -7,7 +7,8 @@
   "settings": {
     "files.autoSave": "afterDelay",
     "files.associations": {
-      "string": "cpp"
+      "string": "cpp",
+      "stm32f1xx_it.h": "c"
     }
   },
   "extensions": {

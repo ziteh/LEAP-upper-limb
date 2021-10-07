@@ -1,0 +1,7 @@
+core_cm3.h:1014:22:void NVIC_SetPriority(IRQn_Type, uint32_t)	16	static
+core_cm3.h:1139:26:uint32_t SysTick_Config(uint32_t)	16	static
+gthr-default.h:229:1:int __gthread_key_delete(__gthread_key_t)	16	static
+main.cpp:19:5:int main()	80	static
+main.cpp:65:6:void rccInit()	8	static
+main.cpp:92:8:void Delay(uint32_t)	16	static
+main.cpp:105:8:void TimingDelay_Decrement()	4	static

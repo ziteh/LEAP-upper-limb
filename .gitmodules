@@ -1,3 +1,0 @@
-[submodule "stm32/stm32f103rb_lib"]
-	path = stm32/stm32f103rb_lib
-	url = https://github.com/ziteh/stm32f103rb-libraries.git

@@ -7,7 +7,6 @@
 #include "main.h"
 
 #define PWM_FREQUENCY (1000) /* PWM frequency in Hz. */
-// #define PWM_DUTY_CYCLE (72.5) /* PWM duty-cycle in %. */
 
 /*
  * f_pwm = f_tim / [(PRS + 1) * (PER + 1)]
@@ -26,38 +25,99 @@ int main(void)
 {
   setup_clock();
   setup_led();
+  setup_control_pin();
   setup_pwm();
+  setup_usart();
 
-  float dutycycle = 0;
-  bool dir_up = true;
+  usart_send_blocking(USART2, 'R');
+  usart_send_blocking(USART2, 'e');
+  usart_send_blocking(USART2, 'a');
+  usart_send_blocking(USART2, 'd');
+  usart_send_blocking(USART2, 'y');
+  usart_send_blocking(USART2, '\r');
+  usart_send_blocking(USART2, '\n');
 
   while (1)
   {
-    set_dutycycle(dutycycle);
-
-    if (dir_up && dutycycle >= 95)
-    {
-      dir_up = false;
-    }
-    else if (!dir_up && dutycycle <= 5)
-    {
-      dir_up = true;
-    }
-
-    if (dir_up)
-    {
-      dutycycle += 0.1;
-    }
-    else
-    {
-      dutycycle -= 0.1;
-    }
-
-    delay(100000);
-    gpio_toggle(GPIOA, GPIO5);
+    __asm__("nop");
   }
 
   return 0;
+}
+
+/**
+ * @brief USART2 Interrupt service routine.
+ */
+void usart2_isr(void)
+{
+  uint16_t data = usart_recv(USART2);
+  switch (data)
+  {
+  case 'e':
+    /* Enable. */
+    gpio_set(GPIOA, GPIO6);
+    break;
+
+  case 'd':
+    /* Disable. */
+    gpio_clear(GPIOA, GPIO6);
+    break;
+
+  case 'w':
+    /* Dir: CW. */
+    gpio_clear(GPIOA, GPIO9);
+    break;
+
+  case 'c':
+    /* Dir: CCW. */
+    gpio_set(GPIOA, GPIO9);
+    break;
+
+  case '1':
+    set_dutycycle(10);
+    break;
+
+  case '2':
+    set_dutycycle(20);
+    break;
+
+  case '3':
+    set_dutycycle(30);
+    break;
+
+  case '4':
+    set_dutycycle(40);
+    break;
+
+  case '5':
+    set_dutycycle(50);
+    break;
+
+  case '6':
+    set_dutycycle(60);
+    break;
+
+  case '7':
+    set_dutycycle(70);
+    break;
+
+  case '8':
+    set_dutycycle(80);
+    break;
+
+  case '9':
+    set_dutycycle(90);
+    break;
+
+  default:
+    break;
+  }
+
+  /* 
+   * Clear RXNE(Read data register not empty) flag of
+   * USART SR(Status register).
+   */
+  USART_SR(USART2) &= ~USART_SR_RXNE;
 }
 
 void inline setup_clock(void)
@@ -66,6 +126,7 @@ void inline setup_clock(void)
 
   rcc_periph_clock_enable(RCC_GPIOA);
   rcc_periph_clock_enable(RCC_TIM3);
+  rcc_periph_clock_enable(RCC_USART2);
 }
 
 void setup_pwm(void)
@@ -92,6 +153,38 @@ void setup_pwm(void)
   timer_enable_counter(TIM3);
 }
 
+void setup_usart(void)
+{
+  /* Enable USART IRQ. */
+  nvic_enable_irq(NVIC_USART2_IRQ);
+
+  /* Setup Tx pin. */
+  gpio_set_mode(GPIO_BANK_USART2_TX,
+                GPIO_MODE_OUTPUT_50_MHZ,
+                GPIO_CNF_OUTPUT_ALTFN_PUSHPULL,
+                GPIO_USART2_TX);
+
+  /* Setup Rx pin. */
+  gpio_set_mode(GPIO_BANK_USART2_RX,
+                GPIO_MODE_INPUT,
+                GPIO_CNF_INPUT_FLOAT,
+                GPIO_USART2_RX);
+
+  /* Setup USART config with 9600, 8-N-1. */
+  usart_set_baudrate(USART2, 9600);
+  usart_set_databits(USART2, 8);
+  usart_set_stopbits(USART2, USART_STOPBITS_1);
+  usart_set_parity(USART2, USART_PARITY_NONE);
+  usart_set_flow_control(USART2, USART_FLOWCONTROL_NONE);
+  usart_set_mode(USART2, USART_MODE_TX_RX);
+
+  /* Enable Rx interrupt. */
+  usart_enable_rx_interrupt(USART2);
+
+  /* Enable. */
+  usart_enable(USART2);
+}
+
 void setup_led(void)
 {
   gpio_set_mode(GPIOA,
@@ -105,6 +198,23 @@ void inline set_dutycycle(float value)
   timer_set_oc_value(TIM3,
                      TIM_OC2,
                      PWM_TIMER_PERIOD * (value / 100.0));
+}
+
+void setup_control_pin(void)
+{
+  /* Enable. */
+  gpio_set_mode(GPIOA,
+                GPIO_MODE_OUTPUT_2_MHZ,
+                GPIO_CNF_OUTPUT_PUSHPULL,
+                GPIO6);
+  gpio_clear(GPIOA, GPIO6);
+
+  /* Direction. */
+  gpio_set_mode(GPIOA,
+                GPIO_MODE_OUTPUT_2_MHZ,
+                GPIO_CNF_OUTPUT_PUSHPULL,
+                GPIO9);
+  gpio_clear(GPIOA, GPIO9);
 }
 
 void delay(uint32_t value)

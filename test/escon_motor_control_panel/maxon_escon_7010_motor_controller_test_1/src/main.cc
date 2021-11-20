@@ -52,66 +52,43 @@ int main(void)
 void usart2_isr(void)
 {
   uint16_t data = usart_recv(USART2);
-  switch (data)
+
+  /* MSB = 1: is command, else duty cycle. */
+  if ((data & (1 << 7)) == (1 << 7))
   {
-  case 'e':
-    /* Enable. */
-    gpio_set(GPIOA, GPIO6);
-    break;
+    uint8_t command = data & 0x7f; /* Mask. */
+    switch (command)
+    {
+    case 0x00:
+      /* Disable. */
+      gpio_clear(GPIOA, GPIO6);
+      break;
 
-  case 'd':
-    /* Disable. */
-    gpio_clear(GPIOA, GPIO6);
-    break;
+    case 0x01:
+      /* Enable. */
+      gpio_set(GPIOA, GPIO6);
+      break;
 
-  case 'w':
-    /* Dir: CW. */
-    gpio_clear(GPIOA, GPIO9);
-    break;
+    case 0x02:
+      /* Dir: CW. */
+      gpio_clear(GPIOA, GPIO9);
+      break;
 
-  case 'c':
-    /* Dir: CCW. */
-    gpio_set(GPIOA, GPIO9);
-    break;
+    case 0x03:
+      /* Dir: CCW. */
+      gpio_set(GPIOA, GPIO9);
+      break;
 
-  case '1':
-    set_dutycycle(10);
-    break;
-
-  case '2':
-    set_dutycycle(20);
-    break;
-
-  case '3':
-    set_dutycycle(30);
-    break;
-
-  case '4':
-    set_dutycycle(40);
-    break;
-
-  case '5':
-    set_dutycycle(50);
-    break;
-
-  case '6':
-    set_dutycycle(60);
-    break;
-
-  case '7':
-    set_dutycycle(70);
-    break;
-
-  case '8':
-    set_dutycycle(80);
-    break;
-
-  case '9':
-    set_dutycycle(90);
-    break;
-
-  default:
-    break;
+    default:
+      usart_send_blocking(USART2, '?');
+      usart_send_blocking(USART2, '\r');
+      usart_send_blocking(USART2, '\n');
+      break;
+    }
+  }
+  else
+  {
+    set_dutycycle(data);
   }
 
   /* 

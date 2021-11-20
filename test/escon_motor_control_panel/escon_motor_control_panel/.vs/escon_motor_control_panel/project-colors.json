@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "ProjectMap": {
+    "00b4dcf1-e97b-4795-8e69-96c2570848a5": {
+      "ProjectGuid": "00b4dcf1-e97b-4795-8e69-96c2570848a5",
+      "DisplayName": "escon_motor_control_panel",
+      "ColorIndex": 0
+    }
+  },
+  "NextColorIndex": 1
+}

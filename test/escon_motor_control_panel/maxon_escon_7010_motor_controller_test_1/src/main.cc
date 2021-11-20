@@ -6,7 +6,8 @@
 
 #include "main.h"
 
-#define PWM_FREQUENCY (1000) /* PWM frequency in Hz. */
+#define USART_BAUDRATE (9600) /* USART baud rate. */
+#define PWM_FREQUENCY (1000)  /* PWM frequency in Hz. */
 
 /*
  * f_pwm = f_tim / [(PRS + 1) * (PER + 1)]
@@ -170,8 +171,8 @@ void setup_usart(void)
                 GPIO_CNF_INPUT_FLOAT,
                 GPIO_USART2_RX);
 
-  /* Setup USART config with 9600, 8-N-1. */
-  usart_set_baudrate(USART2, 9600);
+  /* Setup USART. */
+  usart_set_baudrate(USART2, USART_BAUDRATE);
   usart_set_databits(USART2, 8);
   usart_set_stopbits(USART2, USART_STOPBITS_1);
   usart_set_parity(USART2, USART_PARITY_NONE);

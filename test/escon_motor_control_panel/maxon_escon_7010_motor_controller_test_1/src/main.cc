@@ -56,30 +56,32 @@ void usart2_isr(void)
   /* MSB = 1: is command, else duty cycle. */
   if ((data & (1 << 7)) == (1 << 7))
   {
-    uint8_t command = data & 0x7f; /* Mask. */
-    switch (command)
+    // uint8_t command = data & 0x7f; /* Mask. */
+    switch (data)
     {
-    case 0x00:
+    case 0x80:
       /* Disable. */
       gpio_clear(GPIOA, GPIO6);
       break;
 
-    case 0x01:
+    case 0x81:
       /* Enable. */
       gpio_set(GPIOA, GPIO6);
       break;
 
-    case 0x02:
+    case 0x82:
       /* Dir: CW. */
-      gpio_clear(GPIOA, GPIO9);
+      gpio_clear(GPIOA, GPIO8);
       break;
 
-    case 0x03:
+    case 0x83:
       /* Dir: CCW. */
-      gpio_set(GPIOA, GPIO9);
+      gpio_set(GPIOA, GPIO8);
       break;
 
     default:
+      gpio_toggle(GPIOA, GPIO5);
+
       usart_send_blocking(USART2, '?');
       usart_send_blocking(USART2, '\r');
       usart_send_blocking(USART2, '\n');
@@ -191,8 +193,8 @@ void setup_control_pin(void)
   gpio_set_mode(GPIOA,
                 GPIO_MODE_OUTPUT_2_MHZ,
                 GPIO_CNF_OUTPUT_PUSHPULL,
-                GPIO9);
-  gpio_clear(GPIOA, GPIO9);
+                GPIO8);
+  gpio_clear(GPIOA, GPIO8);
 }
 
 void delay(uint32_t value)

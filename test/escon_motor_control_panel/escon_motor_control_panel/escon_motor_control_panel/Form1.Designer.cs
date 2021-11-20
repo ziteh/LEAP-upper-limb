@@ -37,7 +37,7 @@
             this.trackBarPwmDutycycle = new System.Windows.Forms.TrackBar();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
+            this.labelPwmDutycycle = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.buttonSerialPortConnect = new System.Windows.Forms.Button();
@@ -86,6 +86,7 @@
             this.buttonEnable.TabIndex = 2;
             this.buttonEnable.Text = "Enable";
             this.buttonEnable.UseVisualStyleBackColor = true;
+            this.buttonEnable.Click += new System.EventHandler(this.buttonEnable_Click);
             // 
             // buttonDisable
             // 
@@ -95,6 +96,7 @@
             this.buttonDisable.TabIndex = 2;
             this.buttonDisable.Text = "Disable";
             this.buttonDisable.UseVisualStyleBackColor = true;
+            this.buttonDisable.Click += new System.EventHandler(this.buttonDisable_Click);
             // 
             // buttonDirCW
             // 
@@ -104,6 +106,7 @@
             this.buttonDirCW.TabIndex = 2;
             this.buttonDirCW.Text = "CW";
             this.buttonDirCW.UseVisualStyleBackColor = true;
+            this.buttonDirCW.Click += new System.EventHandler(this.buttonDirCW_Click);
             // 
             // buttonDirCCW
             // 
@@ -113,6 +116,7 @@
             this.buttonDirCCW.TabIndex = 2;
             this.buttonDirCCW.Text = "CCW";
             this.buttonDirCCW.UseVisualStyleBackColor = true;
+            this.buttonDirCCW.Click += new System.EventHandler(this.buttonDirCCW_Click);
             // 
             // trackBarPwmDutycycle
             // 
@@ -121,6 +125,7 @@
             this.trackBarPwmDutycycle.Name = "trackBarPwmDutycycle";
             this.trackBarPwmDutycycle.Size = new System.Drawing.Size(254, 90);
             this.trackBarPwmDutycycle.TabIndex = 3;
+            this.trackBarPwmDutycycle.ValueChanged += new System.EventHandler(this.trackBarPwmDutycycle_ValueChanged);
             // 
             // label1
             // 
@@ -140,14 +145,14 @@
             this.label2.TabIndex = 4;
             this.label2.Text = "Baudrate";
             // 
-            // label3
+            // labelPwmDutycycle
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(476, 563);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(155, 25);
-            this.label3.TabIndex = 4;
-            this.label3.Text = "Duty Cycle (%)";
+            this.labelPwmDutycycle.AutoSize = true;
+            this.labelPwmDutycycle.Location = new System.Drawing.Point(452, 565);
+            this.labelPwmDutycycle.Name = "labelPwmDutycycle";
+            this.labelPwmDutycycle.Size = new System.Drawing.Size(155, 25);
+            this.labelPwmDutycycle.TabIndex = 4;
+            this.labelPwmDutycycle.Text = "Duty Cycle (%)";
             // 
             // groupBox1
             // 
@@ -189,7 +194,7 @@
             this.Controls.Add(this.buttonSerialPortConnect);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
-            this.Controls.Add(this.label3);
+            this.Controls.Add(this.labelPwmDutycycle);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.trackBarPwmDutycycle);
@@ -217,7 +222,7 @@
         private System.Windows.Forms.TrackBar trackBarPwmDutycycle;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label labelPwmDutycycle;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.Button buttonSerialPortConnect;

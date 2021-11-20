@@ -56,7 +56,6 @@ void usart2_isr(void)
   /* MSB = 1: is command, else duty cycle. */
   if ((data & (1 << 7)) == (1 << 7))
   {
-    // uint8_t command = data & 0x7f; /* Mask. */
     switch (data)
     {
     case 0x80:

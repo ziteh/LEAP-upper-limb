@@ -5,6 +5,7 @@ Here are some ROS2 executables:
 - asyn_serial_port (Useless)
 - thread_serial_port
 - read_write_from_topic (with thread)
+- read_write_from_topic_byte (forked from 'read_write_from_topic')
 
 # Usage
 
@@ -30,4 +31,21 @@ ros2 topic echo /serialPort/read/dev/ttyACM0
 Send message (send "Hello World" for example):
 ```cmd
 ros2 topic pub /serialPort/write/dev/ttyACM0 std_msgs/msg/String "data: Hello Woeld"
+```
+
+## read_write_from_topic_byte
+
+Run executable:
+```cmd
+ros2 run serial_port read_write_from_topic_byte
+```
+
+Print received message from serial port:
+```cmd
+ros2 topic echo /serialPort/read/dev/ttyACM0 
+```
+
+Send message (send `0x21` for example):
+```cmd
+ros2 topic pub /serialPort/write/dev/ttyACM0 std_msgs/msg/Byte "data: [0x21]"
 ```

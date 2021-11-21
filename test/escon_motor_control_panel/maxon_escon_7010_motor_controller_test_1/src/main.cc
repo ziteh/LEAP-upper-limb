@@ -6,6 +6,18 @@
 
 #include "main.h"
 
+#define MOTOR_ENABLE_PORT (GPIOA)
+#define MOTOR_ENABLE_PIN (GPIO6)
+
+#define MOTOR_DIRECTION_PORT (GPIOA)
+#define MOTOR_DIRECTION_PIN (GPIO8)
+
+#define LED_PORT (GPIOA)
+#define LED_PIN (GPIO5)
+
+#define PWM_PORT (GPIOA)
+#define PWM_PIN (GPIO7)
+
 #define USART_BAUDRATE (9600) /* USART baud rate. */
 #define PWM_FREQUENCY (1000)  /* PWM frequency in Hz. */
 
@@ -56,31 +68,30 @@ void usart2_isr(void)
   /* MSB = 1: is command, else duty cycle. */
   if ((data & (1 << 7)) == (1 << 7))
   {
-    // uint8_t command = data & 0x7f; /* Mask. */
     switch (data)
     {
     case 0x80:
       /* Disable. */
-      gpio_clear(GPIOA, GPIO6);
+      gpio_clear(MOTOR_ENABLE_PORT, MOTOR_ENABLE_PIN);
       break;
 
     case 0x81:
       /* Enable. */
-      gpio_set(GPIOA, GPIO6);
+      gpio_set(MOTOR_ENABLE_PORT, MOTOR_ENABLE_PIN);
       break;
 
     case 0x82:
       /* Dir: CW. */
-      gpio_clear(GPIOA, GPIO8);
+      gpio_clear(MOTOR_DIRECTION_PORT, MOTOR_DIRECTION_PIN);
       break;
 
     case 0x83:
       /* Dir: CCW. */
-      gpio_set(GPIOA, GPIO8);
+      gpio_set(MOTOR_DIRECTION_PORT, MOTOR_DIRECTION_PIN);
       break;
 
     default:
-      gpio_toggle(GPIOA, GPIO5);
+      gpio_toggle(LED_PORT, LED_PIN);
 
       usart_send_blocking(USART2, '?');
       usart_send_blocking(USART2, '\r');
@@ -111,10 +122,10 @@ void inline setup_clock(void)
 
 void setup_pwm(void)
 {
-  gpio_set_mode(GPIOA,
+  gpio_set_mode(PWM_PORT,
                 GPIO_MODE_OUTPUT_50_MHZ,
                 GPIO_CNF_OUTPUT_ALTFN_PUSHPULL,
-                GPIO7);
+                PWM_PIN);
 
   timer_set_mode(TIM3,
                  TIM_CR1_CKD_CK_INT,
@@ -167,10 +178,10 @@ void setup_usart(void)
 
 void setup_led(void)
 {
-  gpio_set_mode(GPIOA,
+  gpio_set_mode(LED_PORT,
                 GPIO_MODE_OUTPUT_2_MHZ,
                 GPIO_CNF_OUTPUT_PUSHPULL,
-                GPIO5);
+                LED_PIN);
 }
 
 void inline set_dutycycle(float value)
@@ -182,19 +193,19 @@ void inline set_dutycycle(float value)
 
 void setup_control_pin(void)
 {
-  /* Enable. */
-  gpio_set_mode(GPIOA,
+  /* Motor enable pin. */
+  gpio_set_mode(MOTOR_ENABLE_PORT,
                 GPIO_MODE_OUTPUT_2_MHZ,
                 GPIO_CNF_OUTPUT_PUSHPULL,
-                GPIO6);
-  gpio_clear(GPIOA, GPIO6);
+                MOTOR_ENABLE_PIN);
+  gpio_clear(MOTOR_ENABLE_PORT, MOTOR_ENABLE_PIN);
 
-  /* Direction. */
-  gpio_set_mode(GPIOA,
+  /* Motor direction pin. */
+  gpio_set_mode(MOTOR_DIRECTION_PORT,
                 GPIO_MODE_OUTPUT_2_MHZ,
                 GPIO_CNF_OUTPUT_PUSHPULL,
-                GPIO8);
-  gpio_clear(GPIOA, GPIO8);
+                MOTOR_DIRECTION_PIN);
+  gpio_clear(MOTOR_DIRECTION_PORT, MOTOR_DIRECTION_PIN);
 }
 
 void delay(uint32_t value)

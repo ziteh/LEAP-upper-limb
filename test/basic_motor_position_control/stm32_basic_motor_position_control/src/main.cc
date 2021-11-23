@@ -36,6 +36,8 @@ int main(void)
 
 void move(float position)
 {
+  gpio_set(LED_PORT, LED_PIN);
+
   float goal = ((MAX_POSITION - MIN_POSITION) * position * 0.01) + MIN_POSITION;
   uint16_t now_position = get_adc_value();
   if (now_position < goal)
@@ -76,6 +78,8 @@ void move(float position)
   }
   /* Disable motor. */
   gpio_clear(MOTOR_ENABLE_PORT, MOTOR_ENABLE_PIN);
+
+  gpio_clear(LED_PORT, LED_PIN);
 }
 
 /**
@@ -111,8 +115,6 @@ void usart2_isr(void)
       break;
 
     default:
-      gpio_toggle(LED_PORT, LED_PIN);
-
       usart_send_blocking(USART2, '?');
       usart_send_blocking(USART2, '\r');
       usart_send_blocking(USART2, '\n');
@@ -249,6 +251,7 @@ void setup_others_gpio(void)
                 GPIO_MODE_OUTPUT_2_MHZ,
                 GPIO_CNF_OUTPUT_PUSHPULL,
                 LED_PIN);
+  gpio_clear(LED_PORT, LED_PIN);
 
   /* Motor enable pin. */
   gpio_set_mode(MOTOR_ENABLE_PORT,

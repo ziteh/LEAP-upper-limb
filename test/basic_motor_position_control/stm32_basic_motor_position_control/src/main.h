@@ -11,9 +11,9 @@
 #include <libopencm3/stm32/adc.h>
 #include <libopencm3/cm3/nvic.h>
 
-#define MAX_POSITION (2500)
-#define MIN_POSITION (1500)
-#define ALLOWABLE_POSITION_ERROR (200)
+#define MAX_POSITION (3000)
+#define MIN_POSITION (1000)
+#define ALLOWABLE_POSITION_ERROR (50)
 
 /* PA0 = A0 */
 #define ADC_PORT (GPIOA)

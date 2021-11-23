@@ -47,9 +47,13 @@ void move(float position)
     gpio_set(MOTOR_ENABLE_PORT, MOTOR_ENABLE_PIN);
 
     /* Wait. */
-    while ((goal - get_adc_value()) > ALLOWABLE_POSITION_ERROR)
+    while ((goal - now_position) > ALLOWABLE_POSITION_ERROR)
     {
-      /* Do nothing. */
+      now_position = get_adc_value();
+      if (now_position > MAX_POSITION || now_position < MIN_POSITION)
+      {
+        break;
+      }
     }
   }
   else if (now_position > goal)
@@ -61,9 +65,13 @@ void move(float position)
     gpio_set(MOTOR_ENABLE_PORT, MOTOR_ENABLE_PIN);
 
     /* Wait. */
-    while ((get_adc_value() - goal) > ALLOWABLE_POSITION_ERROR)
+    while ((now_position - goal) > ALLOWABLE_POSITION_ERROR)
     {
-      /* Do nothing. */
+      now_position = get_adc_value();
+      if (now_position > MAX_POSITION || now_position < MIN_POSITION)
+      {
+        break;
+      }
     }
   }
   /* Disable motor. */

@@ -14,13 +14,7 @@ int main(void)
   setup_pwm();
   setup_usart();
 
-  usart_send_blocking(USART2, 'R');
-  usart_send_blocking(USART2, 'e');
-  usart_send_blocking(USART2, 'a');
-  usart_send_blocking(USART2, 'd');
-  usart_send_blocking(USART2, 'y');
-  usart_send_blocking(USART2, '\r');
-  usart_send_blocking(USART2, '\n');
+  printf("Ready\r\n");
 
   /* Disable motor. */
   gpio_clear(MOTOR_ENABLE_PORT, MOTOR_ENABLE_PIN);

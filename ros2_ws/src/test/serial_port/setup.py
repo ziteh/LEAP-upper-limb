@@ -24,6 +24,7 @@ setup(
             "asyn_serial_port = serial_port.asyn_serial_port:main",
             "thread_serial_port = serial_port.thread_serial_port:main",
             "read_write_from_topic = serial_port.read_write_from_topic:main",
+            "read_write_from_topic_byte = serial_port.read_write_from_topic_byte:main",
         ],
     },
 )

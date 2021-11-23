@@ -32,7 +32,7 @@ void move(float position)
 {
   gpio_set(LED_PORT, LED_PIN);
 
-  float goal = ((MAX_POSITION - MIN_POSITION) * position * 0.01) + MIN_POSITION;
+  uint16_t goal = ((MAX_POSITION - MIN_POSITION) * position * 0.01) + MIN_POSITION;
   uint16_t now_position = get_adc_value();
   if (now_position < goal)
   {
@@ -46,8 +46,10 @@ void move(float position)
     while ((goal - now_position) > ALLOWABLE_POSITION_ERROR)
     {
       now_position = get_adc_value();
+      printf("E: %d, A: %d (CCW)\r\n", goal, now_position);
       if (now_position > MAX_POSITION || now_position < MIN_POSITION)
       {
+        printf("BREAK\r\n");
         break;
       }
     }
@@ -64,8 +66,10 @@ void move(float position)
     while ((now_position - goal) > ALLOWABLE_POSITION_ERROR)
     {
       now_position = get_adc_value();
+      printf("E: %d, A: %d (CW)\r\n", goal, now_position);
       if (now_position > MAX_POSITION || now_position < MIN_POSITION)
       {
+        printf("BREAK\r\n");
         break;
       }
     }

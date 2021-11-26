@@ -105,9 +105,25 @@ namespace escon_motor_control_panel
 
         private void trackBarPwmDutycycle_ValueChanged(object sender, EventArgs e)
         {
-            var dutycycle = trackBarPwmDutycycle.Value;
-            labelPwmDutycycle.Text = $"Duty Cycle ({dutycycle}%)";
-            SendCommand(Convert.ToByte(dutycycle));
+            if (checkBoxSendOnMove.Checked)
+            {
+                SendValue();
+            }
+        }
+
+        private void trackBarPwmDutycycle_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (!checkBoxSendOnMove.Checked)
+            {
+                SendValue();
+            }
+        }
+
+        private void SendValue()
+        {
+            var value = trackBarPwmDutycycle.Value;
+            labelPwmDutycycle.Text = $"Value ({value}%)";
+            SendCommand(Convert.ToByte(value));
         }
     }
 }

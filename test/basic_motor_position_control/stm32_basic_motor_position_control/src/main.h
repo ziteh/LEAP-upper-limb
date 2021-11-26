@@ -13,9 +13,12 @@
 #include <libopencm3/stm32/adc.h>
 #include <libopencm3/cm3/nvic.h>
 
-#define MAX_POSITION (3000)
-#define MIN_POSITION (1000)
-#define ALLOWABLE_POSITION_ERROR (50)
+#define MAX_POSITION (4095 - 1000)
+#define MIN_POSITION (0 + 1000)
+#define ALLOWABLE_POSITION_ERROR (35)
+
+#define PWM_FREQUENCY (1000) /* PWM frequency in Hz. */
+#define PWM_DUTYCYCLE (20)   /* PWM duty cycle in %. */
 
 /* PA0 = A0 */
 #define ADC_PORT (GPIOA)
@@ -25,9 +28,9 @@
 #define MOTOR_ENABLE_PORT (GPIOA)
 #define MOTOR_ENABLE_PIN (GPIO6)
 
-/* PA8 = D7 */
-#define MOTOR_DIRECTION_PORT (GPIOA)
-#define MOTOR_DIRECTION_PIN (GPIO8)
+/* PB6 = D10 */
+#define MOTOR_DIRECTION_PORT (GPIOB)
+#define MOTOR_DIRECTION_PIN (GPIO6)
 
 /* PA7 = D11 */
 #define PWM_PORT (GPIOA)
@@ -51,7 +54,6 @@
  */
 #define PWM_TIMER_PRESCALER (48 - 1)
 #define PWM_TIMER_PERIOD (((rcc_apb1_frequency * 2) / ((PWM_TIMER_PRESCALER + 1) * PWM_FREQUENCY)) - 1)
-#define PWM_FREQUENCY (1000) /* PWM frequency in Hz. */
 
 void setup_clock(void);
 void setup_usart(void);

@@ -18,7 +18,8 @@ int main(void)
 
   /* Disable motor. */
   gpio_clear(MOTOR_ENABLE_PORT, MOTOR_ENABLE_PIN);
-  set_dutycycle(15);
+
+  set_dutycycle(PWM_DUTYCYCLE);
 
   while (1)
   {
@@ -34,7 +35,7 @@ void move(float position)
 
   uint16_t goal = ((MAX_POSITION - MIN_POSITION) * position * 0.01) + MIN_POSITION;
   uint16_t now_position = get_adc_value();
-  if (now_position < goal)
+  if (now_position > goal)
   {
     /* Set motor CCW. */
     gpio_set(MOTOR_DIRECTION_PORT, MOTOR_DIRECTION_PIN);
@@ -43,7 +44,7 @@ void move(float position)
     gpio_set(MOTOR_ENABLE_PORT, MOTOR_ENABLE_PIN);
 
     /* Wait. */
-    while ((goal - now_position) > ALLOWABLE_POSITION_ERROR)
+    while ((now_position - goal) > ALLOWABLE_POSITION_ERROR)
     {
       now_position = get_adc_value();
       printf("E: %d, A: %d (CCW)\r\n", goal, now_position);
@@ -54,7 +55,7 @@ void move(float position)
       }
     }
   }
-  else if (now_position > goal)
+  else if (now_position < goal)
   {
     /* Set motor CW. */
     gpio_clear(MOTOR_DIRECTION_PORT, MOTOR_DIRECTION_PIN);
@@ -63,7 +64,7 @@ void move(float position)
     gpio_set(MOTOR_ENABLE_PORT, MOTOR_ENABLE_PIN);
 
     /* Wait. */
-    while ((now_position - goal) > ALLOWABLE_POSITION_ERROR)
+    while ((goal - now_position) > ALLOWABLE_POSITION_ERROR)
     {
       now_position = get_adc_value();
       printf("E: %d, A: %d (CW)\r\n", goal, now_position);
@@ -156,6 +157,7 @@ void inline setup_clock(void)
   rcc_clock_setup_in_hsi_out_48mhz();
 
   rcc_periph_clock_enable(RCC_GPIOA);
+  rcc_periph_clock_enable(RCC_GPIOB);
   rcc_periph_clock_enable(RCC_TIM3);
   rcc_periph_clock_enable(RCC_USART2);
   rcc_periph_clock_enable(RCC_ADC1);
@@ -263,7 +265,7 @@ void setup_others_gpio(void)
                 GPIO_MODE_OUTPUT_2_MHZ,
                 GPIO_CNF_OUTPUT_PUSHPULL,
                 MOTOR_DIRECTION_PIN);
-  gpio_clear(MOTOR_DIRECTION_PORT, MOTOR_DIRECTION_PIN);
+  gpio_set(MOTOR_DIRECTION_PORT, MOTOR_DIRECTION_PIN);
 }
 
 void delay(uint32_t value)

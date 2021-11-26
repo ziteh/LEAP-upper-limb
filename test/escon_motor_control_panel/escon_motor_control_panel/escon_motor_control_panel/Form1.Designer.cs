@@ -41,6 +41,7 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.buttonSerialPortConnect = new System.Windows.Forms.Button();
+            this.checkBoxSendOnMove = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownSerialPortBaudrate)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarPwmDutycycle)).BeginInit();
             this.groupBox1.SuspendLayout();
@@ -126,6 +127,7 @@
             this.trackBarPwmDutycycle.Size = new System.Drawing.Size(254, 90);
             this.trackBarPwmDutycycle.TabIndex = 3;
             this.trackBarPwmDutycycle.ValueChanged += new System.EventHandler(this.trackBarPwmDutycycle_ValueChanged);
+            this.trackBarPwmDutycycle.MouseUp += new System.Windows.Forms.MouseEventHandler(this.trackBarPwmDutycycle_MouseUp);
             // 
             // label1
             // 
@@ -186,11 +188,22 @@
             this.buttonSerialPortConnect.UseVisualStyleBackColor = true;
             this.buttonSerialPortConnect.Click += new System.EventHandler(this.buttonSerialPortConnect_Click);
             // 
+            // checkBoxSendOnMove
+            // 
+            this.checkBoxSendOnMove.AutoSize = true;
+            this.checkBoxSendOnMove.Location = new System.Drawing.Point(465, 356);
+            this.checkBoxSendOnMove.Name = "checkBoxSendOnMove";
+            this.checkBoxSendOnMove.Size = new System.Drawing.Size(187, 29);
+            this.checkBoxSendOnMove.TabIndex = 6;
+            this.checkBoxSendOnMove.Text = "Send On Move";
+            this.checkBoxSendOnMove.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(944, 402);
+            this.Controls.Add(this.checkBoxSendOnMove);
             this.Controls.Add(this.buttonSerialPortConnect);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
@@ -226,6 +239,7 @@
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.Button buttonSerialPortConnect;
+        private System.Windows.Forms.CheckBox checkBoxSendOnMove;
     }
 }
 

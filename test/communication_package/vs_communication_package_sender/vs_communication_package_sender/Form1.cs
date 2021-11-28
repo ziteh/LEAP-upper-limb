@@ -70,7 +70,7 @@ namespace vs_communication_package_sender
 
             byte id = (byte)numericUpDownMotorID.Value;
 
-            return new byte[] { 0x80, id, (byte)(en | (dir << 2)), 0x38, 0x38 };
+            return new byte[] { 0x80, id, (byte)(en | (dir << 2)) };
         }
 
         private void comboBoxSerialPorts_Click(object sender, EventArgs e)
@@ -108,7 +108,7 @@ namespace vs_communication_package_sender
 
         private void buttonSend_Click(object sender, EventArgs e)
         {
-            serialPort.Write(ParseSendData(), 0, 5);
+            serialPort.Write(ParseSendData(), 0, 3);
         }
     }
 }

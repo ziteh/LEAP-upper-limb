@@ -33,9 +33,9 @@
             this.buttonConnection = new System.Windows.Forms.Button();
             this.buttonSend = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.radioButtonMotorEnable = new System.Windows.Forms.RadioButton();
-            this.radioButtonMotorDisable = new System.Windows.Forms.RadioButton();
             this.radioButtonMotorEnableToggle = new System.Windows.Forms.RadioButton();
+            this.radioButtonMotorDisable = new System.Windows.Forms.RadioButton();
+            this.radioButtonMotorEnable = new System.Windows.Forms.RadioButton();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.radioButtonDirToggle = new System.Windows.Forms.RadioButton();
             this.radioButtonDirCCW = new System.Windows.Forms.RadioButton();
@@ -43,6 +43,7 @@
             this.numericUpDownMotorID = new System.Windows.Forms.NumericUpDown();
             this.numericUpDownMotorPosition = new System.Windows.Forms.NumericUpDown();
             this.textBoxSendPreview = new System.Windows.Forms.TextBox();
+            this.comboBoxMode = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownBaudrate)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -108,15 +109,15 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Enable";
             // 
-            // radioButtonMotorEnable
+            // radioButtonMotorEnableToggle
             // 
-            this.radioButtonMotorEnable.AutoSize = true;
-            this.radioButtonMotorEnable.Location = new System.Drawing.Point(38, 52);
-            this.radioButtonMotorEnable.Name = "radioButtonMotorEnable";
-            this.radioButtonMotorEnable.Size = new System.Drawing.Size(110, 29);
-            this.radioButtonMotorEnable.TabIndex = 0;
-            this.radioButtonMotorEnable.Text = "Enable";
-            this.radioButtonMotorEnable.UseVisualStyleBackColor = true;
+            this.radioButtonMotorEnableToggle.AutoSize = true;
+            this.radioButtonMotorEnableToggle.Location = new System.Drawing.Point(38, 122);
+            this.radioButtonMotorEnableToggle.Name = "radioButtonMotorEnableToggle";
+            this.radioButtonMotorEnableToggle.Size = new System.Drawing.Size(109, 29);
+            this.radioButtonMotorEnableToggle.TabIndex = 0;
+            this.radioButtonMotorEnableToggle.Text = "Toggle";
+            this.radioButtonMotorEnableToggle.UseVisualStyleBackColor = true;
             // 
             // radioButtonMotorDisable
             // 
@@ -130,15 +131,15 @@
             this.radioButtonMotorDisable.Text = "Disable";
             this.radioButtonMotorDisable.UseVisualStyleBackColor = true;
             // 
-            // radioButtonMotorEnableToggle
+            // radioButtonMotorEnable
             // 
-            this.radioButtonMotorEnableToggle.AutoSize = true;
-            this.radioButtonMotorEnableToggle.Location = new System.Drawing.Point(38, 122);
-            this.radioButtonMotorEnableToggle.Name = "radioButtonMotorEnableToggle";
-            this.radioButtonMotorEnableToggle.Size = new System.Drawing.Size(109, 29);
-            this.radioButtonMotorEnableToggle.TabIndex = 0;
-            this.radioButtonMotorEnableToggle.Text = "Toggle";
-            this.radioButtonMotorEnableToggle.UseVisualStyleBackColor = true;
+            this.radioButtonMotorEnable.AutoSize = true;
+            this.radioButtonMotorEnable.Location = new System.Drawing.Point(38, 52);
+            this.radioButtonMotorEnable.Name = "radioButtonMotorEnable";
+            this.radioButtonMotorEnable.Size = new System.Drawing.Size(110, 29);
+            this.radioButtonMotorEnable.TabIndex = 0;
+            this.radioButtonMotorEnable.Text = "Enable";
+            this.radioButtonMotorEnable.UseVisualStyleBackColor = true;
             // 
             // groupBox2
             // 
@@ -211,11 +212,23 @@
             this.textBoxSendPreview.Size = new System.Drawing.Size(426, 31);
             this.textBoxSendPreview.TabIndex = 4;
             // 
+            // comboBoxMode
+            // 
+            this.comboBoxMode.FormattingEnabled = true;
+            this.comboBoxMode.Items.AddRange(new object[] {
+            "Motor Basic Control",
+            "Motor Position Control"});
+            this.comboBoxMode.Location = new System.Drawing.Point(78, 371);
+            this.comboBoxMode.Name = "comboBoxMode";
+            this.comboBoxMode.Size = new System.Drawing.Size(121, 33);
+            this.comboBoxMode.TabIndex = 5;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(983, 558);
+            this.Controls.Add(this.comboBoxMode);
             this.Controls.Add(this.textBoxSendPreview);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
@@ -256,6 +269,7 @@
         private System.Windows.Forms.NumericUpDown numericUpDownMotorID;
         private System.Windows.Forms.NumericUpDown numericUpDownMotorPosition;
         private System.Windows.Forms.TextBox textBoxSendPreview;
+        private System.Windows.Forms.ComboBox comboBoxMode;
     }
 }
 

@@ -24,6 +24,8 @@ namespace vs_communication_package_sender
             {
                 comboBoxSerialPorts.SelectedIndex = 0;
             }
+
+            comboBoxMode.SelectedIndex = 0;
         }
 
         private void UpdateSerialPorts()
@@ -38,7 +40,7 @@ namespace vs_communication_package_sender
             textBoxSendPreview.Text = $"0x80";
         }
 
-        private byte[] ParseSendData()
+        private byte[] ParseMotorBasicControlSendingeData()
         {
             byte en;
             if (radioButtonMotorEnable.Checked)
@@ -71,6 +73,21 @@ namespace vs_communication_package_sender
             byte id = (byte)numericUpDownMotorID.Value;
 
             return new byte[] { 0x80, id, (byte)(en | (dir << 2)) };
+        }
+
+        private byte[] ParseMotorPositionControlSendingData()
+        {
+            byte id = (byte)numericUpDownMotorID.Value;
+            var pos = (int)((numericUpDownMotorPosition.Value / 100) * 4095);
+            var bPos = BitConverter.GetBytes(pos);
+            var parsed = new byte[]
+            {
+                0x81,
+                id,
+                (byte)(bPos[0] & 0x3f),
+                (byte)((bPos[0] & 0xc0 >> 6 | bPos[1] << 2) & 0x3f)
+            };
+            return parsed;
         }
 
         private void comboBoxSerialPorts_Click(object sender, EventArgs e)
@@ -108,7 +125,14 @@ namespace vs_communication_package_sender
 
         private void buttonSend_Click(object sender, EventArgs e)
         {
-            serialPort.Write(ParseSendData(), 0, 3);
+            if (comboBoxMode.SelectedItem.ToString() == "Motor Basic Control")
+            {
+                serialPort.Write(ParseMotorBasicControlSendingeData(), 0, 3);
+            }
+            else if (comboBoxMode.SelectedItem.ToString() == "Motor Position Control")
+            {
+                serialPort.Write(ParseMotorPositionControlSendingData(), 0, 4);
+            }
         }
     }
 }

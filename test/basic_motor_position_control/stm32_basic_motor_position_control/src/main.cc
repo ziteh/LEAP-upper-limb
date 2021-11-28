@@ -81,56 +81,6 @@ void move(float position)
   gpio_clear(LED_PORT, LED_PIN);
 }
 
-/**
- * @brief USART2 Interrupt service routine.
- */
-void usart2_isr(void)
-{
-  uint16_t data = usart_recv(USART2);
-
-  /* MSB = 1: is command, else position %. */
-  if ((data & (1 << 7)) == (1 << 7))
-  {
-    switch (data)
-    {
-    case 0x80:
-      /* Disable. */
-      gpio_clear(MOTOR_ENABLE_PORT, MOTOR_ENABLE_PIN);
-      break;
-
-    case 0x81:
-      /* Enable. */
-      gpio_set(MOTOR_ENABLE_PORT, MOTOR_ENABLE_PIN);
-      break;
-
-    case 0x82:
-      /* Dir: CW. */
-      gpio_clear(MOTOR_DIRECTION_PORT, MOTOR_DIRECTION_PIN);
-      break;
-
-    case 0x83:
-      /* Dir: CCW. */
-      gpio_set(MOTOR_DIRECTION_PORT, MOTOR_DIRECTION_PIN);
-      break;
-
-    default:
-      usart_send_blocking(USART2, '?');
-      usart_send_blocking(USART2, '\r');
-      usart_send_blocking(USART2, '\n');
-      break;
-    }
-  }
-  else
-  {
-    move(data);
-  }
-
-  /* 
-   * Clear RXNE(Read data register not empty) flag of
-   * USART SR(Status register).
-   */
-  USART_SR(USART2) &= ~USART_SR_RXNE;
-}
 
 uint16_t get_adc_value(void)
 {

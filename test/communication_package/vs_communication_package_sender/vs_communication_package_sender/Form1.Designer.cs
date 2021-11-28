@@ -28,10 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.comboBoxSerialPort = new System.Windows.Forms.ComboBox();
+            this.comboBoxSerialPorts = new System.Windows.Forms.ComboBox();
             this.numericUpDownBaudrate = new System.Windows.Forms.NumericUpDown();
-            this.buttonConnect = new System.Windows.Forms.Button();
-            this.buttonDisconnect = new System.Windows.Forms.Button();
+            this.buttonConnection = new System.Windows.Forms.Button();
             this.buttonSend = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.radioButtonMotorEnable = new System.Windows.Forms.RadioButton();
@@ -51,13 +50,14 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMotorPosition)).BeginInit();
             this.SuspendLayout();
             // 
-            // comboBoxSerialPort
+            // comboBoxSerialPorts
             // 
-            this.comboBoxSerialPort.FormattingEnabled = true;
-            this.comboBoxSerialPort.Location = new System.Drawing.Point(63, 42);
-            this.comboBoxSerialPort.Name = "comboBoxSerialPort";
-            this.comboBoxSerialPort.Size = new System.Drawing.Size(121, 33);
-            this.comboBoxSerialPort.TabIndex = 0;
+            this.comboBoxSerialPorts.FormattingEnabled = true;
+            this.comboBoxSerialPorts.Location = new System.Drawing.Point(63, 42);
+            this.comboBoxSerialPorts.Name = "comboBoxSerialPorts";
+            this.comboBoxSerialPorts.Size = new System.Drawing.Size(121, 33);
+            this.comboBoxSerialPorts.TabIndex = 0;
+            this.comboBoxSerialPorts.Click += new System.EventHandler(this.comboBoxSerialPorts_Click);
             // 
             // numericUpDownBaudrate
             // 
@@ -76,23 +76,15 @@
             0,
             0});
             // 
-            // buttonConnect
+            // buttonConnection
             // 
-            this.buttonConnect.Location = new System.Drawing.Point(63, 159);
-            this.buttonConnect.Name = "buttonConnect";
-            this.buttonConnect.Size = new System.Drawing.Size(162, 71);
-            this.buttonConnect.TabIndex = 2;
-            this.buttonConnect.Text = "Connect";
-            this.buttonConnect.UseVisualStyleBackColor = true;
-            // 
-            // buttonDisconnect
-            // 
-            this.buttonDisconnect.Location = new System.Drawing.Point(63, 249);
-            this.buttonDisconnect.Name = "buttonDisconnect";
-            this.buttonDisconnect.Size = new System.Drawing.Size(162, 71);
-            this.buttonDisconnect.TabIndex = 2;
-            this.buttonDisconnect.Text = "Disconnect";
-            this.buttonDisconnect.UseVisualStyleBackColor = true;
+            this.buttonConnection.Location = new System.Drawing.Point(63, 159);
+            this.buttonConnection.Name = "buttonConnection";
+            this.buttonConnection.Size = new System.Drawing.Size(162, 71);
+            this.buttonConnection.TabIndex = 2;
+            this.buttonConnection.Text = "Connect";
+            this.buttonConnection.UseVisualStyleBackColor = true;
+            this.buttonConnection.Click += new System.EventHandler(this.buttonConnect_Click);
             // 
             // buttonSend
             // 
@@ -102,6 +94,7 @@
             this.buttonSend.TabIndex = 2;
             this.buttonSend.Text = "Send";
             this.buttonSend.UseVisualStyleBackColor = true;
+            this.buttonSend.Click += new System.EventHandler(this.buttonSend_Click);
             // 
             // groupBox1
             // 
@@ -128,10 +121,12 @@
             // radioButtonMotorDisable
             // 
             this.radioButtonMotorDisable.AutoSize = true;
+            this.radioButtonMotorDisable.Checked = true;
             this.radioButtonMotorDisable.Location = new System.Drawing.Point(38, 87);
             this.radioButtonMotorDisable.Name = "radioButtonMotorDisable";
             this.radioButtonMotorDisable.Size = new System.Drawing.Size(115, 29);
             this.radioButtonMotorDisable.TabIndex = 0;
+            this.radioButtonMotorDisable.TabStop = true;
             this.radioButtonMotorDisable.Text = "Disable";
             this.radioButtonMotorDisable.UseVisualStyleBackColor = true;
             // 
@@ -180,10 +175,12 @@
             // radioButtonDicCW
             // 
             this.radioButtonDicCW.AutoSize = true;
+            this.radioButtonDicCW.Checked = true;
             this.radioButtonDicCW.Location = new System.Drawing.Point(24, 52);
             this.radioButtonDicCW.Name = "radioButtonDicCW";
             this.radioButtonDicCW.Size = new System.Drawing.Size(78, 29);
             this.radioButtonDicCW.TabIndex = 0;
+            this.radioButtonDicCW.TabStop = true;
             this.radioButtonDicCW.Text = "CW";
             this.radioButtonDicCW.UseVisualStyleBackColor = true;
             // 
@@ -218,17 +215,16 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1295, 602);
+            this.ClientSize = new System.Drawing.Size(647, 301);
             this.Controls.Add(this.textBoxSendPreview);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
-            this.Controls.Add(this.buttonDisconnect);
             this.Controls.Add(this.buttonSend);
-            this.Controls.Add(this.buttonConnect);
+            this.Controls.Add(this.buttonConnection);
             this.Controls.Add(this.numericUpDownMotorPosition);
             this.Controls.Add(this.numericUpDownMotorID);
             this.Controls.Add(this.numericUpDownBaudrate);
-            this.Controls.Add(this.comboBoxSerialPort);
+            this.Controls.Add(this.comboBoxSerialPorts);
             this.Name = "Form1";
             this.Text = "Communication";
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownBaudrate)).EndInit();
@@ -245,10 +241,9 @@
 
         #endregion
 
-        private System.Windows.Forms.ComboBox comboBoxSerialPort;
+        private System.Windows.Forms.ComboBox comboBoxSerialPorts;
         private System.Windows.Forms.NumericUpDown numericUpDownBaudrate;
-        private System.Windows.Forms.Button buttonConnect;
-        private System.Windows.Forms.Button buttonDisconnect;
+        private System.Windows.Forms.Button buttonConnection;
         private System.Windows.Forms.Button buttonSend;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.RadioButton radioButtonMotorEnableToggle;

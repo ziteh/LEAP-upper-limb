@@ -42,24 +42,14 @@ void usart2_isr(void)
     info_byte = data;
     switch (info_byte)
     {
-    /* Motor control. */
-    case MOTOR_CONTROL_INFO_BYTE:
-      data_byte_number = MOTOR_CONTROL_DATA_BYTE_NUMBER;
+    /* Motor basic control. */
+    case MOTOR_BASIC_CONTROL_INFO_BYTE:
+      data_byte_number = MOTOR_BASIC_CONTROL_DATA_BYTE_NUMBER;
       break;
 
-    case 0x81:
-      /* Enable. */
-      gpio_set(MOTOR_ENABLE_PORT, MOTOR_ENABLE_PIN);
-      break;
-
-    case 0x82:
-      /* Dir: CW. */
-      gpio_clear(MOTOR_DIRECTION_PORT, MOTOR_DIRECTION_PIN);
-      break;
-
-    case 0x83:
-      /* Dir: CCW. */
-      gpio_set(MOTOR_DIRECTION_PORT, MOTOR_DIRECTION_PIN);
+    /* Motor position control. */
+    case MOTOR_POSITION_CONTROL_INFO_BYTE:
+      data_byte_number = MOTOR_POSITION_CONTROL_DATA_BYTE_NUMBER;
       break;
 
     default:
@@ -73,66 +63,63 @@ void usart2_isr(void)
   {
     if (data_byte_number > 0)
     {
-      switch (info_byte)
+      buffer[data_byte_number - 1] = data;
+      data_byte_number--;
+      if (data_byte_number == 0)
       {
-      case MOTOR_CONTROL_INFO_BYTE:
-        buffer[data_byte_number - 1] = data;
-        break;
+        switch (info_byte)
+        {
+        case MOTOR_BASIC_CONTROL_INFO_BYTE:
+        {
+          uint8_t id = buffer[1] & 0x1f;
+          uint8_t enable = buffer[0] & 0x03;
+          uint8_t dircetion = (buffer[0] & 0x0c) >> 2;
 
-      default:
-        break;
+          if (enable == 0x00)
+          {
+            /* Disable. */
+            gpio_clear(MOTOR_ENABLE_PORT, MOTOR_ENABLE_PIN);
+          }
+          else if (enable == 0x01)
+          {
+            /* Enable. */
+            gpio_set(MOTOR_ENABLE_PORT, MOTOR_ENABLE_PIN);
+          }
+          else if (enable == 0x02)
+          {
+            gpio_toggle(MOTOR_ENABLE_PORT, MOTOR_ENABLE_PIN);
+          }
+
+          if (dircetion == 0x00)
+          {
+            /* Dir: CW. */
+            gpio_clear(MOTOR_DIRECTION_PORT, MOTOR_DIRECTION_PIN);
+          }
+          else if (dircetion == 0x01)
+          {
+            /* Dir: CCW. */
+            gpio_set(MOTOR_DIRECTION_PORT, MOTOR_DIRECTION_PIN);
+          }
+          else if (dircetion == 0x02)
+          {
+            gpio_toggle(MOTOR_DIRECTION_PORT, MOTOR_DIRECTION_PIN);
+          }
+          break;
+        }
+
+        case MOTOR_POSITION_CONTROL_INFO_BYTE:
+        {
+          uint8_t id = buffer[2] & 0x1f;
+          uint16_t position = (buffer[1] & 0x3f) | ((buffer[0] & 0x3f) << 6);
+          move(position * (100.0 / 4095));
+          break;
+        }
+
+        default:
+          break;
+        }
+        clear_communication_variable();
       }
-    }
-
-    data_byte_number--;
-    if (data_byte_number == 0)
-    {
-      switch (info_byte)
-      {
-      case MOTOR_CONTROL_INFO_BYTE:
-      {
-        uint8_t id = buffer[3] & 0x1f;
-        uint8_t enable = buffer[2] & 0x03;
-        uint8_t dircetion = (buffer[2] & 0x0c) >> 2;
-        uint16_t position = (buffer[1] & 0x3f) | ((buffer[0] & 0x3f) << 6);
-
-        if (enable == 0x00)
-        {
-          /* Disable. */
-          gpio_clear(MOTOR_ENABLE_PORT, MOTOR_ENABLE_PIN);
-        }
-        else if (enable == 0x01)
-        {
-          /* Enable. */
-          gpio_set(MOTOR_ENABLE_PORT, MOTOR_ENABLE_PIN);
-        }
-        else if (enable == 0x02)
-        {
-          gpio_toggle(MOTOR_ENABLE_PORT, MOTOR_ENABLE_PIN);
-        }
-
-        if (dircetion == 0x00)
-        {
-          /* Dir: CW. */
-          gpio_clear(MOTOR_DIRECTION_PORT, MOTOR_DIRECTION_PIN);
-        }
-        else if (dircetion == 0x01)
-        {
-          /* Dir: CCW. */
-          gpio_set(MOTOR_DIRECTION_PORT, MOTOR_DIRECTION_PIN);
-        }
-        else if (dircetion == 0x02)
-        {
-          gpio_toggle(MOTOR_DIRECTION_PORT, MOTOR_DIRECTION_PIN);
-        }
-        move(position);
-        break;
-      }
-
-      default:
-        break;
-      }
-      clear_communication_variable();
     }
   }
 
@@ -152,7 +139,7 @@ void clear_communication_variable(void)
   }
 }
 
-void move(float position)
+void move(uint16_t position)
 {
   gpio_set(LED_PORT, LED_PIN);
   set_dutycycle(15);

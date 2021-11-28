@@ -62,7 +62,7 @@ void setup_clock(void);
 void setup_usart(void);
 void setup_pwm(void);
 void clear_communication_variable(void);
-void move(float position);
+void move(uint16_t position);
 void setup_adc(void);
 void set_dutycycle(float value);
 void setup_others_gpio(void);

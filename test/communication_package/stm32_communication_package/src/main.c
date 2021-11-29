@@ -52,6 +52,11 @@ void usart2_isr(void)
       data_byte_number = MOTOR_POSITION_CONTROL_DATA_BYTE_NUMBER;
       break;
 
+    /* Request motor state. */
+    case REQUEST_MOTOR_STATE_INFO_BYTE:
+      data_byte_number = REQUEST_MOTOR_STATE_DATA_BYTE_NUMBER;
+      break;
+
     default:
       usart_send_blocking(USART2, '?');
       usart_send_blocking(USART2, '\r');
@@ -112,6 +117,13 @@ void usart2_isr(void)
           uint8_t id = buffer[2] & 0x1f;
           uint16_t position = (buffer[1] & 0x3f) | ((buffer[0] & 0x3f) << 6);
           move(position * (100.0 / 4095));
+          break;
+        }
+
+        case REQUEST_MOTOR_STATE_INFO_BYTE:
+        {
+          uint8_t id = buffer[0] & 0x1f;
+          send_motor_state(id);
           break;
         }
 
@@ -192,15 +204,15 @@ void move(uint16_t position)
   gpio_clear(LED_PORT, LED_PIN);
 }
 
-void send_motor_state(void)
+void send_motor_state(uint8_t motor_id)
 {
-  uint8_t enable = gpio_get(MOTOR_ENABLE_PORT, MOTOR_ENABLE_PIN);
-  uint8_t direction = gpio_get(MOTOR_DIRECTION_PORT, MOTOR_DIRECTION_PIN);
+  uint8_t enable = (GPIO_ODR(MOTOR_ENABLE_PORT) & MOTOR_ENABLE_PIN) == MOTOR_ENABLE_PIN;
+  uint8_t direction = (GPIO_ODR(MOTOR_DIRECTION_PORT) & MOTOR_DIRECTION_PIN) == MOTOR_DIRECTION_PIN;
   uint8_t ready = gpio_get(MOTOR_READY_PORT, MOTOR_READY_PIN);
   uint16_t data = enable | (direction << 1) | (ready << 2);
 
   usart_send_blocking(USART2, MOTOR_STATE_INFO_BYTE);
-  usart_send_blocking(USART2, 0x00); /* TODO: Motor ID */
+  usart_send_blocking(USART2, motor_id);
   usart_send_blocking(USART2, data);
   usart_send_blocking(USART2, 0x01); /* TODO: Motor speed-1 */
   usart_send_blocking(USART2, 0x02); /* TODO: Motor speed-2 */

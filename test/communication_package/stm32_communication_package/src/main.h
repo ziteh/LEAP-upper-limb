@@ -35,6 +35,10 @@
 #define MOTOR_DIRECTION_PORT (GPIOB)
 #define MOTOR_DIRECTION_PIN (GPIO6)
 
+/* PA8 = D7 */
+#define MOTOR_READY_PORT (GPIOA)
+#define MOTOR_READY_PIN (GPIO8)
+
 /* PA7 = D11 */
 #define PWM_PORT (GPIOA)
 #define PWM_PIN (GPIO7)

@@ -326,6 +326,12 @@ void setup_others_gpio(void)
                 GPIO_CNF_OUTPUT_PUSHPULL,
                 MOTOR_DIRECTION_PIN);
   gpio_set(MOTOR_DIRECTION_PORT, MOTOR_DIRECTION_PIN);
+
+  /* Motor ready pin. */
+  gpio_set_mode(MOTOR_READY_PORT,
+                GPIO_MODE_INPUT,
+                GPIO_CNF_INPUT_PULL_UPDOWN,
+                MOTOR_READY_PIN);
 }
 
 void delay(unsigned int value)

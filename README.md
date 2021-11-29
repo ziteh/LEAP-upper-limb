@@ -16,7 +16,7 @@ It is still at an early stage of development.
 
 Data package used between ROS 2 and STM32.
 
-Ever data package contains several bytes, the first byte is called 'header', other bytes are 'payload'.
+Ever data package contains several bytes, the first byte is 'header', other bytes are 'payload'.
 
 ## Structure
 

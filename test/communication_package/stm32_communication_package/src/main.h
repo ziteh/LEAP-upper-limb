@@ -35,6 +35,10 @@
 #define MOTOR_DIRECTION_PORT (GPIOB)
 #define MOTOR_DIRECTION_PIN (GPIO6)
 
+/* PA8 = D7 */
+#define MOTOR_READY_PORT (GPIOA)
+#define MOTOR_READY_PIN (GPIO8)
+
 /* PA7 = D11 */
 #define PWM_PORT (GPIOA)
 #define PWM_PIN (GPIO7)
@@ -63,6 +67,7 @@ void setup_usart(void);
 void setup_pwm(void);
 void clear_communication_variable(void);
 void move(uint16_t position);
+void send_motor_state(uint8_t motor_id);
 void setup_adc(void);
 void set_dutycycle(float value);
 void setup_others_gpio(void);

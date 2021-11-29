@@ -67,6 +67,7 @@ void setup_usart(void);
 void setup_pwm(void);
 void clear_communication_variable(void);
 void move(uint16_t position);
+void send_motor_state(void);
 void setup_adc(void);
 void set_dutycycle(float value);
 void setup_others_gpio(void);

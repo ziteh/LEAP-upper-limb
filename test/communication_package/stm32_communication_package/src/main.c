@@ -192,6 +192,20 @@ void move(uint16_t position)
   gpio_clear(LED_PORT, LED_PIN);
 }
 
+void send_motor_state(void)
+{
+  uint8_t enable = gpio_get(MOTOR_ENABLE_PORT, MOTOR_ENABLE_PIN);
+  uint8_t direction = gpio_get(MOTOR_DIRECTION_PORT, MOTOR_DIRECTION_PIN);
+  uint8_t ready = gpio_get(MOTOR_READY_PORT, MOTOR_READY_PIN);
+  uint16_t data = enable | (direction << 1) | (ready << 2);
+
+  usart_send_blocking(USART2, MOTOR_STATE_INFO_BYTE);
+  usart_send_blocking(USART2, 0x00); /* TODO: Motor ID */
+  usart_send_blocking(USART2, data);
+  usart_send_blocking(USART2, 0x01); /* TODO: Motor speed-1 */
+  usart_send_blocking(USART2, 0x02); /* TODO: Motor speed-2 */
+}
+
 uint16_t get_adc_value(void)
 {
   adc_start_conversion_direct(ADC1);

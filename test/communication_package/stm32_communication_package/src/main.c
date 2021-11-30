@@ -6,8 +6,8 @@
 
 #include "main.h"
 
-int data_byte_number;
-uint8_t info_byte;
+int PAYLOAD_number;
+uint8_t HEADER;
 uint8_t buffer[BUFFER_LENGTH];
 
 int main(void)
@@ -37,24 +37,24 @@ void usart2_isr(void)
 {
   uint16_t data = usart_recv(USART2);
 
-  if (IS_INFO_BYTE(data))
+  if (IS_HEADER(data))
   {
-    info_byte = data;
-    switch (info_byte)
+    HEADER = data;
+    switch (HEADER)
     {
     /* Motor basic control. */
-    case MOTOR_BASIC_CONTROL_INFO_BYTE:
-      data_byte_number = MOTOR_BASIC_CONTROL_DATA_BYTE_NUMBER;
+    case MOTOR_BASIC_CONTROL_HEADER:
+      PAYLOAD_number = MOTOR_BASIC_CONTROL_PAYLOAD_NUMBER;
       break;
 
     /* Motor position control. */
-    case MOTOR_POSITION_CONTROL_INFO_BYTE:
-      data_byte_number = MOTOR_POSITION_CONTROL_DATA_BYTE_NUMBER;
+    case MOTOR_POSITION_CONTROL_HEADER:
+      PAYLOAD_number = MOTOR_POSITION_CONTROL_PAYLOAD_NUMBER;
       break;
 
     /* Request motor state. */
-    case REQUEST_MOTOR_STATE_INFO_BYTE:
-      data_byte_number = REQUEST_MOTOR_STATE_DATA_BYTE_NUMBER;
+    case REQUEST_MOTOR_STATE_HEADER:
+      PAYLOAD_number = REQUEST_MOTOR_STATE_PAYLOAD_NUMBER;
       break;
 
     default:
@@ -66,15 +66,15 @@ void usart2_isr(void)
   }
   else
   {
-    if (data_byte_number > 0)
+    if (PAYLOAD_number > 0)
     {
-      buffer[data_byte_number - 1] = data;
-      data_byte_number--;
-      if (data_byte_number == 0)
+      buffer[PAYLOAD_number - 1] = data;
+      PAYLOAD_number--;
+      if (PAYLOAD_number == 0)
       {
-        switch (info_byte)
+        switch (HEADER)
         {
-        case MOTOR_BASIC_CONTROL_INFO_BYTE:
+        case MOTOR_BASIC_CONTROL_HEADER:
         {
           uint8_t id = buffer[1] & 0x1f;
           uint8_t enable = buffer[0] & 0x03;
@@ -112,7 +112,7 @@ void usart2_isr(void)
           break;
         }
 
-        case MOTOR_POSITION_CONTROL_INFO_BYTE:
+        case MOTOR_POSITION_CONTROL_HEADER:
         {
           uint8_t id = buffer[2] & 0x1f;
           uint16_t position = (buffer[1] & 0x3f) | ((buffer[0] & 0x3f) << 6);
@@ -120,7 +120,7 @@ void usart2_isr(void)
           break;
         }
 
-        case REQUEST_MOTOR_STATE_INFO_BYTE:
+        case REQUEST_MOTOR_STATE_HEADER:
         {
           uint8_t id = buffer[0] & 0x1f;
           send_motor_state(id);
@@ -141,8 +141,8 @@ void usart2_isr(void)
 
 void clear_communication_variable(void)
 {
-  info_byte = 0xff;
-  data_byte_number = 0;
+  HEADER = 0xff;
+  PAYLOAD_number = 0;
 
   /* Clear buffer. */
   for (int i = 0; i < BUFFER_LENGTH; i++)
@@ -211,7 +211,7 @@ void send_motor_state(uint8_t motor_id)
   uint8_t ready = gpio_get(MOTOR_READY_PORT, MOTOR_READY_PIN);
   uint16_t data = enable | (direction << 1) | (ready << 2);
 
-  usart_send_blocking(USART2, MOTOR_STATE_INFO_BYTE);
+  usart_send_blocking(USART2, MOTOR_STATE_HEADER);
   usart_send_blocking(USART2, motor_id);
   usart_send_blocking(USART2, data);
   usart_send_blocking(USART2, 0x01); /* TODO: Motor speed-1 */

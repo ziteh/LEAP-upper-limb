@@ -6,9 +6,9 @@
 
 #include "main.h"
 
-int data_byte_number;
-uint8_t info_byte;
-uint8_t buffer[BUFFER_LENGTH];
+int receive_payload_number;
+uint8_t receive_header;
+uint8_t receive_buffer[BUFFER_LENGTH];
 
 int main(void)
 {
@@ -37,24 +37,25 @@ void usart2_isr(void)
 {
   uint16_t data = usart_recv(USART2);
 
-  if (IS_INFO_BYTE(data))
+  if (IS_HEADER(data))
   {
-    info_byte = data;
-    switch (info_byte)
+    receive_header = data;
+    switch (receive_header)
     {
-    /* Motor basic control. */
-    case MOTOR_BASIC_CONTROL_INFO_BYTE:
-      data_byte_number = MOTOR_BASIC_CONTROL_DATA_BYTE_NUMBER;
+    case MOTOR_BASIC_CONTROL_HEADER:
+      receive_payload_number = MOTOR_BASIC_CONTROL_PAYLOAD_NUMBER;
       break;
 
-    /* Motor position control. */
-    case MOTOR_POSITION_CONTROL_INFO_BYTE:
-      data_byte_number = MOTOR_POSITION_CONTROL_DATA_BYTE_NUMBER;
+    case MOTOR_POSITION_CONTROL_HEADER:
+      receive_payload_number = MOTOR_POSITION_CONTROL_PAYLOAD_NUMBER;
       break;
 
-    /* Request motor state. */
-    case REQUEST_MOTOR_STATE_INFO_BYTE:
-      data_byte_number = REQUEST_MOTOR_STATE_DATA_BYTE_NUMBER;
+    case REQUEST_MOTOR_STATE_HEADER:
+      receive_payload_number = REQUEST_MOTOR_STATE_PAYLOAD_NUMBER;
+      break;
+
+    case REQUEST_FORCE_SENSOR_VALUE_HEADER:
+      receive_payload_number = REQUEST_FORCE_SENSOR_VALUE_PAYLOAD_NUMBER;
       break;
 
     default:
@@ -66,19 +67,19 @@ void usart2_isr(void)
   }
   else
   {
-    if (data_byte_number > 0)
+    if (receive_payload_number > 0)
     {
-      buffer[data_byte_number - 1] = data;
-      data_byte_number--;
-      if (data_byte_number == 0)
+      receive_buffer[receive_payload_number - 1] = data;
+      receive_payload_number--;
+      if (receive_payload_number == 0)
       {
-        switch (info_byte)
+        switch (receive_header)
         {
-        case MOTOR_BASIC_CONTROL_INFO_BYTE:
+        case MOTOR_BASIC_CONTROL_HEADER:
         {
-          uint8_t id = buffer[1] & 0x1f;
-          uint8_t enable = buffer[0] & 0x03;
-          uint8_t dircetion = (buffer[0] & 0x0c) >> 2;
+          uint8_t id = receive_buffer[1] & 0x1f;
+          uint8_t enable = receive_buffer[0] & 0x03;
+          uint8_t dircetion = (receive_buffer[0] & 0x0c) >> 2;
 
           if (enable == 0x00)
           {
@@ -112,18 +113,25 @@ void usart2_isr(void)
           break;
         }
 
-        case MOTOR_POSITION_CONTROL_INFO_BYTE:
+        case MOTOR_POSITION_CONTROL_HEADER:
         {
-          uint8_t id = buffer[2] & 0x1f;
-          uint16_t position = (buffer[1] & 0x3f) | ((buffer[0] & 0x3f) << 6);
+          uint8_t id = receive_buffer[2] & 0x1f;
+          uint16_t position = (receive_buffer[1] & 0x3f) | ((receive_buffer[0] & 0x3f) << 6);
           move(position * (100.0 / 4095));
           break;
         }
 
-        case REQUEST_MOTOR_STATE_INFO_BYTE:
+        case REQUEST_MOTOR_STATE_HEADER:
         {
-          uint8_t id = buffer[0] & 0x1f;
+          uint8_t id = receive_buffer[0] & 0x1f;
           send_motor_state(id);
+          break;
+        }
+
+        case REQUEST_FORCE_SENSOR_VALUE_HEADER:
+        {
+          uint8_t id = receive_buffer[0] & 0x07;
+          send_force_sensor_value(id);
           break;
         }
 
@@ -141,13 +149,13 @@ void usart2_isr(void)
 
 void clear_communication_variable(void)
 {
-  info_byte = 0xff;
-  data_byte_number = 0;
+  receive_header = 0xff;
+  receive_payload_number = 0;
 
   /* Clear buffer. */
   for (int i = 0; i < BUFFER_LENGTH; i++)
   {
-    buffer[i] = 0x00;
+    receive_buffer[i] = 0x00;
   }
 }
 
@@ -157,7 +165,7 @@ void move(uint16_t position)
   set_dutycycle(15);
 
   uint16_t goal = ((MAX_POSITION - MIN_POSITION) * position * 0.01) + MIN_POSITION;
-  uint16_t now_position = get_adc_value();
+  uint16_t now_position = get_adc_value(MOTOR_POSITION_ADC_CHANNEL);
   if (now_position > goal)
   {
     /* Set motor CCW. */
@@ -169,7 +177,7 @@ void move(uint16_t position)
     /* Wait. */
     while ((now_position - goal) > ALLOWABLE_POSITION_ERROR)
     {
-      now_position = get_adc_value();
+      now_position = get_adc_value(MOTOR_POSITION_ADC_CHANNEL);
       printf("E: %d, A: %d (CCW)\r\n", goal, now_position);
       if (now_position > MAX_POSITION || now_position < MIN_POSITION)
       {
@@ -189,7 +197,7 @@ void move(uint16_t position)
     /* Wait. */
     while ((goal - now_position) > ALLOWABLE_POSITION_ERROR)
     {
-      now_position = get_adc_value();
+      now_position = get_adc_value(MOTOR_POSITION_ADC_CHANNEL);
       printf("E: %d, A: %d (CW)\r\n", goal, now_position);
       if (now_position > MAX_POSITION || now_position < MIN_POSITION)
       {
@@ -204,6 +212,22 @@ void move(uint16_t position)
   gpio_clear(LED_PORT, LED_PIN);
 }
 
+void send_force_sensor_value(uint8_t id)
+{
+  uint16_t value_x = get_adc_value(FORCE_SENSOR_X_ADC_CHANNEL);
+  uint16_t value_y = get_adc_value(FORCE_SENSOR_Y_ADC_CHANNEL);
+  uint16_t value_z = get_adc_value(FORCE_SENSOR_Z_ADC_CHANNEL);
+
+  usart_send_blocking(USART2, FORCE_SENSOR_VALUE_HEADER);
+  usart_send_blocking(USART2, id);
+  usart_send_blocking(USART2, (value_x & 0x3f));
+  usart_send_blocking(USART2, ((value_x >> 6) & 0x3f));
+  usart_send_blocking(USART2, (value_y & 0x3f));
+  usart_send_blocking(USART2, ((value_y >> 6) & 0x3f));
+  usart_send_blocking(USART2, (value_z & 0x3f));
+  usart_send_blocking(USART2, ((value_z >> 6) & 0x3f));
+}
+
 void send_motor_state(uint8_t motor_id)
 {
   uint8_t enable = (GPIO_ODR(MOTOR_ENABLE_PORT) & MOTOR_ENABLE_PIN) == MOTOR_ENABLE_PIN;
@@ -211,15 +235,19 @@ void send_motor_state(uint8_t motor_id)
   uint8_t ready = gpio_get(MOTOR_READY_PORT, MOTOR_READY_PIN);
   uint16_t data = enable | (direction << 1) | (ready << 2);
 
-  usart_send_blocking(USART2, MOTOR_STATE_INFO_BYTE);
+  usart_send_blocking(USART2, MOTOR_STATE_HEADER);
   usart_send_blocking(USART2, motor_id);
   usart_send_blocking(USART2, data);
   usart_send_blocking(USART2, 0x01); /* TODO: Motor speed-1 */
   usart_send_blocking(USART2, 0x02); /* TODO: Motor speed-2 */
 }
 
-uint16_t get_adc_value(void)
+uint16_t get_adc_value(int channel)
 {
+  uint8_t adc_channel[16];
+  adc_channel[0] = channel;
+  adc_set_regular_sequence(ADC1, 1, adc_channel);
+
   adc_start_conversion_direct(ADC1);
 
   /* Wait for ADC. */
@@ -251,10 +279,25 @@ void inline setup_clock(void)
 
 void setup_adc(void)
 {
-  gpio_set_mode(ADC_PORT,
+  gpio_set_mode(MOTOR_POSITION_ADC_PORT,
                 GPIO_MODE_INPUT,
                 GPIO_CNF_INPUT_ANALOG,
-                ADC_PIN);
+                MOTOR_POSITION_ADC_PIN);
+
+  gpio_set_mode(FORCE_SENSOR_X_ADC_PORT,
+                GPIO_MODE_INPUT,
+                GPIO_CNF_INPUT_ANALOG,
+                FORCE_SENSOR_X_ADC_PIN);
+
+  gpio_set_mode(FORCE_SENSOR_Y_ADC_PORT,
+                GPIO_MODE_INPUT,
+                GPIO_CNF_INPUT_ANALOG,
+                FORCE_SENSOR_Y_ADC_PIN);
+
+  gpio_set_mode(FORCE_SENSOR_Z_ADC_PORT,
+                GPIO_MODE_INPUT,
+                GPIO_CNF_INPUT_ANALOG,
+                FORCE_SENSOR_Z_ADC_PIN);
 
   adc_power_off(ADC1);
 

@@ -59,7 +59,11 @@ class SerialPort:
         self.sp.close()
     
     def send(self, data):
-        number = self.sp.write(data)
+        dataInt =  []
+        for d in data:
+            dataInt.append(int.from_bytes(d, byteorder='big'))
+
+        number = self.sp.write(bytes(dataInt))
         return number
 
     def read(self):

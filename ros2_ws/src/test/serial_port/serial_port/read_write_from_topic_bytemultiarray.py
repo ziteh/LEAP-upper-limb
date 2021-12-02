@@ -5,7 +5,7 @@ import threading
 import serial
 from rclpy.node import Node
 from std_msgs.msg import String
-from std_msgs.msg import Byte
+from std_msgs.msg import ByteMultiArray
 
 class SerialPortSubscriber(Node):
     def __init__(self):
@@ -25,7 +25,7 @@ class SerialPortSubscriber(Node):
         self.get_logger().debug(f'Port: {self.port}, Baudrate: {self.baudrate}, Write Topic: {self.writeTopicName}, Read Topic: {self.readTopicName}')
 
         self.subscriber = self.create_subscription(
-            Byte,
+            ByteMultiArray,
             self.writeTopicName,
             self.subsrciber_callback,
             10

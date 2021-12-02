@@ -1,7 +1,5 @@
 from setuptools import setup
 
-from test.data_package.data_package import sending_test
-
 package_name = 'data_package'
 
 setup(
@@ -22,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "sending_test = sending_test:main",
+            "sending_test = data_package.sending_test:main",
+            "sending_test_bytemultiarray = data_package.sending_test_bytemultiarray:main",
         ],
     },
 )

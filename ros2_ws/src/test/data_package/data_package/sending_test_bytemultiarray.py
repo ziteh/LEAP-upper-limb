@@ -7,17 +7,19 @@ class SendingTestDataPackage(Node):
     def __init__(self):
         super().__init__("sending_test_data_package")
 
-        self.declare_parameter("id", 0)
+        self.declare_parameter("data", [0x8f])
         self.declare_parameter("topic", "serialPort/write/dev/ttyACM0")
 
-        self.id = self.get_parameter("id").value
+        self.data = self.get_parameter("data").value
         self.topic = self.get_parameter("topic").value
 
         self.get_logger().debug(f'Topic: {self.topic}')
         self.publisher_ = self.create_publisher(ByteMultiArray, self.topic, 1)
 
         msg = ByteMultiArray();
-        msg.data = [bytes([0]), bytes([1]), bytes([2])] 
+        for d in self.data:
+            msg.data.append(bytes([d]))
+
         self.publisher_.publish(msg)
 
 def main(args=None):

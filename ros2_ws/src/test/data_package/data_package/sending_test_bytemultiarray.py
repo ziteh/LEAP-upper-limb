@@ -26,7 +26,7 @@ def main(args=None):
     rclpy.init(args=args)
 
     node = SendingTestDataPackage()
-    rclpy.spin_once(node)
+    # rclpy.spin_once(node)
     node.destroy_node()
     rclpy.shutdown()
 

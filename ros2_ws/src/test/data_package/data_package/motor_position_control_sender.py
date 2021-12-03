@@ -2,31 +2,47 @@ import rclpy
 import time
 from rclpy.node import Node
 from std_msgs.msg import ByteMultiArray
+from std_msgs.msg import UInt8
 
-class SendingTestDataPackage(Node):
+class MotorPositionControlSender(Node):
     def __init__(self):
-        super().__init__("sending_test_data_package")
+        super().__init__("motor_position_control_sender")
 
-        self.declare_parameter("data", [0x8f])
-        self.declare_parameter("topic", "serialPort/write/dev/ttyACM0")
+        self.declare_parameter("serialPort", "/dev/ttyACM0")
+        self.serialPortName = self.get_parameter("serialPort").value
 
-        self.data = self.get_parameter("data").value
-        self.topic = self.get_parameter("topic").value
+        self.pubTopic = f"serialPort/write{self.serialPortName}"
+        self.subTopic = "motor/positionControl"
 
-        self.get_logger().debug(f'Topic: {self.topic}')
-        self.publisher_ = self.create_publisher(ByteMultiArray, self.topic, 1)
+        self.get_logger().info(f'Data package topic: {self.subTopic}')
+        self.get_logger().info(f'Serial port topic: {self.pubTopic}')
 
-        msg = ByteMultiArray();
-        for d in self.data:
-            msg.data.append(bytes([d]))
+        self.subscriber = self.create_subscription(
+            UInt8,
+            self.subTopic,
+            self.subsrciber_callback,
+            10
+        )
 
-        self.publisher_.publish(msg)
+        self.publisher_ = self.create_publisher(ByteMultiArray, 
+                                                self.pubTopic,
+                                                10)
+
+
+    def subsrciber_callback(self, msg):
+        self.get_logger().info(f'Get: {msg}')
+        if(msg.data > 100):
+            msg.data = 100
+        position = msg.data * (4095 / 100)
+        p1 = int(position) & 0x3f
+        p2 = (int(position) >> 6) & 0x3f
+        self.publisher_.publish(bytes([0, p1, p2]))
 
 def main(args=None):
     rclpy.init(args=args)
 
-    node = SendingTestDataPackage()
-    # rclpy.spin_once(node)
+    node = MotorPositionControlSender()
+    rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
 

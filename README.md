@@ -16,7 +16,7 @@ It is still at an early stage of development.
 
 Data package used between ROS 2 and STM32.
 
-Ever data package contains several bytes, the first byte is "Header", the last byte is "EOT" symbol, other bytes are "Payload".
+Every data package contains several bytes, the first byte is "Header", the last byte is "EOT" symbol, other bytes are "Payload".
 
 For example:
 | Number | Byte           | Remark                     |

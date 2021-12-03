@@ -10,12 +10,15 @@ int receive_payload_number;
 uint8_t receive_header;
 uint8_t receive_buffer[BUFFER_LENGTH];
 
+volatile bool sending_data = true;
+
 int main(void)
 {
   setup_clock();
   setup_usart();
   setup_pwm();
   setup_adc();
+  setup_exti();
   setup_others_gpio();
 
   clear_communication_variable();
@@ -24,7 +27,18 @@ int main(void)
 
   while (1)
   {
-    __asm__("nop"); /* Do nothing. */
+    if (sending_data)
+    {
+      gpio_set(LED_PORT, LED_PIN);
+
+      send_fake_data();
+      delay(100000);
+    }
+    else
+    {
+      gpio_clear(LED_PORT, LED_PIN);
+      __asm__("nop"); /* Do nothing. */
+    }
   }
 
   return 0;
@@ -145,6 +159,25 @@ void usart2_isr(void)
 
   /* Clear RXNE(Read data register not empty) flag of USART SR(Status register). */
   USART_SR(USART2) &= ~USART_SR_RXNE;
+}
+
+void exti15_10_isr(void)
+{
+  exti_reset_request(EXTI13);
+  sending_data == !sending_data;
+}
+
+void send_fake_data(void)
+{
+  usart_send_blocking(USART, FORCE_SENSOR_VALUE_HEADER);
+  usart_send_blocking(USART, 0x00);
+  usart_send_blocking(USART, 0x01);
+  usart_send_blocking(USART, 0x02);
+  usart_send_blocking(USART, 0x03);
+  usart_send_blocking(USART, 0x04);
+  usart_send_blocking(USART, 0x05);
+  usart_send_blocking(USART, 0x06);
+  usart_send_blocking(USART, EOT);
 }
 
 void clear_communication_variable(void)
@@ -272,9 +305,11 @@ void inline setup_clock(void)
 
   rcc_periph_clock_enable(RCC_GPIOA);
   rcc_periph_clock_enable(RCC_GPIOB);
+  rcc_periph_clock_enable(RCC_GPIOC);
   rcc_periph_clock_enable(RCC_TIM3);
   rcc_periph_clock_enable(RCC_USART2);
   rcc_periph_clock_enable(RCC_ADC1);
+  rcc_periph_clock_enable(RCC_AFIO); /* EXTI. */
 }
 
 void setup_adc(void)
@@ -373,8 +408,23 @@ void setup_usart(void)
   usart_enable(USART2);
 }
 
+void setup_exti(void)
+{
+  nvic_enable_irq(NVIC_EXTI15_10_IRQ);
+
+  exti_select_source(EXTI13, BUTTON_PORT);
+  exti_set_trigger(EXTI13, EXTI_TRIGGER_FALLING);
+  exti_enable_request(EXTI13);
+}
+
 void setup_others_gpio(void)
 {
+  /* Button. */
+  gpio_set_mode(BUTTON_PORT,
+                GPIO_MODE_INPUT,
+                GPIO_CNF_INPUT_FLOAT,
+                BUTTON_PIN);
+
   /* LED. */
   gpio_set_mode(LED_PORT,
                 GPIO_MODE_OUTPUT_2_MHZ,

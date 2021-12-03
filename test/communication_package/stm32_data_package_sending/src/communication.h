@@ -7,7 +7,7 @@
 #ifndef COMMNUICATION_H_
 #define COMMNUICATION_H_
 
-#define ASCII_LF (0x0a)
+#define EOT (0xff)
 
 #define BUFFER_LENGTH (8)
 

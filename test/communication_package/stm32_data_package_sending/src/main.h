@@ -14,6 +14,7 @@
 #include <libopencm3/stm32/usart.h>
 #include <libopencm3/stm32/timer.h>
 #include <libopencm3/stm32/adc.h>
+#include <libopencm3/stm32/exti.h>
 #include <libopencm3/cm3/nvic.h>
 
 #define MAX_POSITION (4095 - 1000)
@@ -59,6 +60,9 @@
 #define LED_PORT (GPIOA)
 #define LED_PIN (GPIO5)
 
+#define BUTTON_PORT (GPIOC)
+#define BUTTON_PIN (GPIO13)
+
 #define MOTOR_POSITION_ADC_CHANNEL (0)
 
 #define FORCE_SENSOR_X_ADC_CHANNEL (1)
@@ -87,14 +91,17 @@ void move(uint16_t position);
 
 void send_motor_state(uint8_t motor_id);
 void send_force_sensor_value(uint8_t id);
+void send_fake_data(void);
 
 void setup_clock(void);
 void setup_usart(void);
 void setup_pwm(void);
 void setup_adc(void);
+void setup_exti(void);
 void setup_others_gpio(void);
 
 void delay(unsigned int value);
 void usart2_isr(void);
+void exti15_10_isr(void);
 
 #endif /* MAIN_H_ */

@@ -9,6 +9,7 @@
 
 #define BUFFER_LENGTH (8)
 
+#define EOT_SYMBOL (0xff)
 #define HEADER_MASK (0x80)
 
 /* MSB = 1: is header, else  payload. */

@@ -22,6 +22,7 @@ setup(
         'console_scripts': [
             "sending_test = data_package.sending_test:main",
             "sending_test_bytemultiarray = data_package.sending_test_bytemultiarray:main",
+            "motor_position_control_sender = data_package.motor_position_control_sender:main",
         ],
     },
 )

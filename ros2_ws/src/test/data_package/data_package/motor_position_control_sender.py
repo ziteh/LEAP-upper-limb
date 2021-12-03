@@ -39,7 +39,7 @@ class MotorPositionControlSender(Node):
         p2 = (int(position) >> 6) & 0x3f
 
         pubMsg = ByteMultiArray()
-        pubMsg.data.append(bytes([129])) # 0x81
+        pubMsg.data.append(bytes([0x81]))
         pubMsg.data.append(bytes([0]))
         pubMsg.data.append(bytes([p1]))
         pubMsg.data.append(bytes([p2]))

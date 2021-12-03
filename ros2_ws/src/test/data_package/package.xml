@@ -7,6 +7,8 @@
   <maintainer email="honmonoh@gmail.com">irs-lab-vm</maintainer>
   <license>TODO: License declaration</license>
 
+  <exec_depend>ros2launch</exec_depend>
+
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
   <test_depend>ament_pep257</test_depend>

@@ -60,7 +60,7 @@ class SerialPort:
     def send(self, data):
         dataInt =  []
         for d in data:
-            dataInt.append(int.from_bytes(d, byteorder='big'))
+            dataInt.append(d[0])
 
         number = self.sp.write(bytes(dataInt))
         return number
@@ -82,6 +82,9 @@ class SerialPort:
         except KeyboardInterrupt:
             if self.sp != None:
                 self.sp.close()
+        
+        except IndexError:
+            1
 
 
 def main(args=None):

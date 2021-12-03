@@ -5,7 +5,8 @@ Here are some ROS2 executables:
 - asyn_serial_port (Useless)
 - thread_serial_port
 - read_write_from_topic (with thread)
-- read_write_from_topic_byte (forked from 'read_write_from_topic')
+- read_write_from_topic_byte (copied from 'read_write_from_topic')
+- read_write_from_topic_bytemultiarray (copied from 'read_write_from_topic_byte')
 
 # Usage
 

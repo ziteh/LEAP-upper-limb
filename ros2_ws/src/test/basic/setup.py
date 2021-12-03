@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'serial_port'
+package_name = 'basic'
 
 setup(
     name=package_name,
@@ -20,12 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "basic_serial_port = serial_port.basic_serial_port:main",
-            "asyn_serial_port = serial_port.asyn_serial_port:main",
-            "thread_serial_port = serial_port.thread_serial_port:main",
-            "read_write_from_topic = serial_port.read_write_from_topic:main",
-            "read_write_from_topic_byte = serial_port.read_write_from_topic_byte:main",
-            "read_write_from_topic_bytemultiarray = serial_port.read_write_from_topic_bytemultiarray:main",
+            "byte_multi_array_publisher = byte_multi_array_publisher:main",
         ],
     },
 )

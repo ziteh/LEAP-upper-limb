@@ -1,6 +1,8 @@
+import os
+from glob import glob
 from setuptools import setup
 
-package_name = 'serial_port'
+package_name = 'data_package'
 
 setup(
     name=package_name,
@@ -10,6 +12,9 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+
+        # Include all launch files. This is the most important line here!
+        (os.path.join('share', package_name), glob('launch/*.launch.py'))
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -20,12 +25,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "basic_serial_port = serial_port.basic_serial_port:main",
-            "asyn_serial_port = serial_port.asyn_serial_port:main",
-            "thread_serial_port = serial_port.thread_serial_port:main",
-            "read_write_from_topic = serial_port.read_write_from_topic:main",
-            "read_write_from_topic_byte = serial_port.read_write_from_topic_byte:main",
-            "read_write_from_topic_bytemultiarray = serial_port.read_write_from_topic_bytemultiarray:main",
+            "sending_test = data_package.sending_test:main",
+            "sending_test_bytemultiarray = data_package.sending_test_bytemultiarray:main",
+            "motor_position_control_sender = data_package.motor_position_control_sender:main",
         ],
     },
 )

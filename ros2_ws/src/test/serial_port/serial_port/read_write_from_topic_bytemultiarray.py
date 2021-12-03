@@ -69,13 +69,14 @@ class SerialPort:
         try:
             while True:
                 if self.sp.in_waiting > 0:
-                    spMsg = self.sp.readline().splitlines()[0]
+                    spMsg = self.sp.read_until(b'\xff')
 
                     pubMsg = ByteMultiArray()
                     for s in spMsg:
                         pubMsg.data.append(bytes([s]))
 
                     if(pubMsg.data[0][0] > 0x7f):
+                        pubMsg.data.pop() # Remove last element (0xff).
                         self.publisher.publish(pubMsg)
                         time.sleep(self.timeSleep)
 

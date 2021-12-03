@@ -4,7 +4,6 @@ import time
 import threading
 import serial
 from rclpy.node import Node
-from std_msgs.msg import String
 from std_msgs.msg import ByteMultiArray
 
 class SerialPortSubscriber(Node):
@@ -38,7 +37,7 @@ class SerialPortSubscriber(Node):
         self.sp.send(msg.data)
 
     def init_serial_port(self):
-        self.publisher_ = self.create_publisher(String, self.readTopicName, 1)
+        self.publisher_ = self.create_publisher(ByteMultiArray, self.readTopicName, 1)
         self.sp = SerialPort(self.receiveDelay, self.port, self.baudrate,self.publisher_)
         thread = threading.Thread(target = self.sp.read)
         thread.start()
@@ -61,7 +60,7 @@ class SerialPort:
     def send(self, data):
         dataInt =  []
         for d in data:
-            dataInt.append(int.from_bytes(d, byteorder='big'))
+            dataInt.append(d[0])
 
         number = self.sp.write(bytes(dataInt))
         return number
@@ -70,15 +69,23 @@ class SerialPort:
         try:
             while True:
                 if self.sp.in_waiting > 0:
-                    spMsg = self.sp.readline().decode('ascii').splitlines()[0]
-                    pubMsg = String()
-                    pubMsg.data = spMsg 
-                    self.publisher.publish(pubMsg)
-                    time.sleep(self.timeSleep)
+                    spMsg = self.sp.read_until(b'\xff')
+
+                    pubMsg = ByteMultiArray()
+                    for s in spMsg:
+                        pubMsg.data.append(bytes([s]))
+
+                    if(pubMsg.data[0][0] > 0x7f):
+                        pubMsg.data.pop() # Remove last element (0xff).
+                        self.publisher.publish(pubMsg)
+                        time.sleep(self.timeSleep)
 
         except KeyboardInterrupt:
             if self.sp != None:
                 self.sp.close()
+        
+        except IndexError:
+            1
 
 
 def main(args=None):

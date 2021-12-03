@@ -16,35 +16,32 @@ It is still at an early stage of development.
 
 Data package used between ROS 2 and STM32.
 
-Ever data package contains several bytes, the first byte is 'header', other bytes are 'payload'.
+Ever data package contains several bytes, the first byte is "Header", the last byte is "EOT" symbol, other bytes are "Payload".
+
+For example:
+| Number | Byte           | Remark                     |
+| :----: | -------------- | -------------------------- |
+|   0    | Header         | The start of data package. |
+|   1    | Payload byte-0 | The first byte of payload. |
+|  ...   | Payload bytes  |
+|  n-1   | Payload byte-n | The last byte of payload.  |
+|   n    | EOT            | The end of data package.   |
 
 > All the "X" in following table are meaning "Don't care".
 
-## Structure
+## Header
 
-### Header
+### Structure
 
 The MSB of header must be `1`.
 
 | 7 (MSB) |   6   |   5   |   4   |   3   |   2   |   1   | 0 (LSB) |
 | :-----: | :---: | :---: | :---: | :---: | :---: | :---: | :-----: |
-|    1    |   X   |   X   |   X   |  T3   |  T2   |  T1   |   T0    |
+|    1    |   0   |   0   |   0   |  T3   |  T2   |  T1   |   T0    |
 
 - T*x*: Type of this package. 4-bit, 0~15.
 
-### Payload
-
-The MSB of payload must be `0`.
-
-| 7 (MSB) |   6   |   5   |   4   |   3   |   2   |   1   | 0 (LSB) |
-| :-----: | :---: | :---: | :---: | :---: | :---: | :---: | :-----: |
-|    0    |  D6   |  D5   |  D4   |  D3   |  D2   |  D1   |   D0    |
-
-- D*x*: Data. 7-bit, 0~127.
-
-##  Define
-
-### Header
+###  Define
 
 The following table show all the types of header:
 
@@ -67,7 +64,19 @@ The following table show all the types of header:
 | `0x8E` | Motor state                | --     |
 | `0x8F` | Do nothing                 | --     |
 
-### Payload
+## Payload
+
+### Structure
+
+The MSB of payload must be `0`.
+
+| 7 (MSB) |   6   |   5   |   4   |   3   |   2   |   1   | 0 (LSB) |
+| :-----: | :---: | :---: | :---: | :---: | :---: | :---: | :-----: |
+|    0    |  D6   |  D5   |  D4   |  D3   |  D2   |  D1   |   D0    |
+
+- D*x*: Data. 7-bit, 0~127.
+
+###  Define
 
 #### Motor basic control
 
@@ -164,6 +173,14 @@ Number of bytes: 7
 - VX*x*: Value X. 12-bit, 0~4095.
 - VY*x*: Value Y. 12-bit, 0~4095.
 - VZ*x*: Value Z. 12-bit, 0~4095.
+
+## EOT
+
+EOT (End of transmission) symbol = `0xFF`.
+
+| 7 (MSB) |   6   |   5   |   4   |   3   |   2   |   1   | 0 (LSB) |
+| :-----: | :---: | :---: | :---: | :---: | :---: | :---: | :-----: |
+|    1    |   1   |   1   |   1   |   1   |   1   |   1   |    1    |
 
 # Environment
 - Ubuntu 20.04.3 'Focal Fossa' LTS (64-bit)

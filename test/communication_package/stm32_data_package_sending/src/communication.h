@@ -7,6 +7,8 @@
 #ifndef COMMNUICATION_H_
 #define COMMNUICATION_H_
 
+#define ASCII_LF (0x0a)
+
 #define BUFFER_LENGTH (8)
 
 #define HEADER_MASK (0x80)

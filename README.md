@@ -20,9 +20,9 @@ Ever data package contains several bytes, the first byte is "header", the last b
 
 > All the "X" in following table are meaning "Don't care".
 
-## Structure
+## Header
 
-### Header
+### Structure
 
 The MSB of header must be `1`.
 
@@ -32,19 +32,7 @@ The MSB of header must be `1`.
 
 - T*x*: Type of this package. 4-bit, 0~15.
 
-### Payload
-
-The MSB of payload must be `0`.
-
-| 7 (MSB) |   6   |   5   |   4   |   3   |   2   |   1   | 0 (LSB) |
-| :-----: | :---: | :---: | :---: | :---: | :---: | :---: | :-----: |
-|    0    |  D6   |  D5   |  D4   |  D3   |  D2   |  D1   |   D0    |
-
-- D*x*: Data. 7-bit, 0~127.
-
-##  Define
-
-### Header
+###  Define
 
 The following table show all the types of header:
 
@@ -67,7 +55,19 @@ The following table show all the types of header:
 | `0x8E` | Motor state                | --     |
 | `0x8F` | Do nothing                 | --     |
 
-### Payload
+## Payload
+
+### Structure
+
+The MSB of payload must be `0`.
+
+| 7 (MSB) |   6   |   5   |   4   |   3   |   2   |   1   | 0 (LSB) |
+| :-----: | :---: | :---: | :---: | :---: | :---: | :---: | :-----: |
+|    0    |  D6   |  D5   |  D4   |  D3   |  D2   |  D1   |   D0    |
+
+- D*x*: Data. 7-bit, 0~127.
+
+###  Define
 
 #### Motor basic control
 
@@ -165,7 +165,7 @@ Number of bytes: 7
 - VY*x*: Value Y. 12-bit, 0~4095.
 - VZ*x*: Value Z. 12-bit, 0~4095.
 
-### EOT
+## EOT
 
 EOT (End of transmission) symbol = `0xFF`.
 

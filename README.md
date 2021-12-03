@@ -16,7 +16,7 @@ It is still at an early stage of development.
 
 Data package used between ROS 2 and STM32.
 
-Ever data package contains several bytes, the first byte is 'header', other bytes are 'payload'.
+Ever data package contains several bytes, the first byte is "header", the last byte is "EOT" symbol, other bytes are "payload".
 
 > All the "X" in following table are meaning "Don't care".
 
@@ -164,6 +164,14 @@ Number of bytes: 7
 - VX*x*: Value X. 12-bit, 0~4095.
 - VY*x*: Value Y. 12-bit, 0~4095.
 - VZ*x*: Value Z. 12-bit, 0~4095.
+
+### EOT
+
+EOT (End of transmission) symbol = `0xFF`.
+
+| 7 (MSB) |   6   |   5   |   4   |   3   |   2   |   1   | 0 (LSB) |
+| :-----: | :---: | :---: | :---: | :---: | :---: | :---: | :-----: |
+|    1    |   1   |   1   |   1   |   1   |   1   |   1   |    1    |
 
 # Environment
 - Ubuntu 20.04.3 'Focal Fossa' LTS (64-bit)

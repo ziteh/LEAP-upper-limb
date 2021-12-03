@@ -58,6 +58,10 @@ void usart2_isr(void)
       receive_payload_number = REQUEST_FORCE_SENSOR_VALUE_PAYLOAD_NUMBER;
       break;
 
+    case EOT_SYMBOL:
+      clear_communication_variable();
+      break;
+
     default:
       usart_send_blocking(USART2, '?');
       usart_send_blocking(USART2, '\r');
@@ -226,6 +230,7 @@ void send_force_sensor_value(uint8_t id)
   usart_send_blocking(USART2, ((value_y >> 6) & 0x3f));
   usart_send_blocking(USART2, (value_z & 0x3f));
   usart_send_blocking(USART2, ((value_z >> 6) & 0x3f));
+  usart_send_blocking(USART2, EOT_SYMBOL);
 }
 
 void send_motor_state(uint8_t motor_id)
@@ -240,6 +245,7 @@ void send_motor_state(uint8_t motor_id)
   usart_send_blocking(USART2, data);
   usart_send_blocking(USART2, 0x01); /* TODO: Motor speed-1 */
   usart_send_blocking(USART2, 0x02); /* TODO: Motor speed-2 */
+  usart_send_blocking(USART2, EOT_SYMBOL);
 }
 
 uint16_t get_adc_value(int channel)

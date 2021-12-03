@@ -29,14 +29,22 @@ class MotorPositionControlSender(Node):
                                                 10)
 
 
-    def subsrciber_callback(self, msg):
-        self.get_logger().info(f'Get: {msg}')
-        if(msg.data > 100):
-            msg.data = 100
-        position = msg.data * (4095 / 100)
+    def subsrciber_callback(self, subMsg):
+        self.get_logger().info(f'Get: {subMsg}')
+        if(subMsg.data > 100):
+            subMsg.data = 100
+
+        position = subMsg.data * (4095 / 100)
         p1 = int(position) & 0x3f
         p2 = (int(position) >> 6) & 0x3f
-        self.publisher_.publish(bytes([0, p1, p2]))
+
+        pubMsg = ByteMultiArray()
+        pubMsg.data.append(bytes([129])) # 0x81
+        pubMsg.data.append(bytes([0]))
+        pubMsg.data.append(bytes([p1]))
+        pubMsg.data.append(bytes([p2]))
+
+        self.publisher_.publish(pubMsg)
 
 def main(args=None):
     rclpy.init(args=args)

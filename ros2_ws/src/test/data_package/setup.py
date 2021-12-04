@@ -28,6 +28,7 @@ setup(
             "sending_test = data_package.sending_test:main",
             "sending_test_bytemultiarray = data_package.sending_test_bytemultiarray:main",
             "motor_position_control_sender = data_package.motor_position_control_sender:main",
+            "force_sensor_value_decoder = data_package.force_sensor_value_decoder:main",
         ],
     },
 )

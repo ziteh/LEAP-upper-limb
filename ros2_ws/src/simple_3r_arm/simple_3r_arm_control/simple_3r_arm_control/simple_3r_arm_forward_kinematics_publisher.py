@@ -16,7 +16,7 @@ class Simple3RArmForwardKinematicsNode(Node):
         self.l2 = self.get_parameter("l2").value
         self.l3 = self.get_parameter("l3").value
 
-        pubTopic = "/ik3r"
+        pubTopic = "/fk3r"
         self.publisher_ = self.create_publisher(Float64MultiArray, pubTopic, 10)
 
         subTopic = "joint_states"

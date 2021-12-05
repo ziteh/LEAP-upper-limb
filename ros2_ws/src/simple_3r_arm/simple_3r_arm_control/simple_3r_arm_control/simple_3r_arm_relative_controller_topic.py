@@ -23,16 +23,23 @@ class Simple3RArmRelativeController(Node):
         )
 
     def fk3r_subscriber_callback(self, msg):
-        self.position = msg.data
+        try:
+            self.position = msg.data
+        except:
+            1 # keep
 
     def relative_subscriber_callback(self, msg):
-        pubMsg = Float64MultiArray()
-        pubMsg.data = [
-            self.position[0] + msg.data[0],
-            self.position[1] + msg.data[1],
-            self.position[2] + msg.data[2]
-        ]
-        self.publisher_.publish(pubMsg)
+        try:
+            pos = self.position
+            pubMsg = Float64MultiArray()
+            pubMsg.data = [
+                pos[0] + msg.data[0],
+                pos[1] + msg.data[1],
+                pos[2] + msg.data[2]
+            ]
+            self.publisher_.publish(pubMsg)
+        except:
+            1 # keep
 
 def main(args=None):
     rclpy.init(args=args)

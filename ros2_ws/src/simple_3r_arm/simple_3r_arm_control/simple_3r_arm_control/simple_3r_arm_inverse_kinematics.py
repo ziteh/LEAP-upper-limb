@@ -34,27 +34,30 @@ class Simple3RArmInverseKinematicsSubscriber(Node):
         phi = msg.data[1]
         z = -msg.data[2]
 
-        theta2 = 2*math.atan2(
-            math.sqrt(math.pow(self.l2+self.l3,2)-(math.pow(rho,2)+math.pow(z,2))),
-            math.sqrt((math.pow(rho,2)+math.pow(z,2))-math.pow(self.l2-self.l3,2))
+        try:
+            theta2 = 2*math.atan2(
+                math.sqrt(math.pow(self.l2+self.l3,2)-(math.pow(rho,2)+math.pow(z,2))),
+                math.sqrt((math.pow(rho,2)+math.pow(z,2))-math.pow(self.l2-self.l3,2))
+                )
+            theta1 = math.atan2(z,rho)+math.atan2(
+                self.l3*math.sin(theta2),
+                self.l2 + self.l3*math.cos(theta2)
             )
-        theta1 = math.atan2(z,rho)+math.atan2(
-            self.l3*math.sin(theta2),
-            self.l2 + self.l3*math.cos(theta2)
-        )
-        goal = [
-            phi,
-            theta1,
-            -theta2
-        ]
+            goal = [
+                phi,
+                theta1,
+                -theta2
+            ]
 
-        pubTopic = "/" + self.controller_name + "/" + "commands"
-        self.publisher_ = self.create_publisher(Float64MultiArray, pubTopic, 1)
-        pubMsg = Float64MultiArray()
-        pubMsg.data = goal
-        self.get_logger().info(f'Publishing: {pubMsg.data}')
-        self.publisher_.publish(pubMsg)
-        self.get_logger().info("Done")
+            pubTopic = "/" + self.controller_name + "/" + "commands"
+            self.publisher_ = self.create_publisher(Float64MultiArray, pubTopic, 1)
+            pubMsg = Float64MultiArray()
+            pubMsg.data = goal
+            self.get_logger().info(f'Publishing: {pubMsg.data}')
+            self.publisher_.publish(pubMsg)
+            self.get_logger().info("Done")
+        except Exception as ex:
+            self.get_logger().warning(f'{ex}')
     
 def main(args=None):
     rclpy.init(args=args)

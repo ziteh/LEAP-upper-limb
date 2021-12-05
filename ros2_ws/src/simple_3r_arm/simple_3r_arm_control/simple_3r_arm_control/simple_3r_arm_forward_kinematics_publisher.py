@@ -16,6 +16,9 @@ class Simple3RArmForwardKinematicsNode(Node):
         self.l2 = self.get_parameter("l2").value
         self.l3 = self.get_parameter("l3").value
 
+        pubTopic = "/ik3r"
+        self.publisher_ = self.create_publisher(Float64MultiArray, pubTopic, 10)
+
         subTopic = "joint_states"
         self.subscriber = self.create_subscription(
             JointState,
@@ -29,8 +32,6 @@ class Simple3RArmForwardKinematicsNode(Node):
         self.publish()
     
     def publish(self):
-        pubTopic = "/ik3r"
-        self.publisher_ = self.create_publisher(Float64MultiArray, pubTopic, 1)
         pubMsg = Float64MultiArray()
         pubMsg.data = self.forward_kinematics()
         self.get_logger().info(f'Publishing: {pubMsg.data}')

@@ -51,6 +51,31 @@ ros2 run simple_3r_arm_control simple_3r_arm_joint_controller --ros-args -p goal
 ```
 
 ## Using with forward/inverse kinematics
+
+### Topic-Type
+
+Launch with:
+```cmd
+ros2 launch simple_3r_arm_launch simple_3r_arm_with_relative_motion_topic.launch.py
+```
+
+Relative control:
+```cmd
+ros2 topic pub /s3ra/relative std_msgs/msg/Float64MultiArray "data: [-0.1 ,0 ,0]"
+```
+
+Absolute control:
+```cmd
+ros2 topic pub /ik3r std_msgs/msg/Float64MultiArray "data: [0.5, 0, 0]"
+```
+
+Output now position:
+```cmd
+ros2 topic echo /fk3r 
+```
+
+### Service-Type (Not recommender)
+
 Start
 ```cmd
 ros2 launch simple_3r_arm_launch simple_3r_arm.launch_with_kinematics.py

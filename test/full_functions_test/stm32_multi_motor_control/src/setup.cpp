@@ -10,7 +10,7 @@ void setup_all(void)
 {
   setup_clock();
   setup_usart();
-  // setup_pwm(); //FIXME: PWM USATE2 timer conflict.
+  setup_pwm(); //FIXME: PWM USATE2 timer conflict.
   setup_adc();
   setup_others_gpio();
 }

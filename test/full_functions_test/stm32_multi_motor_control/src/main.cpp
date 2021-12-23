@@ -12,6 +12,9 @@ int main(void)
 
   printf("Ready\r\n");
 
+  set_motor_speed(EFE, 10);
+  set_motor_speed(SFE, 90);
+
   int i = 0;
   while (1)
   {

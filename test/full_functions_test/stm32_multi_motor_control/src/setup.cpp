@@ -10,7 +10,7 @@ void setup_all(void)
 {
   setup_clock();
   setup_usart();
-  setup_pwm(); //FIXME: PWM USATE2 timer conflict.
+  setup_pwm();
   setup_adc();
   setup_others_gpio();
 }
@@ -21,8 +21,9 @@ void setup_clock(void)
 
   rcc_periph_clock_enable(RCC_GPIOA);
   rcc_periph_clock_enable(RCC_GPIOB);
+  rcc_periph_clock_enable(RCC_GPIOC);
   rcc_periph_clock_enable(RCC_TIM3);
-  rcc_periph_clock_enable(RCC_TIM2);
+  // rcc_periph_clock_enable(RCC_TIM2);
   rcc_periph_clock_enable(RCC_USART2);
   rcc_periph_clock_enable(RCC_ADC1);
 }

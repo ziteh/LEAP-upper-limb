@@ -15,6 +15,11 @@ int main(void)
   set_motor_speed(EFE, 10);
   set_motor_speed(SFE, 90);
 
+  set_motor_state(EFE, Enable);
+  set_motor_state(SFE, Enable);
+  set_motor_direction(EFE, CCW);
+  set_motor_direction(SFE, CCW);
+
   int i = 0;
   while (1)
   {

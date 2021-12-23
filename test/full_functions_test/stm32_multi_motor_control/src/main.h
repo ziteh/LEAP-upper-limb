@@ -20,6 +20,11 @@
 #include <libopencm3/stm32/adc.h>
 #include <libopencm3/cm3/nvic.h>
 
+typedef enum{
+  EFE,
+  SFE
+}Joints_t;
+
 void clear_communication_variable(void);
 uint16_t get_adc_value(int channel);
 void set_dutycycle(float value);

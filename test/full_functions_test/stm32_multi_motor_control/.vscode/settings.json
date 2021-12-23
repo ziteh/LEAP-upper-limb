@@ -1,0 +1,8 @@
+{
+  "files.associations": {
+    "*.ejs": "html",
+    "delay.h": "c",
+    "istream": "cpp",
+    "ostream": "cpp"
+  }
+}

@@ -72,6 +72,8 @@ void move(uint16_t position);
 void send_motor_state(uint8_t motor_id);
 void send_force_sensor_value(uint8_t id);
 
+void data_package_parser(uint16_t data);
+
 void usart2_isr(void);
 
 void set_motor_state(Joints_t joint, EnableState_t state);

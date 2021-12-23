@@ -6,6 +6,10 @@
 
 #include "main.h"
 
+int receive_payload_number;
+uint8_t receive_header;
+uint8_t receive_buffer[BUFFER_LENGTH];
+
 int main(void)
 {
   setup_all();
@@ -107,4 +111,17 @@ uint16_t get_joint_position(Joints_t joint)
   }
 
   return ADC_DR(adc);
+}
+
+/**
+ * @brief USART2 Interrupt service routine.
+ */
+void usart2_isr(void)
+{
+  uint16_t data = usart_recv(USART2);
+
+  gpio_toggle(LED_PORT, LED_PIN);
+
+  /* Clear RXNE(Read data register not empty) flag of USART SR(Status register). */
+  USART_SR(USART2) &= ~USART_SR_RXNE;
 }

@@ -80,12 +80,14 @@ The MSB of payload must be `0`.
 
 #### Motor basic control
 
-Number of bytes: 2
+Number of bytes: 4
 
 | Bytes | 7 (MSB) |   6   |   5   |   4   |   3   |   2   |   1   | 0 (LSB) | Remark            |
 | :---: | :-----: | :---: | :---: | :---: | :---: | :---: | :---: | :-----: | ----------------- |
 |  `0`  |    0    |   X   |  ID5  |  ID4  |  ID3  |  ID2  |  ID1  |   ID0   | Motor ID          |
 |  `1`  |    0    |   X   |   X   |   X   |  D1   |  D0   |  E1   |   E0    | Direction, enable |
+|  `2`  |    0    |   X   |  S5   |  S4   |  S3   |  S2   |  S1   |   S0    | Speed-0 |
+|  `3`  |    0    |   X   |  S11  |  S10  |  S9   |  S8   |  S7   |   S6    | Speed-1 |
 
 - ID*x*: The motor ID. 6-bit, 0~63.
 - E*x*: Motor enable. 2-bit, 0~3.
@@ -98,6 +100,7 @@ Number of bytes: 2
   - `01(b)`：CCW.
   - `10(b)`：Toggle direction.
   - `11(b)`：Undefined.
+- S*x*: Speed. 12-bit, 0~4095.
 
 #### Motor position control
 

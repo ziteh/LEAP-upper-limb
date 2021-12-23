@@ -12,17 +12,15 @@ int main(void)
 
   printf("Ready\r\n");
 
-  set_motor_speed(EFE, 80);
-  set_motor_speed(SFE, 80);
-
+  int i = 0;
   while (1)
   {
-    set_motor_state(EFE, ToggleState);
-    set_motor_state(SFE, ToggleState);
-    set_motor_direction(EFE, ToggleDirection);
-    set_motor_direction(SFE, ToggleDirection);
+    auto a1 = get_joint_position(EFE);
+    auto a2 = get_joint_position(SFE);
 
-    delay(5000000);
+    printf("E: %d, S: %d\r\n", a1, a2);
+
+    delay(100000);
   }
 
   return 0;
@@ -82,4 +80,23 @@ void set_motor_speed(Joints_t joint, uint8_t speed)
   uint32_t value = PWM_TIMER_PERIOD * (speed / 100.0);
 
   timer_set_oc_value(tim, oc, value);
+}
+
+uint16_t get_joint_position(Joints_t joint)
+{
+  auto adc = joint_posiion_adc[joint];
+
+  uint8_t channels[16];
+  channels[0] = joint_posiion_adc_channel[joint];
+  adc_set_regular_sequence(adc, 1, channels);
+
+  adc_start_conversion_direct(adc);
+
+  /* Wait for ADC. */
+  while (!adc_get_flag(adc, ADC_SR_EOC))
+  {
+    __asm__("nop"); // Do nothing.
+  }
+
+  return ADC_DR(adc);
 }

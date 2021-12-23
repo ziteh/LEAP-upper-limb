@@ -58,6 +58,12 @@ uint32_t motor_speed_pwm_tim[2] = {EFE_MOTOR_SPEED_PWM_TIM,
 tim_oc_id motor_speed_pwm_oc[2] = {EFE_MOTOR_SPEED_PWM_OC,
                                    SFE_MOTOR_SPEED_PWM_OC};
 
+uint32_t joint_posiion_adc[2] = {EFE_JOINT_POSITION_ADC,
+                                 SFE_JOINT_POSITION_ADC};
+
+uint32_t joint_posiion_adc_channel[2] = {EFE_JOINT_POSITION_ADC_CHANNEL,
+                                         SFE_JOINT_POSITION_ADC_CHANNEL};
+
 void clear_communication_variable(void);
 uint16_t get_adc_value(int channel);
 void set_dutycycle(float value);
@@ -71,5 +77,6 @@ void usart2_isr(void);
 void set_motor_state(Joints_t joint, EnableState_t state);
 void set_motor_direction(Joints_t joint, Direction_t dir);
 void set_motor_speed(Joints_t joint, uint8_t speed);
+uint16_t get_joint_position(Joints_t joint);
 
 #endif /* MAIN_H_ */

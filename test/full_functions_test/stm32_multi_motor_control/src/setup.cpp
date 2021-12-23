@@ -10,7 +10,7 @@ void setup_all(void)
 {
   setup_clock();
   setup_usart();
-  setup_pwm();
+  // setup_pwm(); //FIXME: PWM USATE2 timer conflict.
   setup_adc();
   setup_others_gpio();
 }
@@ -29,8 +29,6 @@ void setup_clock(void)
 
 void setup_adc(void)
 {
-  uint8_t adc_channel[16];
-
   /* EFE joint. */
   gpio_set_mode(EFE_JOINT_POSITION_ADC_PORT,
                 GPIO_MODE_INPUT,
@@ -52,9 +50,6 @@ void setup_adc(void)
   adc_reset_calibration(EFE_JOINT_POSITION_ADC);
   adc_calibrate(EFE_JOINT_POSITION_ADC);
 
-  adc_channel[0] = EFE_JOINT_POSITION_ADC_CHANNEL;
-  adc_set_regular_sequence(EFE_JOINT_POSITION_ADC, 1, adc_channel);
-
   /* SFE joint. */
   gpio_set_mode(SFE_JOINT_POSITION_ADC_PORT,
                 GPIO_MODE_INPUT,
@@ -75,9 +70,6 @@ void setup_adc(void)
   delay(800000); // Wait a bit.
   adc_reset_calibration(SFE_JOINT_POSITION_ADC);
   adc_calibrate(SFE_JOINT_POSITION_ADC);
-
-  adc_channel[0] = SFE_JOINT_POSITION_ADC_CHANNEL;
-  adc_set_regular_sequence(SFE_JOINT_POSITION_ADC, 1, adc_channel);
 }
 
 void setup_pwm(void)

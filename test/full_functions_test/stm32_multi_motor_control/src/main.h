@@ -64,10 +64,19 @@ uint32_t joint_posiion_adc[2] = {EFE_JOINT_POSITION_ADC,
 uint32_t joint_posiion_adc_channel[2] = {EFE_JOINT_POSITION_ADC_CHANNEL,
                                          SFE_JOINT_POSITION_ADC_CHANNEL};
 
+uint16_t joint_max_position[2] = {EFE_JOINT_MAX_POSITION,
+                                  SFE_JOINT_MAX_POSITION};
+
+uint16_t joint_min_position[2] = {EFE_JOINT_MIN_POSITION,
+                                  SFE_JOINT_MIN_POSITION};
+
+uint8_t joint_allowable_position_error[2] = {EFE_JOINT_ALLOWABLE_POSITION_ERROR,
+                                             SFE_JOINT_ALLOWABLE_POSITION_ERROR};
+
 void clear_communication_variable(void);
 uint16_t get_adc_value(int channel);
 void set_dutycycle(float value);
-void move(uint16_t position);
+void move(Joints_t joint, uint16_t position);
 
 void send_motor_state(uint8_t motor_id);
 void send_force_sensor_value(uint8_t id);

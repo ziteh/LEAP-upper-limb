@@ -16,22 +16,8 @@ int main(void)
 
   printf("Ready\r\n");
 
-  set_motor_speed(EFE, 10);
-  set_motor_speed(SFE, 90);
-
-  set_motor_state(EFE, Enable);
-  set_motor_state(SFE, Enable);
-  set_motor_direction(EFE, CCW);
-  set_motor_direction(SFE, CCW);
-
   while (1)
   {
-    // auto a1 = get_joint_position(EFE);
-    // auto a2 = get_joint_position(SFE);
-
-    // printf("E: %d, S: %d\r\n", a1, a2);
-
-    // delay(100000);
   }
 
   return 0;

@@ -10,14 +10,24 @@ int receive_payload_number;
 uint8_t receive_header;
 uint8_t receive_buffer[BUFFER_LENGTH];
 
+uint16_t joint_goal_position[2];
+
 int main(void)
 {
   setup_all();
+  delay(50000);
+
+  joint_goal_position[EFE] = get_joint_position(EFE);
+  joint_goal_position[SFE] = get_joint_position(SFE);
 
   printf("Ready\r\n");
 
   while (1)
   {
+    set_joint_absolute_position(EFE, joint_goal_position[EFE]);
+    delay(20);
+    set_joint_absolute_position(SFE, joint_goal_position[SFE]);
+    delay(20);
   }
 
   return 0;
@@ -98,56 +108,45 @@ uint16_t get_joint_position(Joints_t joint)
   return ADC_DR(adc);
 }
 
-void move(Joints_t joint, uint16_t position)
+void set_joint_absolute_position(Joints_t joint, uint16_t goal_position)
 {
   auto max_position = joint_max_position[joint];
   auto min_position = joint_min_position[joint];
   auto allowable_error = joint_allowable_position_error[joint];
+  auto now_position = get_joint_position(joint);
 
-  uint16_t goal_position = ((max_position - min_position) * position * 0.01) + min_position;
-  uint16_t now_position = get_joint_position(joint);
-
-  gpio_set(LED_PORT, LED_PIN); // LED on.
-  set_motor_speed(joint, 15);
-
-  if (now_position > goal_position)
+  if ((now_position - goal_position) > allowable_error && now_position >= min_position)
   {
     set_motor_direction(joint, CCW);
+    set_motor_speed(joint, 15);
     set_motor_state(joint, Enable);
 
-    /* Wait. */
-    while ((now_position - goal_position) > allowable_error)
-    {
-      now_position = get_joint_position(joint);
-      printf("G: %4d, N: %4d (CCW)\r\n", goal_position, now_position);
-      if (now_position > max_position || now_position < min_position)
-      {
-        printf("BREAK\r\n");
-        break;
-      }
-    }
+    printf("J: %d, G: %4d, N: %4d (CCW)\r\n", joint, goal_position, now_position);
   }
-  else if (now_position < goal_position)
+  else if ((goal_position - now_position) > allowable_error && now_position <= max_position)
   {
     set_motor_direction(joint, CW);
+    set_motor_speed(joint, 15);
     set_motor_state(joint, Enable);
 
-    /* Wait. */
-    while ((goal_position - now_position) > allowable_error)
-    {
-      now_position = get_joint_position(joint);
-      printf("G: %4d, N: %4d (CW)\r\n", goal_position, now_position);
-      if (now_position > max_position || now_position < min_position)
-      {
-        printf("BREAK\r\n");
-        break;
-      }
-    }
+    printf("J: %d, G: %4d, N: %4d (CW)\r\n", joint, goal_position, now_position);
   }
+  else
+  {
+    set_motor_state(joint, Disable);
+    set_motor_speed(joint, 0);
 
-  set_motor_state(joint, Disable);
-  set_motor_speed(joint, 0);
-  gpio_clear(LED_PORT, LED_PIN); // LED off.
+    printf("J: %d, Done\r\n", joint);
+  }
+}
+
+void set_joint_absolute_position_percentage(Joints_t joint, uint16_t position_percentage)
+{
+  auto max_position = joint_max_position[joint];
+  auto min_position = joint_min_position[joint];
+  uint16_t goal_position = ((max_position - min_position) * position_percentage * 0.01) + min_position;
+
+  set_joint_absolute_position(joint, goal_position);
 }
 
 void clear_communication_variable(void)
@@ -226,7 +225,8 @@ void data_package_parser(uint16_t data)
           uint8_t id = receive_buffer[2] & 0x1f;
           uint16_t position = (receive_buffer[1] & 0x3f) | ((receive_buffer[0] & 0x3f) << 6);
 
-          move((Joints_t)id, position * (100.0 / 4095));
+          // joint_goal_position[(Joints_t)id] = position * (100.0 / 4095);
+          joint_goal_position[(Joints_t)id] = position;
 
           break;
         }

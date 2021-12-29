@@ -121,7 +121,7 @@ void set_joint_absolute_position(Joints_t joint, uint16_t goal_position)
     set_motor_speed(joint, 15);
     set_motor_state(joint, Enable);
 
-    printf("J: %d, G: %4d, N: %4d (CCW)\r\n", joint, goal_position, now_position);
+    printf("J%d: G: %4d, N: %4d (CCW)\r\n", joint, goal_position, now_position);
   }
   else if ((goal_position - now_position) > allowable_error && now_position <= max_position)
   {
@@ -129,14 +129,14 @@ void set_joint_absolute_position(Joints_t joint, uint16_t goal_position)
     set_motor_speed(joint, 15);
     set_motor_state(joint, Enable);
 
-    printf("J: %d, G: %4d, N: %4d (CW)\r\n", joint, goal_position, now_position);
+    printf("J%d: G: %4d, N: %4d (CW)\r\n", joint, goal_position, now_position);
   }
   else
   {
     set_motor_state(joint, Disable);
     set_motor_speed(joint, 0);
 
-    printf("J: %d, Done\r\n", joint);
+    printf("J%d: N: %4d (Done)\r\n", joint, now_position);
   }
 }
 

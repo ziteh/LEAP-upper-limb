@@ -76,7 +76,7 @@ uint8_t joint_allowable_position_error[2] = {EFE_JOINT_ALLOWABLE_POSITION_ERROR,
 void clear_communication_variable(void);
 uint16_t get_adc_value(int channel);
 void set_dutycycle(float value);
-void move(Joints_t joint, uint16_t position);
+void set_joint_absolute_position(Joints_t joint, uint16_t position);
 
 void send_motor_state(uint8_t motor_id);
 void send_force_sensor_value(uint8_t id);

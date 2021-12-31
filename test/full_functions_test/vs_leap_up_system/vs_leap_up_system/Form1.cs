@@ -29,6 +29,10 @@ namespace vs_leap_up_system
                     var port = comboBoxSerialPortName.SelectedItem.ToString();
                     serialPort = new SerialPort(port, 9600);
                     serialPort.Open();
+                    serialPort.DataReceived += (s, ea) =>
+                    {
+                        Console.WriteLine((s as SerialPort).ReadTo("\r\n"));
+                    };
                 }
                 catch (Exception ex)
                 {
@@ -62,5 +66,68 @@ namespace vs_leap_up_system
         {
             UpdateSerialPortName();
         }
+
+        #region Kinematics
+
+        struct Point3D { public double x, y, z; };
+
+        private Point3D ForwardKinematics3(double r1, double r2, double r3, double l1, double l2)
+        {
+            Point3D res = new Point3D()
+            {
+                x = Math.Sin(r1) +
+                    l1 * Math.Cos(r1) * Math.Cos(r2) +
+                    l2 * Math.Cos(r1) * Math.Cos(r2 + r3),
+
+                y = -Math.Cos(r1) +
+                    l1 * Math.Sin(r1) * Math.Cos(r2) +
+                    l2 * Math.Sin(r1) * Math.Cos(r2 + r3),
+
+                z = l1 * Math.Sin(r2) + l2 * Math.Sin(r2 + r3)
+            };
+
+            return res;
+        }
+
+        private void InverseKinematics3(Point3D point3D,
+                                        double l1,
+                                        double l2,
+                                        out double r1,
+                                        out double r2,
+                                        out double r3)
+        {
+            var a2 = Math.Sqrt(Math.Pow(point3D.x, 2) +
+                               Math.Pow(point3D.y, 2) +
+                               Math.Pow(point3D.z, 2));
+
+            var c3 = (Math.Pow(a2, 2) - (Math.Pow(l1, 2) + Math.Pow(l2, 2))) /
+                     (2 * l1 * l2);
+
+            var cb = (Math.Pow(a2, 2) + Math.Pow(l1, 2) - Math.Pow(l2, 2)) /
+                     (2 * l1 * a2);
+
+            r1 = Math.Atan2(point3D.y, point3D.x);
+
+            r2 = Math.Atan2(point3D.z, Math.Sqrt(Math.Pow(point3D.x, 2) + Math.Pow(point3D.y, 2))) +
+                 Math.Atan2(Math.Sqrt(1 - Math.Pow(cb, 2)), cb);
+
+            r3 = Math.Atan2(Math.Sqrt(1 - Math.Pow(c3, 2)), Math.Pow(c3, 2));
+        }
+
+        private void InverseKinematics2(Point3D point3D,
+                                        double l1,
+                                        double l2,
+                                        out double r1,
+                                        out double r2)
+        {
+            r2 = 2 * Math.Atan2(
+                Math.Sqrt(Math.Pow(l1 + l2, 2) - (Math.Pow(point3D.x, 2) + Math.Pow(point3D.y, 2))),
+                Math.Sqrt((Math.Pow(point3D.x, 2) + Math.Pow(point3D.y, 2)) - Math.Pow(l1 - l2, 2)));
+
+            r1 = -(Math.Atan2(point3D.y, point3D.x) +
+                   Math.Atan2(l2 * Math.Sin(r2), l1 + l2 * Math.Cos(r2)));
+        }
+
+        #endregion Kinematics
     }
 }

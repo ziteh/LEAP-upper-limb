@@ -59,7 +59,7 @@ The following table show all the types of header:
 | `0x89` | *Reserve*                  | --     |
 | `0x8A` | *Reserve*                  | --     |
 | `0x8B` | *Reserve*                  | --     |
-| `0x8C` | *Reserve*                  | --     |
+| `0x8C` | Joint position state       | --     |
 | `0x8D` | Force sensor value         | --     |
 | `0x8E` | Motor state                | --     |
 | `0x8F` | Do nothing                 | --     |
@@ -80,12 +80,14 @@ The MSB of payload must be `0`.
 
 #### Motor basic control
 
-Number of bytes: 2
+Number of bytes: 4
 
 | Bytes | 7 (MSB) |   6   |   5   |   4   |   3   |   2   |   1   | 0 (LSB) | Remark            |
 | :---: | :-----: | :---: | :---: | :---: | :---: | :---: | :---: | :-----: | ----------------- |
 |  `0`  |    0    |   X   |  ID5  |  ID4  |  ID3  |  ID2  |  ID1  |   ID0   | Motor ID          |
 |  `1`  |    0    |   X   |   X   |   X   |  D1   |  D0   |  E1   |   E0    | Direction, enable |
+|  `2`  |    0    |   X   |  S5   |  S4   |  S3   |  S2   |  S1   |   S0    | Speed-0           |
+|  `3`  |    0    |   X   |  S11  |  S10  |  S9   |  S8   |  S7   |   S6    | Speed-1           |
 
 - ID*x*: The motor ID. 6-bit, 0~63.
 - E*x*: Motor enable. 2-bit, 0~3.
@@ -98,6 +100,7 @@ Number of bytes: 2
   - `01(b)`：CCW.
   - `10(b)`：Toggle direction.
   - `11(b)`：Undefined.
+- S*x*: Speed. 12-bit, 0~4095.
 
 #### Motor position control
 
@@ -154,6 +157,22 @@ Number of bytes: 1
 |  `0`  |    0    |   X   |   X   |   X   |   X   |  ID2  |  ID1  |   ID0   | Force sensor ID |
 
 - ID*x*: Force sensor ID. 3-bit, 0~7.
+
+#### Joint position state
+
+Number of bytes: 5
+
+| Bytes | 7 (MSB) |   6   |   5   |   4   |   3   |   2   |   1   | 0 (LSB) | Remark          |
+| :---: | :-----: | :---: | :---: | :---: | :---: | :---: | :---: | :-----: | --------------- |
+|  `0`  |    0    |   X   |  ID5  |  ID4  |  ID3  |  ID2  |  ID1  |   ID0   | Motor ID        |
+|  `1`  |    0    |   X   |  N5   |  N4   |  N3   |  N2   |  N1   |   N0    | Now position-0  |
+|  `2`  |    0    |   X   |  N11  |  N10  |  N9   |  N8   |  N7   |   N6    | Now position-1  |
+|  `3`  |    0    |   X   |  G5   |  G4   |  G3   |  G2   |  G1   |   G0    | Goal position-0 |
+|  `4`  |    0    |   X   |  G11  |  G10  |  G9   |  G8   |  G7   |   G6    | Goal position-1 |
+
+- ID*x*: The motor ID. 6-bit, 0~63.
+- N*x*: Now position. 12-bit, 0~4095.
+- G*x*: Goal position. 12-bit, 0~4095.
 
 #### Force sensor value
 

@@ -13,7 +13,15 @@ namespace vs_leap_up_system
 {
     public partial class Form1 : Form
     {
+        #region Value
+
+        private const double armL1 = 265;
+        private const double armL2 = 220;
+
+        #endregion Value
+
         private SerialPort serialPort = null;
+
         public Form1()
         {
             InitializeComponent();

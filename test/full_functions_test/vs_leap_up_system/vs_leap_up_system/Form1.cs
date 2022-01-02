@@ -17,10 +17,13 @@ namespace vs_leap_up_system
 
         private const double armL1 = 265;
         private const double armL2 = 220;
+        private const byte EOT = 0xff;
 
         #endregion Value
 
         private SerialPort serialPort = null;
+        private byte[] buffer = new byte[16];
+        private int payloadNumber;
 
         public Form1()
         {
@@ -36,8 +39,8 @@ namespace vs_leap_up_system
                 {
                     var port = comboBoxSerialPortName.SelectedItem.ToString();
                     serialPort = new SerialPort(port, 9600);
-                    serialPort.Open();
                     serialPort.DataReceived += SerialPortDataReceivedHandler;
+                    serialPort.Open();
 
                     buttonSerialPortSend.Enabled = true;
                 }
@@ -63,7 +66,29 @@ namespace vs_leap_up_system
             try
             {
                 var sp = sender as SerialPort;
-                Console.WriteLine(sp.ReadTo("\r\n"));
+                int indata = sp.ReadByte();
+                if (indata == 0x8c)
+                {
+                    payloadNumber = 5;
+                }
+                else if (indata != EOT)
+                {
+                    buffer[--payloadNumber] = (byte)indata;
+                    if (payloadNumber == 0)
+                    {
+                        var joint = buffer[4] == 0 ? "EFE" : "SFE";
+                        double now = (buffer[3] & 0x3f) | ((buffer[2] & 0x3f) << 6);
+                        double goal = (buffer[1] & 0x3f) | ((buffer[0] & 0x3f) << 6);
+
+                        now = now * 359.0 / 4095.0;
+                        goal = goal * 359.0 / 4095.0;
+
+                        now = now > 180 ? -(360 - now) : now;
+                        goal = goal > 180 ? -(360 - goal) : goal;
+
+                        Console.WriteLine($"{joint}: Now: {now: 000.00;-000.00}, Goal: {goal: 000.00;-000.00}");
+                    }
+                }
             }
             catch { }
         }

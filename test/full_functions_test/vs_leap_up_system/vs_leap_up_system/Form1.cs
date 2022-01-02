@@ -31,9 +31,14 @@ namespace vs_leap_up_system
                     serialPort.Open();
                     serialPort.DataReceived += (s, ea) =>
                     {
-                        Console.WriteLine((s as SerialPort).ReadTo("\r\n"));
+                        try
+                        {
+                            Console.WriteLine((s as SerialPort).ReadTo("\r\n"));
+                        }
+                        catch (Exception)
+                        { }
                     };
-                }
+                    }
                 catch (Exception ex)
                 {
                     serialPort = null;
@@ -129,5 +134,33 @@ namespace vs_leap_up_system
         }
 
         #endregion Kinematics
+
+        private void buttonSerialPortSend_Click(object sender, EventArgs e)
+        {
+            var efeGoal = numericUpDownEfeGoal.Value;
+            efeGoal = efeGoal < 0 ? (360 + efeGoal) : efeGoal;
+            efeGoal = (decimal)((double)efeGoal * 4095.0 / 359.0);
+            var efeData = new byte[]
+            {
+                0x81,
+                0x00,
+                (byte)((int)efeGoal & 0x3f),
+                (byte)(((int)efeGoal >> 6) & 0x3f)
+            };
+
+            var sfeGoal = numericUpDownSfeGoal.Value;
+            sfeGoal = sfeGoal < 0 ? (360 + sfeGoal) : sfeGoal;
+            sfeGoal = (decimal)((double)sfeGoal * 4095.0 / 359.0);
+            var sfeData = new byte[]
+            {
+                0x81,
+                0x01,
+                (byte)((int)sfeGoal & 0x3f),
+                (byte)(((int)sfeGoal >> 6) & 0x3f)
+            };
+
+            serialPort.Write(efeData, 0, efeData.Length);
+            serialPort.Write(sfeData, 0, sfeData.Length);
+        }
     }
 }

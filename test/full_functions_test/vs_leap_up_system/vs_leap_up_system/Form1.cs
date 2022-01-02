@@ -29,27 +29,31 @@ namespace vs_leap_up_system
                     var port = comboBoxSerialPortName.SelectedItem.ToString();
                     serialPort = new SerialPort(port, 9600);
                     serialPort.Open();
-                    serialPort.DataReceived += (s, ea) =>
-                    {
-                        try
-                        {
-                            Console.WriteLine((s as SerialPort).ReadTo("\r\n"));
-                        }
-                        catch (Exception)
-                        { }
-                    };
-                    }
+                    serialPort.DataReceived += SerialPortDataReceivedHandler;
+
+                    buttonSerialPortSend.Enabled = true;
+                }
                 catch (Exception ex)
                 {
                     serialPort = null;
+                    buttonSerialPortSend.Enabled = false;
                     MessageBox.Show(ex.Message);
                 }
             }
             else
             {
                 serialPort.Close();
+                serialPort.DataReceived -= SerialPortDataReceivedHandler;
                 serialPort = null;
+
+                buttonSerialPortSend.Enabled = false;
             }
+        }
+
+        private void SerialPortDataReceivedHandler(object sender, SerialDataReceivedEventArgs e)
+        {
+            var sp = sender as SerialPort;
+            Console.WriteLine(sp.ReadTo("\r\n"));
         }
 
         private void UpdateSerialPortName()

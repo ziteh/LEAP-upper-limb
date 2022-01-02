@@ -41,11 +41,17 @@
             this.textBoxIKsfe = new System.Windows.Forms.TextBox();
             this.textBoxIKefe = new System.Windows.Forms.TextBox();
             this.buttonCopy = new System.Windows.Forms.Button();
+            this.buttonXp = new System.Windows.Forms.Button();
+            this.buttonXm = new System.Windows.Forms.Button();
+            this.buttonYm = new System.Windows.Forms.Button();
+            this.buttonYp = new System.Windows.Forms.Button();
+            this.numericUpDownRelativeValue = new System.Windows.Forms.NumericUpDown();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownSfeGoal)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownEfeGoal)).BeginInit();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownX)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownY)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownRelativeValue)).BeginInit();
             this.SuspendLayout();
             // 
             // comboBoxSerialPortName
@@ -141,7 +147,7 @@
             this.groupBox1.Controls.Add(this.numericUpDownSfeGoal);
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Controls.Add(this.numericUpDownEfeGoal);
-            this.groupBox1.Location = new System.Drawing.Point(604, 172);
+            this.groupBox1.Location = new System.Drawing.Point(216, 236);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(272, 234);
             this.groupBox1.TabIndex = 5;
@@ -151,7 +157,7 @@
             // numericUpDownX
             // 
             this.numericUpDownX.DecimalPlaces = 3;
-            this.numericUpDownX.Location = new System.Drawing.Point(159, 211);
+            this.numericUpDownX.Location = new System.Drawing.Point(63, 199);
             this.numericUpDownX.Maximum = new decimal(new int[] {
             1000,
             0,
@@ -170,7 +176,7 @@
             // numericUpDownY
             // 
             this.numericUpDownY.DecimalPlaces = 3;
-            this.numericUpDownY.Location = new System.Drawing.Point(159, 248);
+            this.numericUpDownY.Location = new System.Drawing.Point(63, 236);
             this.numericUpDownY.Maximum = new decimal(new int[] {
             1000,
             0,
@@ -188,7 +194,7 @@
             // 
             // textBoxIKsfe
             // 
-            this.textBoxIKsfe.Location = new System.Drawing.Point(159, 311);
+            this.textBoxIKsfe.Location = new System.Drawing.Point(63, 299);
             this.textBoxIKsfe.Name = "textBoxIKsfe";
             this.textBoxIKsfe.ReadOnly = true;
             this.textBoxIKsfe.Size = new System.Drawing.Size(100, 31);
@@ -196,7 +202,7 @@
             // 
             // textBoxIKefe
             // 
-            this.textBoxIKefe.Location = new System.Drawing.Point(159, 370);
+            this.textBoxIKefe.Location = new System.Drawing.Point(63, 358);
             this.textBoxIKefe.Name = "textBoxIKefe";
             this.textBoxIKefe.ReadOnly = true;
             this.textBoxIKefe.Size = new System.Drawing.Size(100, 31);
@@ -204,7 +210,7 @@
             // 
             // buttonCopy
             // 
-            this.buttonCopy.Location = new System.Drawing.Point(159, 436);
+            this.buttonCopy.Location = new System.Drawing.Point(63, 424);
             this.buttonCopy.Name = "buttonCopy";
             this.buttonCopy.Size = new System.Drawing.Size(120, 68);
             this.buttonCopy.TabIndex = 8;
@@ -212,11 +218,68 @@
             this.buttonCopy.UseVisualStyleBackColor = true;
             this.buttonCopy.Click += new System.EventHandler(this.buttonCopy_Click);
             // 
+            // buttonXp
+            // 
+            this.buttonXp.Location = new System.Drawing.Point(660, 282);
+            this.buttonXp.Name = "buttonXp";
+            this.buttonXp.Size = new System.Drawing.Size(71, 40);
+            this.buttonXp.TabIndex = 9;
+            this.buttonXp.Text = "+X";
+            this.buttonXp.UseVisualStyleBackColor = true;
+            this.buttonXp.Click += new System.EventHandler(this.buttonXp_Click);
+            // 
+            // buttonXm
+            // 
+            this.buttonXm.Location = new System.Drawing.Point(812, 282);
+            this.buttonXm.Name = "buttonXm";
+            this.buttonXm.Size = new System.Drawing.Size(71, 40);
+            this.buttonXm.TabIndex = 9;
+            this.buttonXm.Text = "-X";
+            this.buttonXm.UseVisualStyleBackColor = true;
+            this.buttonXm.Click += new System.EventHandler(this.buttonXm_Click);
+            // 
+            // buttonYm
+            // 
+            this.buttonYm.Location = new System.Drawing.Point(732, 334);
+            this.buttonYm.Name = "buttonYm";
+            this.buttonYm.Size = new System.Drawing.Size(71, 40);
+            this.buttonYm.TabIndex = 9;
+            this.buttonYm.Text = "-Y";
+            this.buttonYm.UseVisualStyleBackColor = true;
+            this.buttonYm.Click += new System.EventHandler(this.buttonYm_Click);
+            // 
+            // buttonYp
+            // 
+            this.buttonYp.Location = new System.Drawing.Point(732, 227);
+            this.buttonYp.Name = "buttonYp";
+            this.buttonYp.Size = new System.Drawing.Size(71, 40);
+            this.buttonYp.TabIndex = 9;
+            this.buttonYp.Text = "+Y";
+            this.buttonYp.UseVisualStyleBackColor = true;
+            this.buttonYp.Click += new System.EventHandler(this.buttonYp_Click);
+            // 
+            // numericUpDownRelativeValue
+            // 
+            this.numericUpDownRelativeValue.Location = new System.Drawing.Point(698, 420);
+            this.numericUpDownRelativeValue.Name = "numericUpDownRelativeValue";
+            this.numericUpDownRelativeValue.Size = new System.Drawing.Size(120, 31);
+            this.numericUpDownRelativeValue.TabIndex = 10;
+            this.numericUpDownRelativeValue.Value = new decimal(new int[] {
+            10,
+            0,
+            0,
+            0});
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(988, 681);
+            this.Controls.Add(this.numericUpDownRelativeValue);
+            this.Controls.Add(this.buttonYm);
+            this.Controls.Add(this.buttonYp);
+            this.Controls.Add(this.buttonXm);
+            this.Controls.Add(this.buttonXp);
             this.Controls.Add(this.buttonCopy);
             this.Controls.Add(this.textBoxIKefe);
             this.Controls.Add(this.textBoxIKsfe);
@@ -233,6 +296,7 @@
             this.groupBox1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownX)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownY)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownRelativeValue)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -253,6 +317,11 @@
         private System.Windows.Forms.TextBox textBoxIKsfe;
         private System.Windows.Forms.TextBox textBoxIKefe;
         private System.Windows.Forms.Button buttonCopy;
+        private System.Windows.Forms.Button buttonXp;
+        private System.Windows.Forms.Button buttonXm;
+        private System.Windows.Forms.Button buttonYm;
+        private System.Windows.Forms.Button buttonYp;
+        private System.Windows.Forms.NumericUpDown numericUpDownRelativeValue;
     }
 }
 

@@ -25,6 +25,9 @@ namespace vs_leap_up_system
         private byte[] buffer = new byte[16];
         private int payloadNumber;
 
+        private double sfeAngle;
+        private double efeAngle;
+
         public Form1()
         {
             InitializeComponent();
@@ -90,10 +93,12 @@ namespace vs_leap_up_system
                         if (joint == "SFE")
                         {
                             Console.WriteLine(msg);
+                            sfeAngle = now;
                         }
                         else
                         {
                             Console.Write(msg + ". ");
+                            efeAngle = now;
                         }
                     }
                 }
@@ -125,8 +130,30 @@ namespace vs_leap_up_system
 
         struct Point3D { public double x, y, z; };
 
+        private Point3D ForwardKinematics2(double r1, double r2, double l1, double l2)
+        {
+            r1 *= Math.PI / 180.0;
+            r2 *= Math.PI / 180.0;
+
+            return new Point3D
+            {
+                x = l1 * Math.Cos(r1) +
+                    l2 * Math.Cos(r1 + r2),
+
+                y = -(l1 * Math.Sin(r1) +
+                    l2 * Math.Sin(r1 + r2)),
+
+                z = 0
+            };
+        }
+
+        // XXX
         private Point3D ForwardKinematics3(double r1, double r2, double r3, double l1, double l2)
         {
+            r1 *= Math.PI / 180.0;
+            r2 *= Math.PI / 180.0;
+            r3 *= Math.PI / 180.0;
+
             Point3D res = new Point3D()
             {
                 x = Math.Sin(r1) +
@@ -143,6 +170,7 @@ namespace vs_leap_up_system
             return res;
         }
 
+        // XXX
         private void InverseKinematics3(Point3D point3D,
                                         double l1,
                                         double l2,
@@ -247,6 +275,41 @@ namespace vs_leap_up_system
                 numericUpDownEfeGoal.Value = Decimal.Parse(textBoxIKefe.Text);
             }
             catch { }
+        }
+
+        private void RelaviteMove(int index, double value)
+        {
+            var point = ForwardKinematics2(sfeAngle, efeAngle, armL1, armL2);
+            if (index == 0)
+            {
+                point.x += value;
+            }
+            else
+            {
+                point.y += value;
+            }
+            numericUpDownX.Value = (decimal)point.x;
+            numericUpDownY.Value = (decimal)point.y;
+        }
+
+        private void buttonYp_Click(object sender, EventArgs e)
+        {
+            RelaviteMove(1, (double)numericUpDownRelativeValue.Value);
+        }
+
+        private void buttonYm_Click(object sender, EventArgs e)
+        {
+            RelaviteMove(1, -(double)numericUpDownRelativeValue.Value);
+        }
+
+        private void buttonXp_Click(object sender, EventArgs e)
+        {
+            RelaviteMove(0, (double)numericUpDownRelativeValue.Value);
+        }
+
+        private void buttonXm_Click(object sender, EventArgs e)
+        {
+            RelaviteMove(0, -(double)numericUpDownRelativeValue.Value);
         }
     }
 }

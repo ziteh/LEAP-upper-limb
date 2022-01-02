@@ -34,6 +34,78 @@ int main(void)
   return 0;
 }
 
+int16_t convert_adc_value_to_degree(uint16_t adc_value, Joints_t joint)
+{
+  auto flexed_degree = joint_flexed_degree[joint];
+  auto extension_degree = joint_extension_degree[joint];
+  auto flexed_adc_value = joint_flexed_adc_value[joint];
+  auto extension_adc_value = joint_extension_adc_value[joint];
+
+  auto m = (flexed_degree - extension_degree) / (flexed_adc_value - extension_adc_value);
+  auto degree = ((adc_value - extension_adc_value) * m) + extension_degree;
+
+  if (flexed_degree > extension_degree)
+  {
+    if (degree > flexed_degree)
+    {
+      degree = flexed_degree;
+    }
+    else if (degree < extension_degree)
+    {
+      degree = extension_degree;
+    }
+  }
+  else
+  {
+    if (degree < flexed_degree)
+    {
+      degree = flexed_degree;
+    }
+    else if (degree > extension_degree)
+    {
+      degree = extension_degree;
+    }
+  }
+
+  return degree;
+}
+
+uint16_t convert_degree_to_adc_value(int16_t degree, Joints_t joint)
+{
+  auto flexed_degree = joint_flexed_degree[joint];
+  auto extension_degree = joint_extension_degree[joint];
+  auto flexed_adc_value = joint_flexed_adc_value[joint];
+  auto extension_adc_value = joint_extension_adc_value[joint];
+
+  auto m = (flexed_degree - extension_degree) / (flexed_adc_value - extension_adc_value);
+  auto adc_value = ((degree - extension_degree) / m) + extension_adc_value;
+
+  if (flexed_adc_value > extension_adc_value)
+  {
+    if (adc_value > flexed_adc_value)
+    {
+      adc_value = flexed_adc_value;
+    }
+    else if (adc_value < extension_adc_value)
+    {
+      adc_value = extension_adc_value;
+    }
+  }
+  else
+  {
+    if (adc_value < flexed_adc_value)
+    {
+      adc_value = flexed_adc_value;
+    }
+    else if (adc_value > extension_adc_value)
+    {
+      adc_value = extension_adc_value;
+    }
+  }
+
+  return adc_value;
+}
+
 void set_motor_state(Joints_t joint, EnableState_t state)
 {
   auto port = motor_enable_port[joint];
@@ -109,42 +181,61 @@ uint16_t get_joint_position(Joints_t joint)
   return ADC_DR(adc);
 }
 
-void set_joint_absolute_position(Joints_t joint, uint16_t goal_position)
+void set_joint_absolute_position(Joints_t joint, uint16_t goal_adc_value)
 {
-  auto max_position = joint_max_position[joint];
-  auto min_position = joint_min_position[joint];
+  auto flexed_adc_value = joint_flexed_adc_value[joint];
+  auto extension_adc_value = joint_extension_adc_value[joint];
   auto allowable_error = joint_allowable_position_error[joint];
-  auto now_position = get_joint_position(joint);
+  auto flexed_direction = joint_flexed_direction[joint];
+  auto now_adc_value = get_joint_position(joint);
+  uint16_t max_adc_value;
+  uint16_t min_adc_value;
+  Direction_t increase_adc_value_direction;
 
-  if ((now_position - goal_position) > allowable_error && now_position >= min_position)
+  if (flexed_adc_value > extension_adc_value)
   {
-    set_motor_direction(joint, CCW);
-    set_motor_speed(joint, 15);
-    set_motor_state(joint, Enable);
-
-    printf("J%d: G: %4d, N: %4d (CCW)", joint, goal_position, now_position);
+    max_adc_value = flexed_adc_value;
+    min_adc_value = extension_adc_value;
+    increase_adc_value_direction = flexed_direction;
   }
-  else if ((goal_position - now_position) > allowable_error && now_position <= max_position)
+  else
   {
-    set_motor_direction(joint, CW);
+    max_adc_value = extension_adc_value;
+    min_adc_value = flexed_adc_value;
+    increase_adc_value_direction = (Direction_t)(!(bool)flexed_direction);
+  }
+
+  if ((now_adc_value - goal_adc_value) > allowable_error && now_adc_value >= min_adc_value)
+  {
+    auto dir = (Direction_t)(!(bool)increase_adc_value_direction);
+    set_motor_direction(joint, dir);
     set_motor_speed(joint, 15);
     set_motor_state(joint, Enable);
 
-    printf("J%d: G: %4d, N: %4d (CW)", joint, goal_position, now_position);
+    printf("J%d: G: %4d, N: %4d (%d)", joint, goal_adc_value, now_adc_value, dir);
+  }
+  else if ((goal_adc_value - now_adc_value) > allowable_error && now_adc_value <= max_adc_value)
+  {
+    auto dir = increase_adc_value_direction;
+    set_motor_direction(joint, dir);
+    set_motor_speed(joint, 15);
+    set_motor_state(joint, Enable);
+
+    printf("J%d: G: %4d, N: %4d (%d)", joint, goal_adc_value, now_adc_value, dir);
   }
   else
   {
     set_motor_state(joint, Disable);
     set_motor_speed(joint, 0);
 
-    printf("J%d: N: %4d (Done)", joint, now_position);
+    printf("J%d: N: %4d (Done)", joint, now_adc_value);
   }
 }
 
 void set_joint_absolute_position_percentage(Joints_t joint, uint16_t position_percentage)
 {
-  auto max_position = joint_max_position[joint];
-  auto min_position = joint_min_position[joint];
+  auto max_position = joint_flexed_adc_value[joint];
+  auto min_position = joint_extension_adc_value[joint];
   uint16_t goal_position = ((max_position - min_position) * position_percentage * 0.01) + min_position;
 
   set_joint_absolute_position(joint, goal_position);

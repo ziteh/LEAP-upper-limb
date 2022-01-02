@@ -64,14 +64,26 @@ uint32_t joint_posiion_adc[2] = {EFE_JOINT_POSITION_ADC,
 uint32_t joint_posiion_adc_channel[2] = {EFE_JOINT_POSITION_ADC_CHANNEL,
                                          SFE_JOINT_POSITION_ADC_CHANNEL};
 
-uint16_t joint_max_position[2] = {EFE_JOINT_MAX_POSITION,
-                                  SFE_JOINT_MAX_POSITION};
+int16_t joint_flexed_degree[2] = {EFE_JOINT_FLEXED_DEGREE,
+                                  SFE_JOINT_FLEXED_DEGREE};
 
-uint16_t joint_min_position[2] = {EFE_JOINT_MIN_POSITION,
-                                  SFE_JOINT_MIN_POSITION};
+int16_t joint_extension_degree[2] = {EFE_JOINT_EXTENSION_DEGREE,
+                                     SFE_JOINT_EXTENSION_DEGREE};
+
+uint16_t joint_flexed_adc_value[2] = {EFE_JOINT_FLEXED_ADC_VALUE,
+                                      SFE_JOINT_FLEXED_ADC_VALUE};
+
+uint16_t joint_extension_adc_value[2] = {EFE_JOINT_EXTENSION_ADC_VALUE,
+                                         SFE_JOINT_EXTENSION_ADC_VALUE};
 
 uint8_t joint_allowable_position_error[2] = {EFE_JOINT_ALLOWABLE_POSITION_ERROR,
                                              SFE_JOINT_ALLOWABLE_POSITION_ERROR};
+
+Direction_t joint_flexed_direction[2] = {EFE_FLEXED_DIRCETION,
+                                                  SFE_FLEXED_DIRCETION};
+
+uint16_t convert_degree_to_adc_value(int16_t degree, Joints_t joint);
+int16_t convert_adc_value_to_degree(uint16_t adc_value, Joints_t joint);
 
 void clear_communication_variable(void);
 uint16_t get_adc_value(int channel);

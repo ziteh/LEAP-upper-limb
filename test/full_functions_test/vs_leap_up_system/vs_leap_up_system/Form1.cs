@@ -86,7 +86,15 @@ namespace vs_leap_up_system
                         now = now > 180 ? -(360 - now) : now;
                         goal = goal > 180 ? -(360 - goal) : goal;
 
-                        Console.WriteLine($"{joint}: Now: {now: 000.00;-000.00}, Goal: {goal: 000.00;-000.00}");
+                        var msg = $"{joint}: Now: {now: 000.00;-000.00}, Goal: {goal: 000.00;-000.00}";
+                        if (joint == "SFE")
+                        {
+                            Console.WriteLine(msg);
+                        }
+                        else
+                        {
+                            Console.Write(msg + ". ");
+                        }
                     }
                 }
             }

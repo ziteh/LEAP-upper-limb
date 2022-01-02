@@ -90,6 +90,7 @@ uint16_t get_adc_value(int channel);
 void set_dutycycle(float value);
 void set_joint_absolute_position(Joints_t joint, uint16_t position);
 
+void send_joint_position_state(Joints_t joint);
 void send_motor_state(uint8_t motor_id);
 void send_force_sensor_value(uint8_t id);
 

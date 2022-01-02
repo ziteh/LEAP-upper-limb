@@ -25,13 +25,31 @@ int main(void)
   while (1)
   {
     set_joint_absolute_position(EFE, joint_goal_position[EFE]);
+    send_joint_position_state(EFE);
     delay(20);
     set_joint_absolute_position(SFE, joint_goal_position[SFE]);
+    send_joint_position_state(SFE);
     delay(20);
-    printf("\r\n");
+    // printf("\r\n");
   }
 
   return 0;
+}
+
+void send_joint_position_state(Joints_t joint)
+{
+  auto now = convert_adc_value_to_degree(get_joint_position(joint), joint);
+  auto goal = convert_adc_value_to_degree(joint_goal_position[joint], joint);
+  now = now * 4095.0 / 359.0;
+  goal = goal * 4095.0 / 359.0;
+
+  usart_send_blocking(USART2, JOINT_POSITION_STATE_HEADER);
+  usart_send_blocking(USART2, (int)joint);
+  usart_send_blocking(USART2, now & 0x3f);
+  usart_send_blocking(USART2, (now >> 6) & 0x3f);
+  usart_send_blocking(USART2, goal & 0x3f);
+  usart_send_blocking(USART2, (goal >> 6) & 0x3f);
+  usart_send_blocking(USART2, EOT_SYMBOL);
 }
 
 int16_t convert_adc_value_to_degree(uint16_t adc_value, Joints_t joint)
@@ -41,9 +59,10 @@ int16_t convert_adc_value_to_degree(uint16_t adc_value, Joints_t joint)
   auto flexed_adc_value = joint_flexed_adc_value[joint];
   auto extension_adc_value = joint_extension_adc_value[joint];
 
-  auto m = (flexed_degree - extension_degree) / (flexed_adc_value - extension_adc_value);
-  auto degree = ((adc_value - extension_adc_value) * m) + extension_degree;
+  float m = (float)(flexed_degree - extension_degree) / (float)(flexed_adc_value - extension_adc_value);
+  float degree = ((adc_value - extension_adc_value) * m) + extension_degree;
 
+  /* 點斜式. */
   if (flexed_degree > extension_degree)
   {
     if (degree > flexed_degree)
@@ -67,7 +86,7 @@ int16_t convert_adc_value_to_degree(uint16_t adc_value, Joints_t joint)
     }
   }
 
-  return degree;
+  return (int16_t)degree;
 }
 
 uint16_t convert_degree_to_adc_value(float degree, Joints_t joint)
@@ -213,7 +232,7 @@ void set_joint_absolute_position(Joints_t joint, uint16_t goal_adc_value)
     set_motor_speed(joint, 15);
     set_motor_state(joint, Enable);
 
-    printf("J%d: G: %4d, N: %4d (%d)", joint, goal_adc_value, now_adc_value, dir);
+    // printf("J%d: G: %4d, N: %4d (%d)", joint, goal_adc_value, now_adc_value, dir);
   }
   else if ((goal_adc_value - now_adc_value) > allowable_error && now_adc_value <= max_adc_value)
   {
@@ -222,14 +241,14 @@ void set_joint_absolute_position(Joints_t joint, uint16_t goal_adc_value)
     set_motor_speed(joint, 15);
     set_motor_state(joint, Enable);
 
-    printf("J%d: G: %4d, N: %4d (%d)", joint, goal_adc_value, now_adc_value, dir);
+    // printf("J%d: G: %4d, N: %4d (%d)", joint, goal_adc_value, now_adc_value, dir);
   }
   else
   {
     set_motor_state(joint, Disable);
     set_motor_speed(joint, 0);
 
-    printf("J%d: N: %4d (Done)", joint, now_adc_value);
+    // printf("J%d: N: %4d (Done)", joint, now_adc_value);
   }
 }
 

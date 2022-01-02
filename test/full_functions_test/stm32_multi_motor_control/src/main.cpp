@@ -70,15 +70,16 @@ int16_t convert_adc_value_to_degree(uint16_t adc_value, Joints_t joint)
   return degree;
 }
 
-uint16_t convert_degree_to_adc_value(int16_t degree, Joints_t joint)
+uint16_t convert_degree_to_adc_value(float degree, Joints_t joint)
 {
   auto flexed_degree = joint_flexed_degree[joint];
   auto extension_degree = joint_extension_degree[joint];
   auto flexed_adc_value = joint_flexed_adc_value[joint];
   auto extension_adc_value = joint_extension_adc_value[joint];
 
-  auto m = (flexed_degree - extension_degree) / (flexed_adc_value - extension_adc_value);
-  auto adc_value = ((degree - extension_degree) / m) + extension_adc_value;
+  /* 點斜式. */
+  float m = (float)(flexed_degree - extension_degree) / (float)(flexed_adc_value - extension_adc_value);
+  float adc_value = ((degree - extension_degree) / m) + extension_adc_value;
 
   if (flexed_adc_value > extension_adc_value)
   {
@@ -103,7 +104,7 @@ uint16_t convert_degree_to_adc_value(int16_t degree, Joints_t joint)
     }
   }
 
-  return adc_value;
+  return (uint16_t)adc_value;
 }
 
 void set_motor_state(Joints_t joint, EnableState_t state)
@@ -315,10 +316,13 @@ void data_package_parser(uint16_t data)
         case MOTOR_POSITION_CONTROL_HEADER:
         {
           uint8_t id = receive_buffer[2] & 0x1f;
-          uint16_t position = (receive_buffer[1] & 0x3f) | ((receive_buffer[0] & 0x3f) << 6);
+          uint16_t angle_value = (receive_buffer[1] & 0x3f) | ((receive_buffer[0] & 0x3f) << 6);
 
-          // joint_goal_position[(Joints_t)id] = position * (100.0 / 4095);
-          joint_goal_position[(Joints_t)id] = position;
+          float degree = (angle_value * 359.0 / 4095.0);
+          degree = degree > 180 ? -(360 - degree) : degree;
+
+          auto adc_value = convert_degree_to_adc_value(degree, (Joints_t)id);
+          joint_goal_position[(Joints_t)id] = adc_value;
 
           break;
         }

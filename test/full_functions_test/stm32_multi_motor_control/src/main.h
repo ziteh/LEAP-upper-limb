@@ -80,9 +80,9 @@ uint8_t joint_allowable_position_error[2] = {EFE_JOINT_ALLOWABLE_POSITION_ERROR,
                                              SFE_JOINT_ALLOWABLE_POSITION_ERROR};
 
 Direction_t joint_flexed_direction[2] = {EFE_FLEXED_DIRCETION,
-                                                  SFE_FLEXED_DIRCETION};
+                                         SFE_FLEXED_DIRCETION};
 
-uint16_t convert_degree_to_adc_value(int16_t degree, Joints_t joint);
+uint16_t convert_degree_to_adc_value(float degree, Joints_t joint);
 int16_t convert_adc_value_to_degree(uint16_t adc_value, Joints_t joint);
 
 void clear_communication_variable(void);

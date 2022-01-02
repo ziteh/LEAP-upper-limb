@@ -36,9 +36,16 @@
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.numericUpDownX = new System.Windows.Forms.NumericUpDown();
+            this.numericUpDownY = new System.Windows.Forms.NumericUpDown();
+            this.textBoxIKsfe = new System.Windows.Forms.TextBox();
+            this.textBoxIKefe = new System.Windows.Forms.TextBox();
+            this.buttonCopy = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownSfeGoal)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownEfeGoal)).BeginInit();
             this.groupBox1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownX)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownY)).BeginInit();
             this.SuspendLayout();
             // 
             // comboBoxSerialPortName
@@ -141,11 +148,80 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Manual";
             // 
+            // numericUpDownX
+            // 
+            this.numericUpDownX.DecimalPlaces = 3;
+            this.numericUpDownX.Location = new System.Drawing.Point(159, 211);
+            this.numericUpDownX.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.numericUpDownX.Minimum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            -2147483648});
+            this.numericUpDownX.Name = "numericUpDownX";
+            this.numericUpDownX.Size = new System.Drawing.Size(120, 31);
+            this.numericUpDownX.TabIndex = 6;
+            this.numericUpDownX.ValueChanged += new System.EventHandler(this.numericUpDownX_ValueChanged);
+            // 
+            // numericUpDownY
+            // 
+            this.numericUpDownY.DecimalPlaces = 3;
+            this.numericUpDownY.Location = new System.Drawing.Point(159, 248);
+            this.numericUpDownY.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.numericUpDownY.Minimum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            -2147483648});
+            this.numericUpDownY.Name = "numericUpDownY";
+            this.numericUpDownY.Size = new System.Drawing.Size(120, 31);
+            this.numericUpDownY.TabIndex = 6;
+            this.numericUpDownY.ValueChanged += new System.EventHandler(this.numericUpDownY_ValueChanged);
+            // 
+            // textBoxIKsfe
+            // 
+            this.textBoxIKsfe.Location = new System.Drawing.Point(159, 311);
+            this.textBoxIKsfe.Name = "textBoxIKsfe";
+            this.textBoxIKsfe.ReadOnly = true;
+            this.textBoxIKsfe.Size = new System.Drawing.Size(100, 31);
+            this.textBoxIKsfe.TabIndex = 7;
+            // 
+            // textBoxIKefe
+            // 
+            this.textBoxIKefe.Location = new System.Drawing.Point(159, 370);
+            this.textBoxIKefe.Name = "textBoxIKefe";
+            this.textBoxIKefe.ReadOnly = true;
+            this.textBoxIKefe.Size = new System.Drawing.Size(100, 31);
+            this.textBoxIKefe.TabIndex = 7;
+            // 
+            // buttonCopy
+            // 
+            this.buttonCopy.Location = new System.Drawing.Point(159, 436);
+            this.buttonCopy.Name = "buttonCopy";
+            this.buttonCopy.Size = new System.Drawing.Size(120, 68);
+            this.buttonCopy.TabIndex = 8;
+            this.buttonCopy.Text = "Copy";
+            this.buttonCopy.UseVisualStyleBackColor = true;
+            this.buttonCopy.Click += new System.EventHandler(this.buttonCopy_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(988, 681);
+            this.Controls.Add(this.buttonCopy);
+            this.Controls.Add(this.textBoxIKefe);
+            this.Controls.Add(this.textBoxIKsfe);
+            this.Controls.Add(this.numericUpDownY);
+            this.Controls.Add(this.numericUpDownX);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.buttonSerialPortConnection);
             this.Controls.Add(this.comboBoxSerialPortName);
@@ -155,7 +231,10 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownEfeGoal)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownX)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownY)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -169,6 +248,11 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.NumericUpDown numericUpDownX;
+        private System.Windows.Forms.NumericUpDown numericUpDownY;
+        private System.Windows.Forms.TextBox textBoxIKsfe;
+        private System.Windows.Forms.TextBox textBoxIKefe;
+        private System.Windows.Forms.Button buttonCopy;
     }
 }
 

@@ -60,8 +60,12 @@ namespace vs_leap_up_system
 
         private void SerialPortDataReceivedHandler(object sender, SerialDataReceivedEventArgs e)
         {
-            var sp = sender as SerialPort;
-            Console.WriteLine(sp.ReadTo("\r\n"));
+            try
+            {
+                var sp = sender as SerialPort;
+                Console.WriteLine(sp.ReadTo("\r\n"));
+            }
+            catch { }
         }
 
         private void UpdateSerialPortName()
@@ -143,6 +147,9 @@ namespace vs_leap_up_system
 
             r1 = -(Math.Atan2(point3D.y, point3D.x) +
                    Math.Atan2(l2 * Math.Sin(r2), l1 + l2 * Math.Cos(r2)));
+
+            r1 = r1 * 180.0 / Math.PI;
+            r2 = r2 * 180.0 / Math.PI;
         }
 
         #endregion Kinematics
@@ -173,6 +180,40 @@ namespace vs_leap_up_system
 
             serialPort.Write(efeData, 0, efeData.Length);
             serialPort.Write(sfeData, 0, sfeData.Length);
+        }
+
+        private void UpdateIK()
+        {
+            var point = new Point3D
+            {
+                x = (double)numericUpDownX.Value,
+                y = (double)numericUpDownY.Value,
+                z = 0
+            };
+
+            InverseKinematics2(point, armL1, armL2, out var r1, out var r2);
+            textBoxIKsfe.Text = r1.ToString();
+            textBoxIKefe.Text = r2.ToString();
+        }
+
+        private void numericUpDownX_ValueChanged(object sender, EventArgs e)
+        {
+            UpdateIK();
+        }
+
+        private void numericUpDownY_ValueChanged(object sender, EventArgs e)
+        {
+            UpdateIK();
+        }
+
+        private void buttonCopy_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                numericUpDownSfeGoal.Value = Decimal.Parse(textBoxIKsfe.Text);
+                numericUpDownEfeGoal.Value = Decimal.Parse(textBoxIKefe.Text);
+            }
+            catch { }
         }
     }
 }

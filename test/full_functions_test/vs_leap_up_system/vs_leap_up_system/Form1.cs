@@ -52,11 +52,13 @@ namespace vs_leap_up_system
                     serialPort.Open();
 
                     buttonSerialPortSend.Enabled = true;
+                    this.Text = "LEAP-Up (Connected)";
                 }
                 catch (Exception ex)
                 {
                     serialPort = null;
                     buttonSerialPortSend.Enabled = false;
+                    this.Text = "LEAP-Up (Disconnected)";
                     MessageBox.Show(ex.Message);
                 }
             }
@@ -67,6 +69,7 @@ namespace vs_leap_up_system
                 serialPort = null;
 
                 buttonSerialPortSend.Enabled = false;
+                this.Text = "LEAP-Up (Disconnected)";
             }
         }
 

@@ -289,7 +289,7 @@
             this.Controls.Add(this.buttonSerialPortConnection);
             this.Controls.Add(this.comboBoxSerialPortName);
             this.Name = "Form1";
-            this.Text = "LEAP-Up";
+            this.Text = "LEAP-Up (Disconnected)";
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownSfeGoal)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownEfeGoal)).EndInit();
             this.groupBox1.ResumeLayout(false);

@@ -286,27 +286,29 @@ namespace vs_leap_up_system
 
         private void RelaviteMove(int index, double value)
         {
-            var point = ForwardKinematics2(sfeAngle, efeAngle, armL1, armL2);
+            var nowPoint = ForwardKinematics2(sfeAngle, efeAngle, armL1, armL2);
             if (index == 0)
             {
-                point.x += value;
+                nowPoint.x += value;
             }
             else
             {
-                point.y += value;
+                nowPoint.y += value;
             }
-            numericUpDownX.Value = (decimal)point.x;
-            numericUpDownY.Value = (decimal)point.y;
+
+            InverseKinematics2(nowPoint, armL1, armL2, out var r1, out var r2);
+            SendMotorPositionControl(Joint.SFE, r1);
+            SendMotorPositionControl(Joint.EFE, r2);
         }
 
         private void buttonYp_Click(object sender, EventArgs e)
         {
-            RelaviteMove(1, (double)numericUpDownRelativeValue.Value);
+            RelaviteMove(1, -(double)numericUpDownRelativeValue.Value);
         }
 
         private void buttonYm_Click(object sender, EventArgs e)
         {
-            RelaviteMove(1, -(double)numericUpDownRelativeValue.Value);
+            RelaviteMove(1, (double)numericUpDownRelativeValue.Value);
         }
 
         private void buttonXp_Click(object sender, EventArgs e)

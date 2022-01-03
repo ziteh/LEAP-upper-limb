@@ -88,18 +88,22 @@ namespace vs_leap_up_system
                     buffer[--payloadNumber] = (byte)indata;
                     if (payloadNumber == 0)
                     {
-                        var joint = buffer[4] == 0 ? "EFE" : "SFE";
+                        var joint = buffer[4] == 0 ? Joint.EFE : Joint.SFE;
                         double now = (buffer[3] & 0x3f) | ((buffer[2] & 0x3f) << 6);
                         double goal = (buffer[1] & 0x3f) | ((buffer[0] & 0x3f) << 6);
 
-                        now = now * 359.0 / 4095.0;
-                        goal = goal * 359.0 / 4095.0;
+                        now *= (359.0 / 4095.0);
+                        goal *= (359.0 / 4095.0);
 
                         now = now > 180 ? -(360 - now) : now;
                         goal = goal > 180 ? -(360 - goal) : goal;
 
+                        // UI
+                        SetNowPositionTextBox(joint, now);
+
+                        // Console
                         var msg = $"{joint}: Now: {now: 000.00;-000.00}, Goal: {goal: 000.00;-000.00}";
-                        if (joint == "SFE")
+                        if (joint == Joint.SFE)
                         {
                             Console.WriteLine(msg);
                             sfeAngle = now;
@@ -113,6 +117,31 @@ namespace vs_leap_up_system
                 }
             }
             catch { }
+        }
+
+        delegate void SetNowPositionTextBoxCallBack(Joint joint, double value);
+
+        private void SetNowPositionTextBox(Joint joint, double value)
+        {
+            TextBox tb;
+            if (joint == Joint.SFE)
+            {
+                tb = textBoxNowPositionSfe;
+            }
+            else
+            {
+                tb = textBoxNowPositionEfe;
+            }
+
+            if (tb.InvokeRequired)
+            {
+                SetNowPositionTextBoxCallBack d = new SetNowPositionTextBoxCallBack(SetNowPositionTextBox);
+                this.Invoke(d, new object[] { joint, value });
+            }
+            else
+            {
+                tb.Text = value.ToString();
+            }
         }
 
         private void UpdateSerialPortName()

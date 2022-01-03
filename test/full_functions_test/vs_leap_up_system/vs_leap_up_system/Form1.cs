@@ -21,6 +21,12 @@ namespace vs_leap_up_system
 
         #endregion Value
 
+        private enum Joint
+        {
+            EFE,
+            SFE
+        };
+
         private SerialPort serialPort = null;
         private byte[] buffer = new byte[16];
         private int payloadNumber;
@@ -217,30 +223,31 @@ namespace vs_leap_up_system
 
         private void buttonSerialPortSend_Click(object sender, EventArgs e)
         {
-            var efeGoal = numericUpDownEfeGoal.Value;
-            efeGoal = efeGoal < 0 ? (360 + efeGoal) : efeGoal;
-            efeGoal = (decimal)((double)efeGoal * 4095.0 / 359.0);
-            var efeData = new byte[]
+            SendMotorPositionControl(Joint.EFE, (double)numericUpDownEfeGoal.Value);
+            SendMotorPositionControl(Joint.SFE, (double)numericUpDownSfeGoal.Value);
+        }
+
+        private void SendMotorPositionControl(Joint joint, double angleInDegree)
+        {
+            angleInDegree = angleInDegree < 0 ? (360 + angleInDegree) : angleInDegree;
+            angleInDegree *= (4095.0 / 359.0);
+
+            var data = new byte[]
             {
                 0x81,
-                0x00,
-                (byte)((int)efeGoal & 0x3f),
-                (byte)(((int)efeGoal >> 6) & 0x3f)
+                (byte)joint,
+                (byte)((int)angleInDegree & 0x3f),
+                (byte)(((int)angleInDegree >> 6) & 0x3f)
             };
 
-            var sfeGoal = numericUpDownSfeGoal.Value;
-            sfeGoal = sfeGoal < 0 ? (360 + sfeGoal) : sfeGoal;
-            sfeGoal = (decimal)((double)sfeGoal * 4095.0 / 359.0);
-            var sfeData = new byte[]
+            try
             {
-                0x81,
-                0x01,
-                (byte)((int)sfeGoal & 0x3f),
-                (byte)(((int)sfeGoal >> 6) & 0x3f)
-            };
-
-            serialPort.Write(efeData, 0, efeData.Length);
-            serialPort.Write(sfeData, 0, sfeData.Length);
+                serialPort.Write(data, 0, data.Length);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         private void UpdateIK()

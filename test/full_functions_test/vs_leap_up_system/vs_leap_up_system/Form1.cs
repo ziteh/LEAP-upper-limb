@@ -43,8 +43,8 @@ namespace vs_leap_up_system
 
         private void TimerEvenHandler(object sender, EventArgs e)
         {
-            textBoxNowPositionSfe.Text = sfeAngle.ToString();
-            textBoxNowPositionEfe.Text = efeAngle.ToString();
+            textBoxNowPositionSfe.Text = sfeAngle.ToString(" 000.00;-000.00");
+            textBoxNowPositionEfe.Text = efeAngle.ToString(" 000.00;-000.00");
         }
 
         #region Serial Port

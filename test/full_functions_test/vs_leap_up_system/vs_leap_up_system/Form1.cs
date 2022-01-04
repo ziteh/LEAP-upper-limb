@@ -45,6 +45,10 @@ namespace vs_leap_up_system
         {
             textBoxNowPositionSfe.Text = sfeAngle.ToString(" 000.00;-000.00");
             textBoxNowPositionEfe.Text = efeAngle.ToString(" 000.00;-000.00");
+
+            var point = ForwardKinematics2(sfeAngle, efeAngle, armL1, armL2);
+            textBoxX.Text = point.x.ToString(" 000.00;-000.00");
+            textBoxY.Text = point.y.ToString(" 000.00;-000.00");
         }
 
         #region Serial Port

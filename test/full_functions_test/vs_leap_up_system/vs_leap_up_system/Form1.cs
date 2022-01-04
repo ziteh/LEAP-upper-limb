@@ -17,7 +17,6 @@ namespace vs_leap_up_system
 
         private const double armL1 = 265;
         private const double armL2 = 220;
-        private const byte EOT = 0xff;
 
         #endregion Value
 
@@ -26,10 +25,6 @@ namespace vs_leap_up_system
             EFE,
             SFE
         };
-
-        private SerialPort serialPort = null;
-        private byte[] buffer = new byte[16];
-        private int payloadNumber;
 
         private double sfeAngle;
         private double efeAngle;
@@ -52,40 +47,57 @@ namespace vs_leap_up_system
             textBoxNowPositionEfe.Text = efeAngle.ToString();
         }
 
+        #region Serial Port
+
+        private SerialPort serialPort = null;
+        private byte[] buffer = new byte[16];
+        private int payloadNumber;
+        private const byte EOT = 0xff;
+
         private void buttonSerialPortConnection_Click(object sender, EventArgs e)
         {
             if (serialPort == null)
             {
                 try
                 {
-                    var port = comboBoxSerialPortName.SelectedItem.ToString();
-                    serialPort = new SerialPort(port, 9600);
-                    serialPort.DataReceived += SerialPortDataReceivedHandler;
-                    serialPort.Open();
-
-                    timer.Start();
-                    buttonSerialPortSend.Enabled = true;
-                    this.Text = "LEAP-Up (Connected)";
+                    SerialPortConnect();
                 }
                 catch (Exception ex)
                 {
-                    serialPort = null;
-                    timer.Stop();
-                    buttonSerialPortSend.Enabled = false;
-                    this.Text = "LEAP-Up (Disconnected)";
+                    SerialPortDisconnect();
                     MessageBox.Show(ex.Message);
                 }
             }
             else
             {
-                serialPort.Close();
-                serialPort.DataReceived -= SerialPortDataReceivedHandler;
-                serialPort = null;
-
-                timer.Stop();
-                buttonSerialPortSend.Enabled = false;
-                this.Text = "LEAP-Up (Disconnected)";
+                SerialPortDisconnect();
             }
+        }
+
+        private void SerialPortConnect()
+        {
+            var port = comboBoxSerialPortName.SelectedItem.ToString();
+            serialPort = new SerialPort(port, 9600);
+            serialPort.DataReceived += SerialPortDataReceivedHandler;
+            serialPort.Open();
+
+            timer.Start();
+            buttonSerialPortSend.Enabled = true;
+            this.Text = "LEAP-Up (Connected)";
+        }
+
+        private void SerialPortDisconnect()
+        {
+            if (serialPort != null)
+            {
+                serialPort.DataReceived -= SerialPortDataReceivedHandler;
+                serialPort.Close();
+                serialPort = null;
+            }
+
+            timer.Stop();
+            buttonSerialPortSend.Enabled = false;
+            this.Text = "LEAP-Up (Disconnected)";
         }
 
         private void SerialPortDataReceivedHandler(object sender, SerialDataReceivedEventArgs e)
@@ -150,6 +162,13 @@ namespace vs_leap_up_system
         {
             UpdateSerialPortName();
         }
+        private void buttonSerialPortSend_Click(object sender, EventArgs e)
+        {
+            SendMotorPositionControl(Joint.EFE, (double)numericUpDownEfeGoal.Value);
+            SendMotorPositionControl(Joint.SFE, (double)numericUpDownSfeGoal.Value);
+        }
+
+        #endregion Serial Port
 
         #region Kinematics
 
@@ -239,12 +258,6 @@ namespace vs_leap_up_system
         }
 
         #endregion Kinematics
-
-        private void buttonSerialPortSend_Click(object sender, EventArgs e)
-        {
-            SendMotorPositionControl(Joint.EFE, (double)numericUpDownEfeGoal.Value);
-            SendMotorPositionControl(Joint.SFE, (double)numericUpDownSfeGoal.Value);
-        }
 
         private void SendMotorPositionControl(Joint joint, double angleInDegree)
         {

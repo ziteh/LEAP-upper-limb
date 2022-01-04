@@ -34,10 +34,22 @@ namespace vs_leap_up_system
         private double sfeAngle;
         private double efeAngle;
 
+        private Timer timer = new Timer();
+
         public Form1()
         {
             InitializeComponent();
+
             UpdateSerialPortName();
+            timer.Interval = 500;
+            timer.Tick += TimerEvenHandler;
+            timer.Enabled = true;
+        }
+
+        private void TimerEvenHandler(object sender, EventArgs e)
+        {
+            textBoxNowPositionSfe.Text = sfeAngle.ToString();
+            textBoxNowPositionEfe.Text = efeAngle.ToString();
         }
 
         private void buttonSerialPortConnection_Click(object sender, EventArgs e)
@@ -51,12 +63,14 @@ namespace vs_leap_up_system
                     serialPort.DataReceived += SerialPortDataReceivedHandler;
                     serialPort.Open();
 
+                    timer.Start();
                     buttonSerialPortSend.Enabled = true;
                     this.Text = "LEAP-Up (Connected)";
                 }
                 catch (Exception ex)
                 {
                     serialPort = null;
+                    timer.Stop();
                     buttonSerialPortSend.Enabled = false;
                     this.Text = "LEAP-Up (Disconnected)";
                     MessageBox.Show(ex.Message);
@@ -68,6 +82,7 @@ namespace vs_leap_up_system
                 serialPort.DataReceived -= SerialPortDataReceivedHandler;
                 serialPort = null;
 
+                timer.Stop();
                 buttonSerialPortSend.Enabled = false;
                 this.Text = "LEAP-Up (Disconnected)";
             }
@@ -98,10 +113,7 @@ namespace vs_leap_up_system
                         now = now > 180 ? -(360 - now) : now;
                         goal = goal > 180 ? -(360 - goal) : goal;
 
-                        // UI
-                        SetNowPositionTextBox(joint, now);
-
-                        // Console
+                        // Show on console
                         var msg = $"{joint}: Now: {now: 000.00;-000.00}, Goal: {goal: 000.00;-000.00}";
                         if (joint == Joint.SFE)
                         {
@@ -117,31 +129,6 @@ namespace vs_leap_up_system
                 }
             }
             catch { }
-        }
-
-        delegate void SetNowPositionTextBoxCallBack(Joint joint, double value);
-
-        private void SetNowPositionTextBox(Joint joint, double value)
-        {
-            TextBox tb;
-            if (joint == Joint.SFE)
-            {
-                tb = textBoxNowPositionSfe;
-            }
-            else
-            {
-                tb = textBoxNowPositionEfe;
-            }
-
-            if (tb.InvokeRequired)
-            {
-                SetNowPositionTextBoxCallBack d = new SetNowPositionTextBoxCallBack(SetNowPositionTextBox);
-                this.Invoke(d, new object[] { joint, value });
-            }
-            else
-            {
-                tb.Text = value.ToString();
-            }
         }
 
         private void UpdateSerialPortName()

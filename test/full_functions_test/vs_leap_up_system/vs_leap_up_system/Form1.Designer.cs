@@ -50,6 +50,10 @@
             this.textBoxNowPositionSfe = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.textBoxY = new System.Windows.Forms.TextBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.textBoxX = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownSfeGoal)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownEfeGoal)).BeginInit();
             this.groupBox1.SuspendLayout();
@@ -310,13 +314,53 @@
             this.label4.TabIndex = 4;
             this.label4.Text = "EFE";
             // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(49, 538);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(26, 25);
+            this.label5.TabIndex = 4;
+            this.label5.Text = "X";
+            // 
+            // textBoxY
+            // 
+            this.textBoxY.Location = new System.Drawing.Point(108, 584);
+            this.textBoxY.Name = "textBoxY";
+            this.textBoxY.ReadOnly = true;
+            this.textBoxY.Size = new System.Drawing.Size(100, 31);
+            this.textBoxY.TabIndex = 11;
+            this.textBoxY.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(49, 590);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(27, 25);
+            this.label6.TabIndex = 4;
+            this.label6.Text = "Y";
+            // 
+            // textBoxX
+            // 
+            this.textBoxX.Location = new System.Drawing.Point(108, 531);
+            this.textBoxX.Name = "textBoxX";
+            this.textBoxX.ReadOnly = true;
+            this.textBoxX.Size = new System.Drawing.Size(100, 31);
+            this.textBoxX.TabIndex = 11;
+            this.textBoxX.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(988, 681);
+            this.Controls.Add(this.textBoxX);
+            this.Controls.Add(this.label6);
             this.Controls.Add(this.textBoxNowPositionSfe);
+            this.Controls.Add(this.textBoxY);
             this.Controls.Add(this.label4);
+            this.Controls.Add(this.label5);
             this.Controls.Add(this.textBoxNowPositionEfe);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.numericUpDownRelativeValue);
@@ -370,6 +414,10 @@
         private System.Windows.Forms.TextBox textBoxNowPositionSfe;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox textBoxY;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.TextBox textBoxX;
     }
 }
 

@@ -246,7 +246,7 @@ void set_joint_absolute_position(Joints_t joint, uint16_t goal_adc_value)
   else
   {
     set_motor_state(joint, Disable);
-    set_motor_speed(joint, 0);
+    set_motor_speed(joint, 11);
 
     // printf("J%d: N: %4d (Done)", joint, now_adc_value);
   }

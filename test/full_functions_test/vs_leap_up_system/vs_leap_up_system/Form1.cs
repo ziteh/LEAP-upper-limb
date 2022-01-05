@@ -17,22 +17,46 @@ namespace vs_leap_up_system
 
         private const double armL1 = 265;
         private const double armL2 = 220;
-        private const byte EOT = 0xff;
 
         #endregion Value
 
-        private SerialPort serialPort = null;
-        private byte[] buffer = new byte[16];
-        private int payloadNumber;
+        private enum Joint
+        {
+            EFE,
+            SFE
+        };
 
         private double sfeAngle;
         private double efeAngle;
 
+        private Timer timer = new Timer();
+
         public Form1()
         {
             InitializeComponent();
+
             UpdateSerialPortName();
+            timer.Interval = 500;
+            timer.Tick += TimerEvenHandler;
+            timer.Enabled = true;
         }
+
+        private void TimerEvenHandler(object sender, EventArgs e)
+        {
+            textBoxNowPositionSfe.Text = sfeAngle.ToString(" 000.00;-000.00");
+            textBoxNowPositionEfe.Text = efeAngle.ToString(" 000.00;-000.00");
+
+            var point = ForwardKinematics2(sfeAngle, efeAngle, armL1, armL2);
+            textBoxX.Text = point.x.ToString(" 000.00;-000.00");
+            textBoxY.Text = point.y.ToString(" 000.00;-000.00");
+        }
+
+        #region Serial Port
+
+        private SerialPort serialPort = null;
+        private byte[] buffer = new byte[16];
+        private int payloadNumber;
+        private const byte EOT = 0xff;
 
         private void buttonSerialPortConnection_Click(object sender, EventArgs e)
         {
@@ -40,28 +64,44 @@ namespace vs_leap_up_system
             {
                 try
                 {
-                    var port = comboBoxSerialPortName.SelectedItem.ToString();
-                    serialPort = new SerialPort(port, 9600);
-                    serialPort.DataReceived += SerialPortDataReceivedHandler;
-                    serialPort.Open();
-
-                    buttonSerialPortSend.Enabled = true;
+                    SerialPortConnect();
                 }
                 catch (Exception ex)
                 {
-                    serialPort = null;
-                    buttonSerialPortSend.Enabled = false;
+                    SerialPortDisconnect();
                     MessageBox.Show(ex.Message);
                 }
             }
             else
             {
-                serialPort.Close();
-                serialPort.DataReceived -= SerialPortDataReceivedHandler;
-                serialPort = null;
-
-                buttonSerialPortSend.Enabled = false;
+                SerialPortDisconnect();
             }
+        }
+
+        private void SerialPortConnect()
+        {
+            var port = comboBoxSerialPortName.SelectedItem.ToString();
+            serialPort = new SerialPort(port, 9600);
+            serialPort.DataReceived += SerialPortDataReceivedHandler;
+            serialPort.Open();
+
+            timer.Start();
+            buttonSerialPortSend.Enabled = true;
+            this.Text = "LEAP-Up (Connected)";
+        }
+
+        private void SerialPortDisconnect()
+        {
+            if (serialPort != null)
+            {
+                serialPort.DataReceived -= SerialPortDataReceivedHandler;
+                serialPort.Close();
+                serialPort = null;
+            }
+
+            timer.Stop();
+            buttonSerialPortSend.Enabled = false;
+            this.Text = "LEAP-Up (Disconnected)";
         }
 
         private void SerialPortDataReceivedHandler(object sender, SerialDataReceivedEventArgs e)
@@ -79,18 +119,19 @@ namespace vs_leap_up_system
                     buffer[--payloadNumber] = (byte)indata;
                     if (payloadNumber == 0)
                     {
-                        var joint = buffer[4] == 0 ? "EFE" : "SFE";
+                        var joint = buffer[4] == 0 ? Joint.EFE : Joint.SFE;
                         double now = (buffer[3] & 0x3f) | ((buffer[2] & 0x3f) << 6);
                         double goal = (buffer[1] & 0x3f) | ((buffer[0] & 0x3f) << 6);
 
-                        now = now * 359.0 / 4095.0;
-                        goal = goal * 359.0 / 4095.0;
+                        now *= (359.0 / 4095.0);
+                        goal *= (359.0 / 4095.0);
 
                         now = now > 180 ? -(360 - now) : now;
                         goal = goal > 180 ? -(360 - goal) : goal;
 
+                        // Show on console
                         var msg = $"{joint}: Now: {now: 000.00;-000.00}, Goal: {goal: 000.00;-000.00}";
-                        if (joint == "SFE")
+                        if (joint == Joint.SFE)
                         {
                             Console.WriteLine(msg);
                             sfeAngle = now;
@@ -125,6 +166,13 @@ namespace vs_leap_up_system
         {
             UpdateSerialPortName();
         }
+        private void buttonSerialPortSend_Click(object sender, EventArgs e)
+        {
+            SendMotorPositionControl(Joint.EFE, (double)numericUpDownEfeGoal.Value);
+            SendMotorPositionControl(Joint.SFE, (double)numericUpDownSfeGoal.Value);
+        }
+
+        #endregion Serial Port
 
         #region Kinematics
 
@@ -215,32 +263,27 @@ namespace vs_leap_up_system
 
         #endregion Kinematics
 
-        private void buttonSerialPortSend_Click(object sender, EventArgs e)
+        private void SendMotorPositionControl(Joint joint, double angleInDegree)
         {
-            var efeGoal = numericUpDownEfeGoal.Value;
-            efeGoal = efeGoal < 0 ? (360 + efeGoal) : efeGoal;
-            efeGoal = (decimal)((double)efeGoal * 4095.0 / 359.0);
-            var efeData = new byte[]
+            angleInDegree = angleInDegree < 0 ? (360 + angleInDegree) : angleInDegree;
+            angleInDegree *= (4095.0 / 359.0);
+
+            var data = new byte[]
             {
                 0x81,
-                0x00,
-                (byte)((int)efeGoal & 0x3f),
-                (byte)(((int)efeGoal >> 6) & 0x3f)
+                (byte)joint,
+                (byte)((int)angleInDegree & 0x3f),
+                (byte)(((int)angleInDegree >> 6) & 0x3f)
             };
 
-            var sfeGoal = numericUpDownSfeGoal.Value;
-            sfeGoal = sfeGoal < 0 ? (360 + sfeGoal) : sfeGoal;
-            sfeGoal = (decimal)((double)sfeGoal * 4095.0 / 359.0);
-            var sfeData = new byte[]
+            try
             {
-                0x81,
-                0x01,
-                (byte)((int)sfeGoal & 0x3f),
-                (byte)(((int)sfeGoal >> 6) & 0x3f)
-            };
-
-            serialPort.Write(efeData, 0, efeData.Length);
-            serialPort.Write(sfeData, 0, sfeData.Length);
+                serialPort.Write(data, 0, data.Length);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         private void UpdateIK()
@@ -279,27 +322,29 @@ namespace vs_leap_up_system
 
         private void RelaviteMove(int index, double value)
         {
-            var point = ForwardKinematics2(sfeAngle, efeAngle, armL1, armL2);
+            var nowPoint = ForwardKinematics2(sfeAngle, efeAngle, armL1, armL2);
             if (index == 0)
             {
-                point.x += value;
+                nowPoint.x += value;
             }
             else
             {
-                point.y += value;
+                nowPoint.y += value;
             }
-            numericUpDownX.Value = (decimal)point.x;
-            numericUpDownY.Value = (decimal)point.y;
+
+            InverseKinematics2(nowPoint, armL1, armL2, out var r1, out var r2);
+            SendMotorPositionControl(Joint.SFE, r1);
+            SendMotorPositionControl(Joint.EFE, r2);
         }
 
         private void buttonYp_Click(object sender, EventArgs e)
         {
-            RelaviteMove(1, (double)numericUpDownRelativeValue.Value);
+            RelaviteMove(1, -(double)numericUpDownRelativeValue.Value);
         }
 
         private void buttonYm_Click(object sender, EventArgs e)
         {
-            RelaviteMove(1, -(double)numericUpDownRelativeValue.Value);
+            RelaviteMove(1, (double)numericUpDownRelativeValue.Value);
         }
 
         private void buttonXp_Click(object sender, EventArgs e)

@@ -26,6 +26,14 @@ int main(void)
 
   while (1)
   {
+    auto a1 = get_force_sensor_value(A1);
+    auto a2 = get_force_sensor_value(A2);
+    auto b1 = get_force_sensor_value(B1);
+    auto b2 = get_force_sensor_value(B2);
+
+    printf("A1:%4d, A2:%4d, B1:%4d, B2:%4d\r\n", a1, a2, b1, b2);
+    delay(100000);
+
     //     set_joint_absolute_position(EFE, joint_goal_position[EFE]);
     // #if !defined(DEBUG)
     //     send_joint_position_state(EFE);
@@ -205,6 +213,47 @@ uint16_t get_adc_value(uint32_t adc, uint8_t channel)
   }
 
   return ADC_DR(adc);
+}
+
+int16_t get_force_sensor_x()
+{
+  auto a1 = get_force_sensor_value(A1);
+  auto a2 = get_force_sensor_value(A2);
+  return a2 - a1;
+}
+
+int16_t get_force_sensor_y()
+{
+  auto b1 = get_force_sensor_value(B1);
+  auto b2 = get_force_sensor_value(B2);
+  return b2 - b1;
+}
+
+void send_force_sensor_value(uint8_t id)
+{
+  auto x = get_force_sensor_x();
+  auto y = get_force_sensor_y();
+  uint16_t z = 0;
+
+  if (x < 0)
+  {
+    x = (0xfff - x) + 1;
+  }
+
+  if (y < 0)
+  {
+    y = (0xfff - y) + 1;
+  }
+
+  usart_send_blocking(USART2, FORCE_SENSOR_VALUE_HEADER);
+  usart_send_blocking(USART2, (int)id);
+  usart_send_blocking(USART2, x & 0x3f);
+  usart_send_blocking(USART2, (x >> 6) & 0x3f);
+  usart_send_blocking(USART2, y & 0x3f);
+  usart_send_blocking(USART2, (y >> 6) & 0x3f);
+  usart_send_blocking(USART2, z & 0x3f);
+  usart_send_blocking(USART2, (z >> 6) & 0x3f);
+  usart_send_blocking(USART2, EOT_SYMBOL);
 }
 
 uint16_t get_force_sensor_value(Force_sensors_t force_sensor)

@@ -107,6 +107,8 @@ void clear_communication_variable(void);
 uint16_t get_adc_value(uint32_t adc, uint8_t channel);
 void set_dutycycle(float value);
 void set_joint_absolute_position(Joints_t joint, uint16_t position);
+int16_t get_force_sensor_x();
+int16_t get_force_sensor_y();
 
 void send_joint_position_state(Joints_t joint);
 void send_motor_state(uint8_t motor_id);

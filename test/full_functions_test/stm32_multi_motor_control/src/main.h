@@ -104,7 +104,7 @@ uint16_t convert_degree_to_adc_value(float degree, Joints_t joint);
 int16_t convert_adc_value_to_degree(uint16_t adc_value, Joints_t joint);
 
 void clear_communication_variable(void);
-uint16_t get_adc_value(int channel);
+uint16_t get_adc_value(uint32_t adc, uint8_t channel);
 void set_dutycycle(float value);
 void set_joint_absolute_position(Joints_t joint, uint16_t position);
 

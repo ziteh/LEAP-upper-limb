@@ -190,12 +190,10 @@ void set_motor_speed(Joints_t joint, uint8_t speed)
   timer_set_oc_value(tim, oc, value);
 }
 
-uint16_t get_force_sensor_value(Force_sensors_t force_sensor)
+uint16_t get_adc_value(uint32_t adc, uint8_t channel)
 {
-  auto adc = force_sensor_adc[force_sensor];
-
   uint8_t channels[16];
-  channels[0] = force_sensor_adc_channel[force_sensor];
+  channels[0] = channel;
   adc_set_regular_sequence(adc, 1, channels);
 
   adc_start_conversion_direct(adc);
@@ -209,23 +207,18 @@ uint16_t get_force_sensor_value(Force_sensors_t force_sensor)
   return ADC_DR(adc);
 }
 
+uint16_t get_force_sensor_value(Force_sensors_t force_sensor)
+{
+  auto adc = force_sensor_adc[force_sensor];
+  auto channel = force_sensor_adc_channel[force_sensor];
+  return get_adc_value(adc, channel);
+}
+
 uint16_t get_joint_position(Joints_t joint)
 {
   auto adc = joint_posiion_adc[joint];
-
-  uint8_t channels[16];
-  channels[0] = joint_posiion_adc_channel[joint];
-  adc_set_regular_sequence(adc, 1, channels);
-
-  adc_start_conversion_direct(adc);
-
-  /* Wait for ADC. */
-  while (!adc_get_flag(adc, ADC_SR_EOC))
-  {
-    __asm__("nop"); // Do nothing.
-  }
-
-  return ADC_DR(adc);
+  auto channel = joint_posiion_adc_channel[joint];
+  return get_adc_value(adc, channel);
 }
 
 void set_joint_absolute_position(Joints_t joint, uint16_t goal_adc_value)

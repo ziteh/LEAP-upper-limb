@@ -4,7 +4,7 @@
  * @brief  Multi motor control with communication.
  */
 
-#define DEBUG
+// #define DEBUG
 
 #include "main.h"
 
@@ -26,21 +26,20 @@ int main(void)
 
   while (1)
   {
+    set_joint_absolute_position(EFE, joint_goal_position[EFE]);
+#if !defined(DEBUG)
+    send_joint_position_state(EFE);
+#endif
+    delay(20);
+    set_joint_absolute_position(SFE, joint_goal_position[SFE]);
+#if !defined(DEBUG)
+    send_joint_position_state(SFE);
+#endif
     send_force_sensor_value(0);
-    delay(200000);
-    //     set_joint_absolute_position(EFE, joint_goal_position[EFE]);
-    // #if !defined(DEBUG)
-    //     send_joint_position_state(EFE);
-    // #endif
-    //     delay(20);
-    //     set_joint_absolute_position(SFE, joint_goal_position[SFE]);
-    // #if !defined(DEBUG)
-    //     send_joint_position_state(SFE);
-    // #endif
-    //     delay(20);
-    // #if defined(DEBUG)
-    //     printf("\r\n");
-    // #endif
+    delay(20);
+#if defined(DEBUG)
+    printf("\r\n");
+#endif
   }
 
   return 0;

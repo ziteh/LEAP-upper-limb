@@ -125,4 +125,6 @@ uint16_t get_joint_position(Joints_t joint);
 
 uint16_t get_force_sensor_value(Force_sensors_t force_sensor);
 
+void debug_send_force_sensor_value(void);
+
 #endif /* MAIN_H_ */

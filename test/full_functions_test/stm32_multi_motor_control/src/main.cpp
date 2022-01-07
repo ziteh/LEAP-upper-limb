@@ -26,14 +26,8 @@ int main(void)
 
   while (1)
   {
-    auto a1 = get_force_sensor_value(A1);
-    auto a2 = get_force_sensor_value(A2);
-    auto b1 = get_force_sensor_value(B1);
-    auto b2 = get_force_sensor_value(B2);
-
-    printf("A1:%4d, A2:%4d, B1:%4d, B2:%4d\r\n", a1, a2, b1, b2);
-    delay(100000);
-
+    send_force_sensor_value(0);
+    delay(200000);
     //     set_joint_absolute_position(EFE, joint_goal_position[EFE]);
     // #if !defined(DEBUG)
     //     send_joint_position_state(EFE);
@@ -50,6 +44,16 @@ int main(void)
   }
 
   return 0;
+}
+
+void debug_send_force_sensor_value(void)
+{
+  auto a1 = get_force_sensor_value(A1);
+  auto a2 = get_force_sensor_value(A2);
+  auto b1 = get_force_sensor_value(B1);
+  auto b2 = get_force_sensor_value(B2);
+
+  printf("A1:%4d, A2:%4d, B1:%4d, B2:%4d\r\n", a1, a2, b1, b2);
 }
 
 void send_joint_position_state(Joints_t joint)

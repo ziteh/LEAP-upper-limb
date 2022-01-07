@@ -71,6 +71,90 @@ void setup_adc(void)
   delay(800000); // Wait a bit.
   adc_reset_calibration(SFE_JOINT_POSITION_ADC);
   adc_calibrate(SFE_JOINT_POSITION_ADC);
+
+  /* Force sensor A1. */
+  gpio_set_mode(FORCE_SENSOR_A1_ADC_PORT,
+                GPIO_MODE_INPUT,
+                GPIO_CNF_INPUT_ANALOG,
+                FORCE_SENSOR_A1_ADC_PIN);
+
+  adc_power_off(FORCE_SENSOR_A1_ADC);
+
+  adc_disable_scan_mode(FORCE_SENSOR_A1_ADC);
+  adc_disable_external_trigger_regular(FORCE_SENSOR_A1_ADC);
+  adc_set_single_conversion_mode(FORCE_SENSOR_A1_ADC);
+  adc_set_right_aligned(FORCE_SENSOR_A1_ADC);
+  adc_set_sample_time(FORCE_SENSOR_A1_ADC,
+                      FORCE_SENSOR_A1_ADC_CHANNEL,
+                      ADC_SMPR_SMP_55DOT5CYC);
+
+  adc_power_on(FORCE_SENSOR_A1_ADC);
+  delay(800000); // Wait a bit.
+  adc_reset_calibration(FORCE_SENSOR_A1_ADC);
+  adc_calibrate(FORCE_SENSOR_A1_ADC);
+
+  /* Force sensor A2. */
+  gpio_set_mode(FORCE_SENSOR_A2_ADC_PORT,
+                GPIO_MODE_INPUT,
+                GPIO_CNF_INPUT_ANALOG,
+                FORCE_SENSOR_A2_ADC_PIN);
+
+  adc_power_off(FORCE_SENSOR_A2_ADC);
+
+  adc_disable_scan_mode(FORCE_SENSOR_A2_ADC);
+  adc_disable_external_trigger_regular(FORCE_SENSOR_A2_ADC);
+  adc_set_single_conversion_mode(FORCE_SENSOR_A2_ADC);
+  adc_set_right_aligned(FORCE_SENSOR_A2_ADC);
+  adc_set_sample_time(FORCE_SENSOR_A2_ADC,
+                      FORCE_SENSOR_A2_ADC_CHANNEL,
+                      ADC_SMPR_SMP_55DOT5CYC);
+
+  adc_power_on(FORCE_SENSOR_A2_ADC);
+  delay(800000); // Wait a bit.
+  adc_reset_calibration(FORCE_SENSOR_A2_ADC);
+  adc_calibrate(FORCE_SENSOR_A2_ADC);
+
+  /* Force sensor B1. */
+  gpio_set_mode(FORCE_SENSOR_B1_ADC_PORT,
+                GPIO_MODE_INPUT,
+                GPIO_CNF_INPUT_ANALOG,
+                FORCE_SENSOR_B1_ADC_PIN);
+
+  adc_power_off(FORCE_SENSOR_B1_ADC);
+
+  adc_disable_scan_mode(FORCE_SENSOR_B1_ADC);
+  adc_disable_external_trigger_regular(FORCE_SENSOR_B1_ADC);
+  adc_set_single_conversion_mode(FORCE_SENSOR_B1_ADC);
+  adc_set_right_aligned(FORCE_SENSOR_B1_ADC);
+  adc_set_sample_time(FORCE_SENSOR_B1_ADC,
+                      FORCE_SENSOR_B1_ADC_CHANNEL,
+                      ADC_SMPR_SMP_55DOT5CYC);
+
+  adc_power_on(FORCE_SENSOR_B1_ADC);
+  delay(800000); // Wait a bit.
+  adc_reset_calibration(FORCE_SENSOR_B1_ADC);
+  adc_calibrate(FORCE_SENSOR_B1_ADC);
+
+  /* Force sensor B2. */
+  gpio_set_mode(FORCE_SENSOR_B2_ADC_PORT,
+                GPIO_MODE_INPUT,
+                GPIO_CNF_INPUT_ANALOG,
+                FORCE_SENSOR_B2_ADC_PIN);
+
+  adc_power_off(FORCE_SENSOR_B2_ADC);
+
+  adc_disable_scan_mode(FORCE_SENSOR_B2_ADC);
+  adc_disable_external_trigger_regular(FORCE_SENSOR_B2_ADC);
+  adc_set_single_conversion_mode(FORCE_SENSOR_B2_ADC);
+  adc_set_right_aligned(FORCE_SENSOR_B2_ADC);
+  adc_set_sample_time(FORCE_SENSOR_B2_ADC,
+                      FORCE_SENSOR_B2_ADC_CHANNEL,
+                      ADC_SMPR_SMP_55DOT5CYC);
+
+  adc_power_on(FORCE_SENSOR_B2_ADC);
+  delay(800000); // Wait a bit.
+  adc_reset_calibration(FORCE_SENSOR_B2_ADC);
+  adc_calibrate(FORCE_SENSOR_B2_ADC);
 }
 
 void setup_pwm(void)

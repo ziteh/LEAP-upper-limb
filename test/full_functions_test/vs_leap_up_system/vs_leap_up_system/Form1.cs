@@ -56,6 +56,7 @@ namespace vs_leap_up_system
         private SerialPort serialPort = null;
         private byte[] buffer = new byte[16];
         private int payloadNumber;
+        private byte header;
         private const byte EOT = 0xff;
 
         private void buttonSerialPortConnection_Click(object sender, EventArgs e)
@@ -110,36 +111,93 @@ namespace vs_leap_up_system
             {
                 var sp = sender as SerialPort;
                 int indata = sp.ReadByte();
-                if (indata == 0x8c)
+                if ((indata & 0x80) == 0x80)
                 {
-                    payloadNumber = 5;
+                    // Is header of EOT.
+                    header = (byte)indata;
+                    switch (indata)
+                    {
+                        case 0x8c:
+                            payloadNumber = 5;
+                            break;
+                        case 0x8d:
+                            payloadNumber = 7;
+                            break;
+                        default:
+                            break;
+                    }
+
                 }
-                else if (indata != EOT)
+                else
                 {
+                    // Is payload.
                     buffer[--payloadNumber] = (byte)indata;
                     if (payloadNumber == 0)
                     {
-                        var joint = buffer[4] == 0 ? Joint.EFE : Joint.SFE;
-                        double now = (buffer[3] & 0x3f) | ((buffer[2] & 0x3f) << 6);
-                        double goal = (buffer[1] & 0x3f) | ((buffer[0] & 0x3f) << 6);
-
-                        now *= (359.0 / 4095.0);
-                        goal *= (359.0 / 4095.0);
-
-                        now = now > 180 ? -(360 - now) : now;
-                        goal = goal > 180 ? -(360 - goal) : goal;
-
-                        // Show on console
-                        var msg = $"{joint}: Now: {now: 000.00;-000.00}, Goal: {goal: 000.00;-000.00}";
-                        if (joint == Joint.SFE)
+                        switch (header)
                         {
-                            Console.WriteLine(msg);
-                            sfeAngle = now;
-                        }
-                        else
-                        {
-                            Console.Write(msg + ". ");
-                            efeAngle = now;
+                            case 0x8c:
+                                {
+                                    var joint = buffer[4] == 0 ? Joint.EFE : Joint.SFE;
+                                    double now = (buffer[3] & 0x3f) | ((buffer[2] & 0x3f) << 6);
+                                    double goal = (buffer[1] & 0x3f) | ((buffer[0] & 0x3f) << 6);
+
+                                    now *= (359.0 / 4095.0);
+                                    goal *= (359.0 / 4095.0);
+
+                                    now = now > 180 ? -(360 - now) : now;
+                                    goal = goal > 180 ? -(360 - goal) : goal;
+
+                                    // Show on console
+                                    var msg = $"{joint}: Now: {now: 000.00;-000.00}, Goal: {goal: 000.00;-000.00}";
+                                    if (joint == Joint.SFE)
+                                    {
+                                        Console.WriteLine(msg);
+                                        sfeAngle = now;
+                                    }
+                                    else
+                                    {
+                                        Console.Write(msg + ". ");
+                                        efeAngle = now;
+                                    }
+                                    break;
+                                }
+                            case 0x8d:
+                                {
+                                    var id = buffer[6];
+                                    int x = (buffer[5] & 0x3f) | ((buffer[4] & 0x3f) << 6);
+                                    int y = (buffer[3] & 0x3f) | ((buffer[2] & 0x3f) << 6);
+                                    int z = (buffer[1] & 0x3f) | ((buffer[0] & 0x3f) << 6);
+
+                                    if ((x >> 11) == 1)
+                                    {
+                                        x = -((0xfff - x) + 1);
+                                    }
+                                    if ((y >> 11) == 1)
+                                    {
+                                        y = -((0xfff - y) + 1);
+                                    }
+                                    if ((z >> 11) == 1)
+                                    {
+                                        z = -((0xfff - z) + 1);
+                                    }
+
+                                    y = -y;
+
+                                    if (Math.Abs(x) > 80)
+                                    {
+                                        RelaviteMove(0, x / 10.0);
+                                    }
+                                    if (Math.Abs(y) > 80)
+                                    {
+                                        RelaviteMove(1, y / 10.0);
+                                    }
+
+                                    Console.WriteLine($"X:{x}, Y:{y}, Z:{z}");
+                                    break;
+                                }
+                            default:
+                                break;
                         }
                     }
                 }

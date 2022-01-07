@@ -4,6 +4,8 @@
  * @brief  Multi motor control with communication.
  */
 
+// #define DEBUG
+
 #include "main.h"
 
 int receive_payload_number;
@@ -25,15 +27,32 @@ int main(void)
   while (1)
   {
     set_joint_absolute_position(EFE, joint_goal_position[EFE]);
+#if !defined(DEBUG)
     send_joint_position_state(EFE);
+#endif
     delay(20);
     set_joint_absolute_position(SFE, joint_goal_position[SFE]);
+#if !defined(DEBUG)
     send_joint_position_state(SFE);
+#endif
+    send_force_sensor_value(0);
     delay(20);
-    // printf("\r\n");
+#if defined(DEBUG)
+    printf("\r\n");
+#endif
   }
 
   return 0;
+}
+
+void debug_send_force_sensor_value(void)
+{
+  auto a1 = get_force_sensor_value(A1);
+  auto a2 = get_force_sensor_value(A2);
+  auto b1 = get_force_sensor_value(B1);
+  auto b2 = get_force_sensor_value(B2);
+
+  printf("A1:%4d, A2:%4d, B1:%4d, B2:%4d\r\n", a1, a2, b1, b2);
 }
 
 void send_joint_position_state(Joints_t joint)
@@ -182,12 +201,10 @@ void set_motor_speed(Joints_t joint, uint8_t speed)
   timer_set_oc_value(tim, oc, value);
 }
 
-uint16_t get_joint_position(Joints_t joint)
+uint16_t get_adc_value(uint32_t adc, uint8_t channel)
 {
-  auto adc = joint_posiion_adc[joint];
-
   uint8_t channels[16];
-  channels[0] = joint_posiion_adc_channel[joint];
+  channels[0] = channel;
   adc_set_regular_sequence(adc, 1, channels);
 
   adc_start_conversion_direct(adc);
@@ -199,6 +216,61 @@ uint16_t get_joint_position(Joints_t joint)
   }
 
   return ADC_DR(adc);
+}
+
+int16_t get_force_sensor_x()
+{
+  auto a1 = get_force_sensor_value(A1);
+  auto a2 = get_force_sensor_value(A2);
+  return a2 - a1;
+}
+
+int16_t get_force_sensor_y()
+{
+  auto b1 = get_force_sensor_value(B1);
+  auto b2 = get_force_sensor_value(B2);
+  return b2 - b1;
+}
+
+void send_force_sensor_value(uint8_t id)
+{
+  auto x = get_force_sensor_x();
+  auto y = get_force_sensor_y();
+  uint16_t z = 0;
+
+  if (x < 0)
+  {
+    x = (0xfff + x) + 1;
+  }
+
+  if (y < 0)
+  {
+    y = (0xfff + y) + 1;
+  }
+
+  usart_send_blocking(USART2, FORCE_SENSOR_VALUE_HEADER);
+  usart_send_blocking(USART2, (int)id);
+  usart_send_blocking(USART2, x & 0x3f);
+  usart_send_blocking(USART2, (x >> 6) & 0x3f);
+  usart_send_blocking(USART2, y & 0x3f);
+  usart_send_blocking(USART2, (y >> 6) & 0x3f);
+  usart_send_blocking(USART2, z & 0x3f);
+  usart_send_blocking(USART2, (z >> 6) & 0x3f);
+  usart_send_blocking(USART2, EOT_SYMBOL);
+}
+
+uint16_t get_force_sensor_value(Force_sensors_t force_sensor)
+{
+  auto adc = force_sensor_adc[force_sensor];
+  auto channel = force_sensor_adc_channel[force_sensor];
+  return get_adc_value(adc, channel);
+}
+
+uint16_t get_joint_position(Joints_t joint)
+{
+  auto adc = joint_posiion_adc[joint];
+  auto channel = joint_posiion_adc_channel[joint];
+  return get_adc_value(adc, channel);
 }
 
 void set_joint_absolute_position(Joints_t joint, uint16_t goal_adc_value)
@@ -232,7 +304,9 @@ void set_joint_absolute_position(Joints_t joint, uint16_t goal_adc_value)
     set_motor_speed(joint, 15);
     set_motor_state(joint, Enable);
 
-    // printf("J%d: G: %4d, N: %4d (%d)", joint, goal_adc_value, now_adc_value, dir);
+#if defined(DEBUG)
+    printf("J%d: G: %4d, N: %4d (%d)", joint, goal_adc_value, now_adc_value, dir);
+#endif
   }
   else if ((goal_adc_value - now_adc_value) > allowable_error && now_adc_value <= max_adc_value)
   {
@@ -241,14 +315,18 @@ void set_joint_absolute_position(Joints_t joint, uint16_t goal_adc_value)
     set_motor_speed(joint, 15);
     set_motor_state(joint, Enable);
 
-    // printf("J%d: G: %4d, N: %4d (%d)", joint, goal_adc_value, now_adc_value, dir);
+#if defined(DEBUG)
+    printf("J%d: G: %4d, N: %4d (%d)", joint, goal_adc_value, now_adc_value, dir);
+#endif
   }
   else
   {
     set_motor_state(joint, Disable);
     set_motor_speed(joint, 11);
 
-    // printf("J%d: N: %4d (Done)", joint, now_adc_value);
+#if defined(DEBUG)
+    printf("J%d: N: %4d (Done)", joint, now_adc_value);
+#endif
   }
 }
 

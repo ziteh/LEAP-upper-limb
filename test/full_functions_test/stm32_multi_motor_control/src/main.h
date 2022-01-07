@@ -28,6 +28,14 @@ typedef enum
 
 typedef enum
 {
+  A1,
+  A2,
+  B1,
+  B2
+} Force_sensors_t;
+
+typedef enum
+{
   Disable = 0,
   Enable = !Disable,
   ToggleState
@@ -82,6 +90,16 @@ uint8_t joint_allowable_position_error[2] = {EFE_JOINT_ALLOWABLE_POSITION_ERROR,
 Direction_t joint_flexed_direction[2] = {EFE_FLEXED_DIRCETION,
                                          SFE_FLEXED_DIRCETION};
 
+uint32_t force_sensor_adc[4] = {FORCE_SENSOR_A1_ADC,
+                                FORCE_SENSOR_A2_ADC,
+                                FORCE_SENSOR_B1_ADC,
+                                FORCE_SENSOR_B2_ADC};
+
+uint32_t force_sensor_adc_channel[4] = {FORCE_SENSOR_A1_ADC_CHANNEL,
+                                        FORCE_SENSOR_A2_ADC_CHANNEL,
+                                        FORCE_SENSOR_B1_ADC_CHANNEL,
+                                        FORCE_SENSOR_B2_ADC_CHANNEL};
+
 uint16_t convert_degree_to_adc_value(float degree, Joints_t joint);
 int16_t convert_adc_value_to_degree(uint16_t adc_value, Joints_t joint);
 
@@ -102,5 +120,7 @@ void set_motor_state(Joints_t joint, EnableState_t state);
 void set_motor_direction(Joints_t joint, Direction_t dir);
 void set_motor_speed(Joints_t joint, uint8_t speed);
 uint16_t get_joint_position(Joints_t joint);
+
+uint16_t get_force_sensor_value(Force_sensors_t force_sensor);
 
 #endif /* MAIN_H_ */

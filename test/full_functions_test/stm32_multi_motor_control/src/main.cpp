@@ -4,7 +4,7 @@
  * @brief  Multi motor control with communication.
  */
 
-// #define DEBUG
+#define DEBUG
 
 #include "main.h"
 
@@ -26,19 +26,19 @@ int main(void)
 
   while (1)
   {
-    set_joint_absolute_position(EFE, joint_goal_position[EFE]);
-#if !defined(DEBUG)
-    send_joint_position_state(EFE);
-#endif
-    delay(20);
-    set_joint_absolute_position(SFE, joint_goal_position[SFE]);
-#if !defined(DEBUG)
-    send_joint_position_state(SFE);
-#endif
-    delay(20);
-#if defined(DEBUG)
-    printf("\r\n");
-#endif
+    //     set_joint_absolute_position(EFE, joint_goal_position[EFE]);
+    // #if !defined(DEBUG)
+    //     send_joint_position_state(EFE);
+    // #endif
+    //     delay(20);
+    //     set_joint_absolute_position(SFE, joint_goal_position[SFE]);
+    // #if !defined(DEBUG)
+    //     send_joint_position_state(SFE);
+    // #endif
+    //     delay(20);
+    // #if defined(DEBUG)
+    //     printf("\r\n");
+    // #endif
   }
 
   return 0;
@@ -188,6 +188,25 @@ void set_motor_speed(Joints_t joint, uint8_t speed)
   uint32_t value = PWM_TIMER_PERIOD * (speed / 100.0);
 
   timer_set_oc_value(tim, oc, value);
+}
+
+uint16_t get_force_sensor_value(Force_sensors_t force_sensor)
+{
+  auto adc = force_sensor_adc[force_sensor];
+
+  uint8_t channels[16];
+  channels[0] = force_sensor_adc_channel[force_sensor];
+  adc_set_regular_sequence(adc, 1, channels);
+
+  adc_start_conversion_direct(adc);
+
+  /* Wait for ADC. */
+  while (!adc_get_flag(adc, ADC_SR_EOC))
+  {
+    __asm__("nop"); // Do nothing.
+  }
+
+  return ADC_DR(adc);
 }
 
 uint16_t get_joint_position(Joints_t joint)

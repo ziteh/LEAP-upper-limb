@@ -241,12 +241,12 @@ void send_force_sensor_value(uint8_t id)
 
   if (x < 0)
   {
-    x = (0xfff - x) + 1;
+    x = (0xfff + x) + 1;
   }
 
   if (y < 0)
   {
-    y = (0xfff - y) + 1;
+    y = (0xfff + y) + 1;
   }
 
   usart_send_blocking(USART2, FORCE_SENSOR_VALUE_HEADER);

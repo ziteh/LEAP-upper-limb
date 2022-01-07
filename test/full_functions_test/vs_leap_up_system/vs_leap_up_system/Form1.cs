@@ -182,6 +182,17 @@ namespace vs_leap_up_system
                                         z = -((0xfff - z) + 1);
                                     }
 
+                                    y = -y;
+
+                                    if (Math.Abs(x) > 80)
+                                    {
+                                        RelaviteMove(0, x / 10.0);
+                                    }
+                                    if (Math.Abs(y) > 80)
+                                    {
+                                        RelaviteMove(1, y / 10.0);
+                                    }
+
                                     Console.WriteLine($"X:{x}, Y:{y}, Z:{z}");
                                     break;
                                 }

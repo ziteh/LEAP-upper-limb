@@ -4,6 +4,8 @@
  * @brief  Multi motor control with communication.
  */
 
+// #define DEBUG
+
 #include "main.h"
 
 int receive_payload_number;
@@ -25,12 +27,18 @@ int main(void)
   while (1)
   {
     set_joint_absolute_position(EFE, joint_goal_position[EFE]);
+#if !defined(DEBUG)
     send_joint_position_state(EFE);
+#endif
     delay(20);
     set_joint_absolute_position(SFE, joint_goal_position[SFE]);
+#if !defined(DEBUG)
     send_joint_position_state(SFE);
+#endif
     delay(20);
-    // printf("\r\n");
+#if defined(DEBUG)
+    printf("\r\n");
+#endif
   }
 
   return 0;
@@ -232,7 +240,9 @@ void set_joint_absolute_position(Joints_t joint, uint16_t goal_adc_value)
     set_motor_speed(joint, 15);
     set_motor_state(joint, Enable);
 
-    // printf("J%d: G: %4d, N: %4d (%d)", joint, goal_adc_value, now_adc_value, dir);
+#if defined(DEBUG)
+    printf("J%d: G: %4d, N: %4d (%d)", joint, goal_adc_value, now_adc_value, dir);
+#endif
   }
   else if ((goal_adc_value - now_adc_value) > allowable_error && now_adc_value <= max_adc_value)
   {
@@ -241,14 +251,18 @@ void set_joint_absolute_position(Joints_t joint, uint16_t goal_adc_value)
     set_motor_speed(joint, 15);
     set_motor_state(joint, Enable);
 
-    // printf("J%d: G: %4d, N: %4d (%d)", joint, goal_adc_value, now_adc_value, dir);
+#if defined(DEBUG)
+    printf("J%d: G: %4d, N: %4d (%d)", joint, goal_adc_value, now_adc_value, dir);
+#endif
   }
   else
   {
     set_motor_state(joint, Disable);
     set_motor_speed(joint, 11);
 
-    // printf("J%d: N: %4d (Done)", joint, now_adc_value);
+#if defined(DEBUG)
+    printf("J%d: N: %4d (Done)", joint, now_adc_value);
+#endif
   }
 }
 

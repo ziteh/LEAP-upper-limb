@@ -28,6 +28,8 @@ namespace vs_leap_up_system
 
         private double sfeAngle;
         private double efeAngle;
+        private double forceSensorX;
+        private double forceSensorY;
 
         private Timer timer = new Timer();
 
@@ -43,6 +45,9 @@ namespace vs_leap_up_system
 
         private void TimerEvenHandler(object sender, EventArgs e)
         {
+            textBoxForceSensorX.Text = forceSensorX.ToString(" 000,00;-000.00");
+            textBoxForceSensorY.Text = forceSensorY.ToString(" 000,00;-000.00");
+
             textBoxNowPositionSfe.Text = sfeAngle.ToString(" 000.00;-000.00");
             textBoxNowPositionEfe.Text = efeAngle.ToString(" 000.00;-000.00");
 
@@ -183,6 +188,9 @@ namespace vs_leap_up_system
                                     }
 
                                     y = -y;
+
+                                    forceSensorX = x;
+                                    forceSensorY = y;
 
                                     if (Math.Abs(x) > 110)
                                     {

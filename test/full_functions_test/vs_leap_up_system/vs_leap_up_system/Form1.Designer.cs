@@ -54,6 +54,8 @@
             this.textBoxY = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.textBoxX = new System.Windows.Forms.TextBox();
+            this.textBoxForceSensorY = new System.Windows.Forms.TextBox();
+            this.textBoxForceSensorX = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownSfeGoal)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownEfeGoal)).BeginInit();
             this.groupBox1.SuspendLayout();
@@ -350,13 +352,33 @@
             this.textBoxX.TabIndex = 11;
             this.textBoxX.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
+            // textBoxForceSensorY
+            // 
+            this.textBoxForceSensorY.Location = new System.Drawing.Point(243, 584);
+            this.textBoxForceSensorY.Name = "textBoxForceSensorY";
+            this.textBoxForceSensorY.ReadOnly = true;
+            this.textBoxForceSensorY.Size = new System.Drawing.Size(100, 31);
+            this.textBoxForceSensorY.TabIndex = 11;
+            this.textBoxForceSensorY.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            // 
+            // textBoxForceSensorX
+            // 
+            this.textBoxForceSensorX.Location = new System.Drawing.Point(243, 531);
+            this.textBoxForceSensorX.Name = "textBoxForceSensorX";
+            this.textBoxForceSensorX.ReadOnly = true;
+            this.textBoxForceSensorX.Size = new System.Drawing.Size(100, 31);
+            this.textBoxForceSensorX.TabIndex = 11;
+            this.textBoxForceSensorX.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(988, 681);
+            this.Controls.Add(this.textBoxForceSensorX);
             this.Controls.Add(this.textBoxX);
             this.Controls.Add(this.label6);
+            this.Controls.Add(this.textBoxForceSensorY);
             this.Controls.Add(this.textBoxNowPositionSfe);
             this.Controls.Add(this.textBoxY);
             this.Controls.Add(this.label4);
@@ -418,6 +440,8 @@
         private System.Windows.Forms.TextBox textBoxY;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.TextBox textBoxX;
+        private System.Windows.Forms.TextBox textBoxForceSensorY;
+        private System.Windows.Forms.TextBox textBoxForceSensorX;
     }
 }
 

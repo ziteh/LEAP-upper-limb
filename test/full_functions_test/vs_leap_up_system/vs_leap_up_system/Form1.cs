@@ -16,7 +16,7 @@ namespace vs_leap_up_system
         #region Value
 
         private const double armL1 = 265;
-        private const double armL2 = 220;
+        private const double armL2 = 425;
 
         #endregion Value
 
@@ -184,11 +184,11 @@ namespace vs_leap_up_system
 
                                     y = -y;
 
-                                    if (Math.Abs(x) > 80)
+                                    if (Math.Abs(x) > 110)
                                     {
                                         RelaviteMove(0, x / 10.0);
                                     }
-                                    if (Math.Abs(y) > 80)
+                                    if (Math.Abs(y) > 110)
                                     {
                                         RelaviteMove(1, y / 10.0);
                                     }

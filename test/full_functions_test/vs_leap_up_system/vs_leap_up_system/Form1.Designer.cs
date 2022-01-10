@@ -56,12 +56,20 @@
             this.textBoxX = new System.Windows.Forms.TextBox();
             this.textBoxForceSensorY = new System.Windows.Forms.TextBox();
             this.textBoxForceSensorX = new System.Windows.Forms.TextBox();
+            this.numericUpDownForceSensorConverTestX = new System.Windows.Forms.NumericUpDown();
+            this.numericUpDownForceSensorConverTestY = new System.Windows.Forms.NumericUpDown();
+            this.numericUpDownForceSensorConverTestConvertedX = new System.Windows.Forms.TextBox();
+            this.numericUpDownForceSensorConverTestConvertedY = new System.Windows.Forms.TextBox();
+            this.numericUpDownForceSensorConverTestXnumericUpDownForceSensorConverTestTheta = new System.Windows.Forms.NumericUpDown();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownSfeGoal)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownEfeGoal)).BeginInit();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownX)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownY)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownRelativeValue)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownForceSensorConverTestX)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownForceSensorConverTestY)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownForceSensorConverTestXnumericUpDownForceSensorConverTestTheta)).BeginInit();
             this.SuspendLayout();
             // 
             // comboBoxSerialPortName
@@ -370,11 +378,84 @@
             this.textBoxForceSensorX.TabIndex = 11;
             this.textBoxForceSensorX.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
+            // numericUpDownForceSensorConverTestX
+            // 
+            this.numericUpDownForceSensorConverTestX.DecimalPlaces = 3;
+            this.numericUpDownForceSensorConverTestX.Location = new System.Drawing.Point(1079, 180);
+            this.numericUpDownForceSensorConverTestX.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.numericUpDownForceSensorConverTestX.Minimum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            -2147483648});
+            this.numericUpDownForceSensorConverTestX.Name = "numericUpDownForceSensorConverTestX";
+            this.numericUpDownForceSensorConverTestX.Size = new System.Drawing.Size(120, 31);
+            this.numericUpDownForceSensorConverTestX.TabIndex = 6;
+            this.numericUpDownForceSensorConverTestX.ValueChanged += new System.EventHandler(this.numericUpDownForceSensorConverTestX_ValueChanged);
+            // 
+            // numericUpDownForceSensorConverTestY
+            // 
+            this.numericUpDownForceSensorConverTestY.DecimalPlaces = 3;
+            this.numericUpDownForceSensorConverTestY.Location = new System.Drawing.Point(1079, 217);
+            this.numericUpDownForceSensorConverTestY.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.numericUpDownForceSensorConverTestY.Minimum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            -2147483648});
+            this.numericUpDownForceSensorConverTestY.Name = "numericUpDownForceSensorConverTestY";
+            this.numericUpDownForceSensorConverTestY.Size = new System.Drawing.Size(120, 31);
+            this.numericUpDownForceSensorConverTestY.TabIndex = 6;
+            this.numericUpDownForceSensorConverTestY.ValueChanged += new System.EventHandler(this.numericUpDownForceSensorConverTestY_ValueChanged);
+            // 
+            // numericUpDownForceSensorConverTestConvertedX
+            // 
+            this.numericUpDownForceSensorConverTestConvertedX.Location = new System.Drawing.Point(1079, 280);
+            this.numericUpDownForceSensorConverTestConvertedX.Name = "numericUpDownForceSensorConverTestConvertedX";
+            this.numericUpDownForceSensorConverTestConvertedX.ReadOnly = true;
+            this.numericUpDownForceSensorConverTestConvertedX.Size = new System.Drawing.Size(100, 31);
+            this.numericUpDownForceSensorConverTestConvertedX.TabIndex = 7;
+            // 
+            // numericUpDownForceSensorConverTestConvertedY
+            // 
+            this.numericUpDownForceSensorConverTestConvertedY.Location = new System.Drawing.Point(1079, 339);
+            this.numericUpDownForceSensorConverTestConvertedY.Name = "numericUpDownForceSensorConverTestConvertedY";
+            this.numericUpDownForceSensorConverTestConvertedY.ReadOnly = true;
+            this.numericUpDownForceSensorConverTestConvertedY.Size = new System.Drawing.Size(100, 31);
+            this.numericUpDownForceSensorConverTestConvertedY.TabIndex = 7;
+            // 
+            // numericUpDownForceSensorConverTestXnumericUpDownForceSensorConverTestTheta
+            // 
+            this.numericUpDownForceSensorConverTestXnumericUpDownForceSensorConverTestTheta.DecimalPlaces = 3;
+            this.numericUpDownForceSensorConverTestXnumericUpDownForceSensorConverTestTheta.Location = new System.Drawing.Point(1079, 143);
+            this.numericUpDownForceSensorConverTestXnumericUpDownForceSensorConverTestTheta.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.numericUpDownForceSensorConverTestXnumericUpDownForceSensorConverTestTheta.Minimum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            -2147483648});
+            this.numericUpDownForceSensorConverTestXnumericUpDownForceSensorConverTestTheta.Name = "numericUpDownForceSensorConverTestXnumericUpDownForceSensorConverTestTheta";
+            this.numericUpDownForceSensorConverTestXnumericUpDownForceSensorConverTestTheta.Size = new System.Drawing.Size(120, 31);
+            this.numericUpDownForceSensorConverTestXnumericUpDownForceSensorConverTestTheta.TabIndex = 6;
+            this.numericUpDownForceSensorConverTestXnumericUpDownForceSensorConverTestTheta.ValueChanged += new System.EventHandler(this.numericUpDownForceSensorConverTestXnumericUpDownForceSensorConverTestTheta_ValueChanged);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(988, 681);
+            this.ClientSize = new System.Drawing.Size(1447, 681);
             this.Controls.Add(this.textBoxForceSensorX);
             this.Controls.Add(this.textBoxX);
             this.Controls.Add(this.label6);
@@ -391,8 +472,13 @@
             this.Controls.Add(this.buttonXm);
             this.Controls.Add(this.buttonXp);
             this.Controls.Add(this.buttonCopy);
+            this.Controls.Add(this.numericUpDownForceSensorConverTestConvertedY);
+            this.Controls.Add(this.numericUpDownForceSensorConverTestConvertedX);
             this.Controls.Add(this.textBoxIKefe);
+            this.Controls.Add(this.numericUpDownForceSensorConverTestY);
             this.Controls.Add(this.textBoxIKsfe);
+            this.Controls.Add(this.numericUpDownForceSensorConverTestXnumericUpDownForceSensorConverTestTheta);
+            this.Controls.Add(this.numericUpDownForceSensorConverTestX);
             this.Controls.Add(this.numericUpDownY);
             this.Controls.Add(this.numericUpDownX);
             this.Controls.Add(this.groupBox1);
@@ -407,6 +493,9 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownX)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownY)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownRelativeValue)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownForceSensorConverTestX)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownForceSensorConverTestY)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownForceSensorConverTestXnumericUpDownForceSensorConverTestTheta)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -442,6 +531,11 @@
         private System.Windows.Forms.TextBox textBoxX;
         private System.Windows.Forms.TextBox textBoxForceSensorY;
         private System.Windows.Forms.TextBox textBoxForceSensorX;
+        private System.Windows.Forms.NumericUpDown numericUpDownForceSensorConverTestX;
+        private System.Windows.Forms.NumericUpDown numericUpDownForceSensorConverTestY;
+        private System.Windows.Forms.TextBox numericUpDownForceSensorConverTestConvertedX;
+        private System.Windows.Forms.TextBox numericUpDownForceSensorConverTestConvertedY;
+        private System.Windows.Forms.NumericUpDown numericUpDownForceSensorConverTestXnumericUpDownForceSensorConverTestTheta;
     }
 }
 

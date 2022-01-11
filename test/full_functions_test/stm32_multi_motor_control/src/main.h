@@ -127,5 +127,14 @@ uint16_t get_joint_position(Joints_t joint);
 uint16_t get_force_sensor_value(Force_sensors_t force_sensor);
 
 void debug_send_force_sensor_value(void);
+double pid_compute(double goal_value,
+                   double input_value,
+                   double kp,
+                   double ki,
+                   double kd,
+                   double *last_input,
+                   double *last_sum,
+                   double max,
+                   double min);
 
 #endif /* MAIN_H_ */

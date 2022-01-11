@@ -428,7 +428,7 @@ void data_package_parser(uint16_t data)
         case REQUEST_MOTOR_STATE_HEADER:
         {
           uint8_t id = receive_buffer[0] & 0x1f;
-          // send_motor_state(id);
+          // send_ motor_state(id);
           break;
         }
 
@@ -446,6 +446,37 @@ void data_package_parser(uint16_t data)
       }
     }
   }
+}
+
+double pid_compute(double goal_value,
+                   double input_value,
+                   double kp,
+                   double ki,
+                   double kd,
+                   double *last_input,
+                   double *last_sum,
+                   double max,
+                   double min)
+{
+  auto error = goal_value - input_value;
+  auto diff = input_value - *last_input;
+
+  *last_sum += (ki * error);
+  double output = kp * error;
+  output += *last_sum - (kd * diff);
+
+  if (output > max)
+  {
+    output = max;
+  }
+  else if (output < min)
+  {
+    output = min;
+  }
+
+  *last_input = input_value;
+
+  return output;
 }
 
 /**

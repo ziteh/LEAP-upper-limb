@@ -21,6 +21,7 @@ int main(void)
 
   joint_goal_position[EFE] = get_joint_position(EFE);
   joint_goal_position[SFE] = get_joint_position(SFE);
+  timer_enable_counter(PID_TIMER);
 
   printf("Ready\r\n");
 

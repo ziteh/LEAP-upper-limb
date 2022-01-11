@@ -16,6 +16,7 @@ void setup_clock(void);
 void setup_usart(void);
 void setup_pwm(void);
 void setup_adc(void);
+void setup_timer(void);
 void setup_others_gpio(void);
 
 #endif /* SETUP_H_ */

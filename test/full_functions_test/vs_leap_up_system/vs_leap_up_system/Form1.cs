@@ -16,7 +16,7 @@ namespace vs_leap_up_system
         #region Value
 
         private const double armL1 = 265;
-        private const double armL2 = 220;
+        private const double armL2 = 425;
 
         #endregion Value
 
@@ -28,6 +28,10 @@ namespace vs_leap_up_system
 
         private double sfeAngle;
         private double efeAngle;
+        private double forceSensorX;
+        private double forceSensorY;
+        private double forceSensorSourceX;
+        private double forceSensorSourceY;
 
         private Timer timer = new Timer();
 
@@ -36,13 +40,31 @@ namespace vs_leap_up_system
             InitializeComponent();
 
             UpdateSerialPortName();
-            timer.Interval = 500;
+            timer.Interval = 200;
             timer.Tick += TimerEvenHandler;
             timer.Enabled = true;
         }
 
         private void TimerEvenHandler(object sender, EventArgs e)
         {
+            var convertedPoint = ForceSensorCoordinateConvert(
+                new Point3D() { x = forceSensorSourceX, y = forceSensorSourceY, z = 0 },
+                (sfeAngle + efeAngle));
+
+            forceSensorX = convertedPoint.x;
+            forceSensorY = convertedPoint.y;
+
+            textBoxForceSensorX.Text = forceSensorX.ToString(" 0000.00;-0000.00");
+            textBoxForceSensorY.Text = forceSensorY.ToString(" 0000.00;-0000.00");
+            if (Math.Abs(forceSensorX) > 110)
+            {
+                RelaviteMove(0, forceSensorX / 10.0);
+            }
+            if (Math.Abs(forceSensorY) > 110)
+            {
+                RelaviteMove(1, -forceSensorY / 10.0);
+            }
+
             textBoxNowPositionSfe.Text = sfeAngle.ToString(" 000.00;-000.00");
             textBoxNowPositionEfe.Text = efeAngle.ToString(" 000.00;-000.00");
 
@@ -182,16 +204,9 @@ namespace vs_leap_up_system
                                         z = -((0xfff - z) + 1);
                                     }
 
-                                    y = -y;
-
-                                    if (Math.Abs(x) > 80)
-                                    {
-                                        RelaviteMove(0, x / 10.0);
-                                    }
-                                    if (Math.Abs(y) > 80)
-                                    {
-                                        RelaviteMove(1, y / 10.0);
-                                    }
+                                    //y = -y;
+                                    forceSensorSourceX = x;
+                                    forceSensorSourceY = y;
 
                                     Console.WriteLine($"X:{x}, Y:{y}, Z:{z}");
                                     break;
@@ -321,6 +336,17 @@ namespace vs_leap_up_system
 
         #endregion Kinematics
 
+        private Point3D ForceSensorCoordinateConvert(Point3D source, double theta)
+        {
+            theta *= Math.PI / 180.0;
+            return new Point3D()
+            {
+                x = source.x * Math.Cos(theta) - source.y * Math.Sin(theta),
+                y = source.x * Math.Sin(theta) + source.y * Math.Cos(theta),
+                z = source.z
+            };
+        }
+
         private void SendMotorPositionControl(Joint joint, double angleInDegree)
         {
             angleInDegree = angleInDegree < 0 ? (360 + angleInDegree) : angleInDegree;
@@ -413,6 +439,33 @@ namespace vs_leap_up_system
         private void buttonXm_Click(object sender, EventArgs e)
         {
             RelaviteMove(0, -(double)numericUpDownRelativeValue.Value);
+        }
+
+        private void numericUpDownForceSensorConverTestX_ValueChanged(object sender, EventArgs e)
+        {
+            UpdateTestForceSensorConvert();
+        }
+
+        private void numericUpDownForceSensorConverTestY_ValueChanged(object sender, EventArgs e)
+        {
+
+            UpdateTestForceSensorConvert();
+        }
+
+        private void UpdateTestForceSensorConvert()
+        {
+            var theta = (double)numericUpDownForceSensorConverTestXnumericUpDownForceSensorConverTestTheta.Value;
+            var x = (double)numericUpDownForceSensorConverTestX.Value;
+            var y = (double)numericUpDownForceSensorConverTestY.Value;
+
+            var converted = ForceSensorCoordinateConvert(new Point3D() { x = x, y = y, z = 0 }, theta);
+            numericUpDownForceSensorConverTestConvertedX.Text = converted.x.ToString("000.00");
+            numericUpDownForceSensorConverTestConvertedY.Text = converted.y.ToString("000.00");
+        }
+
+        private void numericUpDownForceSensorConverTestXnumericUpDownForceSensorConverTestTheta_ValueChanged(object sender, EventArgs e)
+        {
+            UpdateTestForceSensorConvert();
         }
     }
 }

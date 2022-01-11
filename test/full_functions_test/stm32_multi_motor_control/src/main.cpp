@@ -459,3 +459,21 @@ void usart2_isr(void)
   /* Clear RXNE(Read data register not empty) flag of USART SR(Status register). */
   USART_SR(USART2) &= ~USART_SR_RXNE;
 }
+
+/**
+ * @brief Timer2 Interrupt service routine.
+ */
+void tim2_isr(void)
+{
+  /*
+   * SR: Status register.
+   * CC1IF: Capture/Compare 1 interrupt flag.
+   */
+
+  if (timer_get_flag(TIM2, TIM_SR_CC1IF))
+  {
+    timer_clear_flag(TIM2, TIM_SR_CC1IF);
+
+    gpio_toggle(LED_PORT, LED_PIN);
+  }
+}

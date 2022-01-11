@@ -17,11 +17,11 @@
 /* PID. */
 #define PID_TIMER (TIM2)
 #define PID_TIMER_PRESCALER (rcc_apb1_frequency / 1000.0)
-#define PID_TIMER_PERIOD (500)
+#define PID_TIMER_PERIOD (100)
 #define PID_TIMER_IRQ (NVIC_TIM2_IRQ)
 #define PID_KP (1)
-#define PID_KI (1)
-#define PID_KD (1)
+#define PID_KI (0)
+#define PID_KD (0)
 
 /* EFE Joint. */
 

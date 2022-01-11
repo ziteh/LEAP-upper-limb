@@ -14,6 +14,9 @@ uint8_t receive_buffer[BUFFER_LENGTH];
 
 uint16_t joint_goal_position[2];
 
+double pid_last_input[2] = {0, 0};
+double pid_last_sum[2] = {0, 0};
+
 int main(void)
 {
   setup_all();
@@ -27,20 +30,6 @@ int main(void)
 
   while (1)
   {
-    set_joint_absolute_position(EFE, joint_goal_position[EFE]);
-#if !defined(DEBUG)
-    send_joint_position_state(EFE);
-#endif
-    delay(20);
-    set_joint_absolute_position(SFE, joint_goal_position[SFE]);
-#if !defined(DEBUG)
-    send_joint_position_state(SFE);
-#endif
-    send_force_sensor_value(0);
-    delay(20);
-#if defined(DEBUG)
-    printf("\r\n");
-#endif
   }
 
   return 0;
@@ -274,7 +263,7 @@ uint16_t get_joint_position(Joints_t joint)
   return get_adc_value(adc, channel);
 }
 
-void set_joint_absolute_position(Joints_t joint, uint16_t goal_adc_value)
+void set_joint_absolute_position(Joints_t joint, uint16_t goal_adc_value, uint8_t speed)
 {
   auto flexed_adc_value = joint_flexed_adc_value[joint];
   auto extension_adc_value = joint_extension_adc_value[joint];
@@ -302,7 +291,7 @@ void set_joint_absolute_position(Joints_t joint, uint16_t goal_adc_value)
   {
     auto dir = (Direction_t)(!(bool)increase_adc_value_direction);
     set_motor_direction(joint, dir);
-    set_motor_speed(joint, 15);
+    set_motor_speed(joint, speed);
     set_motor_state(joint, Enable);
 
 #if defined(DEBUG)
@@ -313,7 +302,7 @@ void set_joint_absolute_position(Joints_t joint, uint16_t goal_adc_value)
   {
     auto dir = increase_adc_value_direction;
     set_motor_direction(joint, dir);
-    set_motor_speed(joint, 15);
+    set_motor_speed(joint, speed);
     set_motor_state(joint, Enable);
 
 #if defined(DEBUG)
@@ -337,7 +326,7 @@ void set_joint_absolute_position_percentage(Joints_t joint, uint16_t position_pe
   auto min_position = joint_extension_adc_value[joint];
   uint16_t goal_position = ((max_position - min_position) * position_percentage * 0.01) + min_position;
 
-  set_joint_absolute_position(joint, goal_position);
+  set_joint_absolute_position(joint, goal_position, 15);
 }
 
 void clear_communication_variable(void)
@@ -504,7 +493,41 @@ void tim2_isr(void)
   if (timer_get_flag(TIM2, TIM_SR_CC1IF))
   {
     timer_clear_flag(TIM2, TIM_SR_CC1IF);
-
     gpio_toggle(LED_PORT, LED_PIN);
+
+    /* EFE. */
+    auto efe_pid_speed = pid_compute(joint_goal_position[EFE],
+                                     get_joint_position(EFE),
+                                     PID_KP,
+                                     PID_KI,
+                                     PID_KD,
+                                     &pid_last_input[EFE],
+                                     &pid_last_sum[EFE],
+                                     30,
+                                     11);
+    set_joint_absolute_position(EFE, joint_goal_position[EFE], efe_pid_speed);
+#if !defined(DEBUG)
+    send_joint_position_state(EFE);
+#endif
+
+    /* SFE. */
+    auto sfe_pid_speed = pid_compute(joint_goal_position[SFE],
+                                     get_joint_position(SFE),
+                                     PID_KP,
+                                     PID_KI,
+                                     PID_KD,
+                                     &pid_last_input[SFE],
+                                     &pid_last_sum[SFE],
+                                     45,
+                                     11);
+    set_joint_absolute_position(SFE, joint_goal_position[SFE], sfe_pid_speed);
+#if !defined(DEBUG)
+    send_joint_position_state(SFE);
+#endif
+    send_force_sensor_value(0);
+
+#if defined(DEBUG)
+    printf("\r\n");
+#endif
   }
 }

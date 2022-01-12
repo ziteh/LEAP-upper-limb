@@ -32,15 +32,61 @@
 #define HALL_SENSOR_C_PORT (GPIOA)
 #define HALL_SENSOR_C_PIN (GPIO4)
 
+/* D12 = PA6, PWM3-Ch1 */
+#define MOTOR_SPEED_PWM_PORT (GPIOA)
+#define MOTOR_SPEED_PWM_PIN (GPIO6)
+#define MOTOR_SPEED_PWM_TIM (TIM3)
+#define MOTOR_SPEED_PWM_OC (TIM_OC1)
+
 #define CW (false)
 #define CCW (!CW)
 
+#define PWM_FREQUENCY (1000) /* PWM frequency in Hz. */
+#define PWM_TIMER_PRESCALER (48 - 1)
+#define PWM_TIMER_PERIOD (((rcc_apb1_frequency * 2) / ((PWM_TIMER_PRESCALER + 1) * PWM_FREQUENCY)) - 1)
+
+void set_pwm_duty_cycle(float duty_cycle)
+{
+  timer_set_oc_value(MOTOR_SPEED_PWM_TIM,
+                     MOTOR_SPEED_PWM_OC,
+                     PWM_TIMER_PERIOD * (duty_cycle / 100.0));
+}
+
 void clock_init(void)
 {
+  rcc_clock_setup_hse_3v3(&rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_84MHZ]);
+
   rcc_periph_clock_enable(RCC_GPIOA);
   rcc_periph_clock_enable(RCC_GPIOB);
   rcc_periph_clock_enable(RCC_GPIOC);
+
+  rcc_periph_reset_pulse(RST_TIM3);
+  rcc_periph_clock_enable(RCC_TIM3);
+
   rcc_periph_clock_enable(RCC_SYSCFG); // Request for EXTI.
+}
+
+void motor_gpio_init(void)
+{
+  /* PWM. */
+  gpio_mode_setup(MOTOR_SPEED_PWM_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, MOTOR_SPEED_PWM_PIN);
+  gpio_set_output_options(MOTOR_SPEED_PWM_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, MOTOR_SPEED_PWM_PIN);
+  gpio_set_af(MOTOR_SPEED_PWM_PORT, GPIO_AF2, MOTOR_SPEED_PWM_PIN); // TIM3: AF02.
+
+  timer_set_mode(MOTOR_SPEED_PWM_TIM,
+                 TIM_CR1_CKD_CK_INT,
+                 TIM_CR1_CMS_EDGE,
+                 TIM_CR1_DIR_UP);
+  timer_set_prescaler(MOTOR_SPEED_PWM_TIM, PWM_TIMER_PRESCALER);
+  timer_set_period(MOTOR_SPEED_PWM_TIM, PWM_TIMER_PERIOD);
+  timer_set_oc_mode(MOTOR_SPEED_PWM_TIM, MOTOR_SPEED_PWM_OC, TIM_OCM_PWM1);
+  set_pwm_duty_cycle(50); // Set duty cycle to 50.0 %.
+
+  timer_disable_preload(MOTOR_SPEED_PWM_TIM);
+  timer_continuous_mode(MOTOR_SPEED_PWM_TIM);
+
+  timer_enable_oc_output(MOTOR_SPEED_PWM_TIM, MOTOR_SPEED_PWM_OC);
+  timer_enable_counter(MOTOR_SPEED_PWM_TIM);
 }
 
 void led_init(void)
@@ -95,6 +141,7 @@ int main(void)
   led_init();
   button_init();
   hall_sensor_init();
+  motor_gpio_init();
 
   while (1)
   {

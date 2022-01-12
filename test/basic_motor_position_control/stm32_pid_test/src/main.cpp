@@ -32,6 +32,9 @@
 #define HALL_SENSOR_C_PORT (GPIOA)
 #define HALL_SENSOR_C_PIN (GPIO4)
 
+#define CW (false)
+#define CCW (!CW)
+
 void clock_init(void)
 {
   rcc_periph_clock_enable(RCC_GPIOA);

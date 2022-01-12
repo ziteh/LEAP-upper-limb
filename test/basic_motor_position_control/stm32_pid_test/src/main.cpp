@@ -67,6 +67,7 @@ bool hall_sensor_c = false;
 
 auto dircetion = CW;
 int64_t plus_count = 0;
+int64_t goal_plus = 200;
 
 void set_pwm_duty_cycle(float duty_cycle)
 {
@@ -215,8 +216,30 @@ int main(void)
 
   while (1)
   {
-    // gpio_toggle(LED_PORT, LED_PIN);
-    // delay(2000000);
+    auto error = goal_plus - plus_count;
+    auto sp = (error > 0) ? error * 0.1 : error * -0.1;
+    if (sp > 30)
+      sp = 30;
+    else if (sp < 13)
+      sp = 13;
+    set_pwm_duty_cycle(sp);
+
+    auto a = 0;
+    if (error > a)
+    {
+      SET_MOTOR_ENABLE;
+      SET_MOTOR_CW;
+    }
+    else if (error < -a)
+    {
+      SET_MOTOR_ENABLE;
+      SET_MOTOR_CCW;
+    }
+    else
+    {
+      SET_MOTOR_DISENABLE;
+    }
+    delay(1000);
   }
 
   return 0;
@@ -310,6 +333,14 @@ void usart2_isr(void)
 
   case 0x03:
     SET_MOTOR_CCW;
+    break;
+
+  case 0x10:
+    goal_plus = 500;
+    break;
+
+  case 0x11:
+    goal_plus = -500;
     break;
 
   default:

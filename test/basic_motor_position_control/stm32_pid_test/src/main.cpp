@@ -46,12 +46,19 @@
 #define MOTOR_SPEED_PWM_TIM (TIM3)
 #define MOTOR_SPEED_PWM_OC (TIM_OC1)
 
-#define CW (false)
-#define CCW (!CW)
+#define CW (1)
+#define CCW (-1)
 
 #define PWM_FREQUENCY (1000) /* PWM frequency in Hz. */
 #define PWM_TIMER_PRESCALER (48 - 1)
 #define PWM_TIMER_PERIOD (((rcc_apb1_frequency * 2) / ((PWM_TIMER_PRESCALER + 1) * PWM_FREQUENCY)) - 1)
+
+bool hall_sensor_a = false;
+bool hall_sensor_b = false;
+bool hall_sensor_c = false;
+
+auto dircetion = CW;
+int64_t plus_count = 0;
 
 void set_pwm_duty_cycle(float duty_cycle)
 {
@@ -161,10 +168,15 @@ int main(void)
   hall_sensor_init();
   motor_gpio_init();
 
+  delay(1000);
+  hall_sensor_a = gpio_get(HALL_SENSOR_A_PORT, HALL_SENSOR_A_PIN);
+  hall_sensor_b = gpio_get(HALL_SENSOR_B_PORT, HALL_SENSOR_B_PIN);
+  hall_sensor_c = gpio_get(HALL_SENSOR_C_PORT, HALL_SENSOR_C_PIN);
+
   while (1)
   {
-    gpio_toggle(LED_PORT, LED_PIN);
-    delay(2000000);
+    // gpio_toggle(LED_PORT, LED_PIN);
+    // delay(2000000);
   }
 
   return 0;
@@ -173,19 +185,64 @@ int main(void)
 void exti0_isr(void)
 {
   exti_reset_request(EXTI0);
-  gpio_toggle(LED_PORT, LED_PIN);
+
+  /* Hall sensor A. */
+  // if ((hall_sensor_a && hall_sensor_b && !hall_sensor_c) ||
+  //     (!hall_sensor_a && !hall_sensor_b && hall_sensor_c))
+  if (hall_sensor_a != hall_sensor_c)
+  {
+    dircetion = CW;
+    gpio_set(LED_PORT, LED_PIN);
+  }
+  else
+  {
+    dircetion = CCW;
+    gpio_clear(LED_PORT, LED_PIN);
+  }
+  hall_sensor_a = gpio_get(HALL_SENSOR_A_PORT, HALL_SENSOR_A_PIN);
+  plus_count += dircetion;
 }
 
 void exti1_isr(void)
 {
   exti_reset_request(EXTI1);
-  gpio_toggle(LED_PORT, LED_PIN);
+
+  /* Hall sensor B. */
+  // if ((!hall_sensor_a && hall_sensor_b && hall_sensor_c) ||
+  //     (hall_sensor_a && !hall_sensor_b && !hall_sensor_c))
+  if (hall_sensor_b != hall_sensor_a)
+  {
+    dircetion = CW;
+    gpio_set(LED_PORT, LED_PIN);
+  }
+  else
+  {
+    dircetion = CCW;
+    gpio_clear(LED_PORT, LED_PIN);
+  }
+  hall_sensor_b = gpio_get(HALL_SENSOR_B_PORT, HALL_SENSOR_B_PIN);
+  plus_count += dircetion;
 }
 
 void exti4_isr(void)
 {
   exti_reset_request(EXTI4);
-  gpio_toggle(LED_PORT, LED_PIN);
+
+  /* Hall sensor C. */
+  // if ((hall_sensor_a && !hall_sensor_b && hall_sensor_c) ||
+  //     (!hall_sensor_a && hall_sensor_b && !hall_sensor_c))
+  if (hall_sensor_c != hall_sensor_b)
+  {
+    dircetion = CW;
+    gpio_set(LED_PORT, LED_PIN);
+  }
+  else
+  {
+    dircetion = CCW;
+    gpio_clear(LED_PORT, LED_PIN);
+  }
+  hall_sensor_c = gpio_get(HALL_SENSOR_C_PORT, HALL_SENSOR_C_PIN);
+  plus_count += dircetion;
 }
 
 void exti15_10_isr(void)

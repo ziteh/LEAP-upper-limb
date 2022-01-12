@@ -32,6 +32,14 @@
 #define HALL_SENSOR_C_PORT (GPIOA)
 #define HALL_SENSOR_C_PIN (GPIO4)
 
+/* D11 = PA7. */
+#define MOTOR_ENABLE_PORT (GPIOA)
+#define MOTOR_ENABLE_PIN (GPIO7)
+
+/* D10 = PB6. */
+#define MOTOR_DIRECTION_PORT (GPIOB)
+#define MOTOR_DIRECTION_PIN (GPIO6)
+
 /* D12 = PA6, PWM3-Ch1 */
 #define MOTOR_SPEED_PWM_PORT (GPIOA)
 #define MOTOR_SPEED_PWM_PIN (GPIO6)
@@ -87,6 +95,16 @@ void motor_gpio_init(void)
 
   timer_enable_oc_output(MOTOR_SPEED_PWM_TIM, MOTOR_SPEED_PWM_OC);
   timer_enable_counter(MOTOR_SPEED_PWM_TIM);
+
+  /* Enable pin. */
+  gpio_mode_setup(MOTOR_ENABLE_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, MOTOR_ENABLE_PIN);
+  gpio_set_output_options(MOTOR_ENABLE_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, MOTOR_ENABLE_PIN);
+  gpio_clear(MOTOR_ENABLE_PORT, MOTOR_ENABLE_PIN); // Disable motor.
+
+  /* Dircetion pin. */
+  gpio_mode_setup(MOTOR_DIRECTION_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, MOTOR_DIRECTION_PIN);
+  gpio_set_output_options(MOTOR_DIRECTION_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, MOTOR_DIRECTION_PIN);
+  gpio_clear(MOTOR_DIRECTION_PORT, MOTOR_DIRECTION_PIN); // Set to CW.
 }
 
 void led_init(void)

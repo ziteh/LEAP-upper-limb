@@ -67,7 +67,7 @@ bool hall_sensor_c = false;
 
 auto dircetion = CW;
 int64_t plus_count = 0;
-int64_t goal_plus = 200;
+int64_t goal_plus = 33;
 
 void set_pwm_duty_cycle(float duty_cycle)
 {
@@ -213,11 +213,12 @@ int main(void)
   SET_MOTOR_CW;
 
   usart_send_blocking(USART2, 0x41);
+  const float kp = 0.1;
 
   while (1)
   {
     auto error = goal_plus - plus_count;
-    auto sp = (error > 0) ? error * 0.1 : error * -0.1;
+    auto sp = (error > 0) ? error * kp : error * -kp;
     if (sp > 30)
       sp = 30;
     else if (sp < 13)
@@ -239,7 +240,7 @@ int main(void)
     {
       SET_MOTOR_DISENABLE;
     }
-    delay(1000);
+    delay(200);
   }
 
   return 0;
@@ -336,11 +337,11 @@ void usart2_isr(void)
     break;
 
   case 0x10:
-    goal_plus = 500;
+    goal_plus = 33;
     break;
 
   case 0x11:
-    goal_plus = -500;
+    goal_plus = -33;
     break;
 
   default:

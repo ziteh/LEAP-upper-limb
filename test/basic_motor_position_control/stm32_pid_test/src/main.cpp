@@ -4,6 +4,7 @@
  * @brief  Basic motor position control with PID.
  */
 
+#include "printf.h"
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/usart.h>
@@ -61,9 +62,12 @@
 #define PWM_TIMER_PRESCALER (48 - 1)
 #define PWM_TIMER_PERIOD (((rcc_apb1_frequency * 2) / ((PWM_TIMER_PRESCALER + 1) * PWM_FREQUENCY)) - 1)
 
-#define PID_KP (0.1)
-#define PID_KI (0.01)
-#define PID_KD (0)
+// #define PID_KP (0.5)
+// #define PID_KI (0.002)
+// #define PID_KD (0.01)
+#define PID_KP (0.25)
+#define PID_KI (0.008)
+#define PID_KD (1)
 
 bool hall_sensor_a = false;
 bool hall_sensor_b = false;
@@ -72,7 +76,8 @@ bool hall_sensor_c = false;
 auto dircetion = CW;
 int64_t plus_count = 0;
 int64_t goal_plus = 33;
-int32_t sum = 0;
+double sum = 0;
+double lastError = 0;
 
 void set_pwm_duty_cycle(float duty_cycle)
 {
@@ -219,16 +224,34 @@ void delay(uint32_t value)
 void pid(void)
 {
   auto error = goal_plus - plus_count;
-  sum += PID_KI * error;
-  auto speed = sum + (PID_KP * error);
+  auto diff = error - lastError;
+  if (error == 0 && diff == 0)
+  {
+    sum = 0;
+  }
+  else
+  {
+
+    sum += error;
+    if (sum > 90/PID_KI)
+    {
+      sum = 90/PID_KI;
+    }
+    else if (sum < -90/PID_KI)
+    {
+      sum = -90/PID_KI;
+    }
+  }
+
+  auto speed = (PID_KP * error) + (PID_KI * sum) + (PID_KD * diff);
 
   if (speed < 0)
     speed = -speed;
 
-  if (speed > 30)
-    speed = 30;
-  else if (speed < 13)
-    speed = 13;
+  if (speed > 90)
+    speed = 90;
+  else if (speed < 11.2)
+    speed = 11.2;
 
   set_pwm_duty_cycle(speed);
 
@@ -247,6 +270,8 @@ void pid(void)
   {
     SET_MOTOR_DISENABLE;
   }
+
+  lastError = error;
 }
 
 int main(void)

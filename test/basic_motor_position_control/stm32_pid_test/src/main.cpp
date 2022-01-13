@@ -227,13 +227,13 @@ int main(void)
     auto a = 0;
     if (error > a)
     {
-      SET_MOTOR_ENABLE;
       SET_MOTOR_CW;
+      SET_MOTOR_ENABLE;
     }
     else if (error < -a)
     {
-      SET_MOTOR_ENABLE;
       SET_MOTOR_CCW;
+      SET_MOTOR_ENABLE;
     }
     else
     {

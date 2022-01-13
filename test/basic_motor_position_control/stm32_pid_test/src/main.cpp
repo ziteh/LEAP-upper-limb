@@ -61,6 +61,10 @@
 #define PWM_TIMER_PRESCALER (48 - 1)
 #define PWM_TIMER_PERIOD (((rcc_apb1_frequency * 2) / ((PWM_TIMER_PRESCALER + 1) * PWM_FREQUENCY)) - 1)
 
+#define PID_KP (0.1)
+#define PID_KI (0.01)
+#define PID_KD (0)
+
 bool hall_sensor_a = false;
 bool hall_sensor_b = false;
 bool hall_sensor_c = false;
@@ -68,12 +72,28 @@ bool hall_sensor_c = false;
 auto dircetion = CW;
 int64_t plus_count = 0;
 int64_t goal_plus = 33;
+int32_t sum = 0;
 
 void set_pwm_duty_cycle(float duty_cycle)
 {
   timer_set_oc_value(MOTOR_SPEED_PWM_TIM,
                      MOTOR_SPEED_PWM_OC,
                      PWM_TIMER_PERIOD * (duty_cycle / 100.0));
+}
+
+void pid_init(void)
+{
+  nvic_enable_irq(NVIC_TIM2_IRQ);
+  rcc_periph_reset_pulse(RST_TIM2);
+
+  timer_set_mode(TIM2, TIM_CR1_CKD_CK_INT, TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
+  timer_set_prescaler(TIM2, (rcc_apb1_frequency * 2) / 10000);
+  timer_set_period(TIM2, 10);
+  timer_disable_preload(TIM2);
+  timer_continuous_mode(TIM2);
+
+  timer_enable_counter(TIM2);
+  timer_enable_irq(TIM2, TIM_DIER_CC1IE);
 }
 
 void clock_init(void)
@@ -88,6 +108,7 @@ void clock_init(void)
 
   rcc_periph_reset_pulse(RST_TIM3);
   rcc_periph_clock_enable(RCC_TIM3);
+  rcc_periph_clock_enable(RCC_TIM2);
 
   rcc_periph_clock_enable(RCC_SYSCFG); // Request for EXTI.
 }
@@ -195,6 +216,39 @@ void delay(uint32_t value)
   }
 }
 
+void pid(void)
+{
+  auto error = goal_plus - plus_count;
+  sum += PID_KI * error;
+  auto speed = sum + (PID_KP * error);
+
+  if (speed < 0)
+    speed = -speed;
+
+  if (speed > 30)
+    speed = 30;
+  else if (speed < 13)
+    speed = 13;
+
+  set_pwm_duty_cycle(speed);
+
+  auto a = 0;
+  if (error > a)
+  {
+    SET_MOTOR_CW;
+    SET_MOTOR_ENABLE;
+  }
+  else if (error < -a)
+  {
+    SET_MOTOR_CCW;
+    SET_MOTOR_ENABLE;
+  }
+  else
+  {
+    SET_MOTOR_DISENABLE;
+  }
+}
+
 int main(void)
 {
   clock_init();
@@ -202,6 +256,7 @@ int main(void)
   led_init();
   button_init();
   hall_sensor_init();
+  pid_init();
   motor_gpio_init();
 
   delay(1000);
@@ -213,34 +268,9 @@ int main(void)
   SET_MOTOR_CW;
 
   usart_send_blocking(USART2, 0x41);
-  const float kp = 0.1;
 
   while (1)
   {
-    auto error = goal_plus - plus_count;
-    auto sp = (error > 0) ? error * kp : error * -kp;
-    if (sp > 30)
-      sp = 30;
-    else if (sp < 13)
-      sp = 13;
-    set_pwm_duty_cycle(sp);
-
-    auto a = 0;
-    if (error > a)
-    {
-      SET_MOTOR_CW;
-      SET_MOTOR_ENABLE;
-    }
-    else if (error < -a)
-    {
-      SET_MOTOR_CCW;
-      SET_MOTOR_ENABLE;
-    }
-    else
-    {
-      SET_MOTOR_DISENABLE;
-    }
-    delay(200);
   }
 
   return 0;
@@ -354,4 +384,14 @@ void usart2_isr(void)
    * USART SR(Status register).
    */
   USART_SR(USART2) &= ~USART_SR_RXNE;
+}
+
+void tim2_isr(void)
+{
+  if (timer_get_flag(TIM2, TIM_SR_CC1IF))
+  {
+    timer_clear_flag(TIM2, TIM_SR_CC1IF);
+    // gpio_toggle(LED_PORT, LED_PIN);
+    pid();
+  }
 }

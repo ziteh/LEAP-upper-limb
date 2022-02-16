@@ -4,6 +4,7 @@
  * @brief  Control DYNAMIXEL motor with RS-485 UART.
  */
 
+#include "printf.h"
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/adc.h>
@@ -20,13 +21,13 @@
 #define GPIO_ENABLE_PORT (GPIOB)
 #define GPIO_ENABLE_PIN (GPIO3)
 
-/* PA9 = D8, USART1_TX. */
+/* PA0 = A0, UART4_TX. */
 #define GPIO_UART_TX_PORT (GPIOA)
-#define GPIO_UART_TX_PIN (GPIO9)
+#define GPIO_UART_TX_PIN (GPIO0)
 
-/* PA10 = D2, USART1_RX. */
+/* PA1 = A1, UART4_RX. */
 #define GPIO_UART_RX_PORT (GPIOA)
-#define GPIO_UART_RX_PIN (GPIO10)
+#define GPIO_UART_RX_PIN (GPIO1)
 
 #define GPIO_CONSOLE_UART_TX_PORT (GPIOA)
 #define GPIO_CONSOLE_UART_TX_PIN (GPIO2)
@@ -48,7 +49,8 @@ void rcc_setup(void)
 
   rcc_periph_clock_enable(RCC_GPIOA);
   rcc_periph_clock_enable(RCC_GPIOB);
-  rcc_periph_clock_enable(RCC_USART1);
+  rcc_periph_clock_enable(RCC_UART4);
+  rcc_periph_clock_enable(RCC_USART2);
 }
 
 void console_usart_setup(void)
@@ -79,24 +81,24 @@ void dynamixel_usart_setup(void)
 {
   /* Tx. */
   gpio_mode_setup(GPIO_UART_TX_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO_UART_TX_PIN);
-  gpio_set_af(GPIO_UART_TX_PORT, GPIO_AF7, GPIO_UART_TX_PIN);
+  gpio_set_af(GPIO_UART_TX_PORT, GPIO_AF8, GPIO_UART_TX_PIN);
 
   /* Rx. */
   gpio_mode_setup(GPIO_UART_RX_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO_UART_RX_PIN);
-  gpio_set_af(GPIO_UART_RX_PORT, GPIO_AF7, GPIO_UART_RX_PIN);
+  gpio_set_af(GPIO_UART_RX_PORT, GPIO_AF8, GPIO_UART_RX_PIN);
 
-  nvic_enable_irq(NVIC_USART1_IRQ);
+  nvic_enable_irq(NVIC_UART4_IRQ);
 
-  usart_set_baudrate(USART1, UART_BAUD_RATE);
-  usart_set_databits(USART1, 8);
-  usart_set_stopbits(USART1, USART_STOPBITS_1);
-  usart_set_parity(USART1, USART_PARITY_NONE);
-  usart_set_flow_control(USART1, USART_FLOWCONTROL_NONE);
-  usart_set_mode(USART1, USART_MODE_TX_RX);
+  usart_set_baudrate(UART4, UART_BAUD_RATE);
+  usart_set_databits(UART4, 8);
+  usart_set_stopbits(UART4, USART_STOPBITS_1);
+  usart_set_parity(UART4, USART_PARITY_NONE);
+  usart_set_flow_control(UART4, USART_FLOWCONTROL_NONE);
+  usart_set_mode(UART4, USART_MODE_TX_RX);
 
-  usart_enable_rx_interrupt(USART1);
+  usart_enable_rx_interrupt(UART4);
 
-  usart_enable(USART1);
+  usart_enable(UART4);
 }
 
 void led_setup(void)
@@ -197,7 +199,7 @@ void weite_dynamixel_torque_enable(uint8_t id, bool enable)
   delay(100);
   for (int i = 0; i < packet_length; i++)
   {
-    usart_send_blocking(USART1, packet[i]);
+    usart_send_blocking(UART4, packet[i]);
   }
   delay(6000);
   gpio_clear(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
@@ -241,7 +243,7 @@ void write_dynamixel_position(uint8_t id, int32_t position)
   delay(100);
   for (int i = 0; i < packet_length; i++)
   {
-    usart_send_blocking(USART1, packet[i]);
+    usart_send_blocking(UART4, packet[i]);
   }
   delay(6000);
   gpio_clear(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
@@ -282,7 +284,7 @@ uint32_t read_dynamixel_present_position(uint8_t id)
   delay(100);
   for (int i = 0; i < packet_length; i++)
   {
-    usart_send_blocking(USART1, packet[i]);
+    usart_send_blocking(UART4, packet[i]);
   }
   delay(6000);
   gpio_clear(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
@@ -297,26 +299,37 @@ int main(void)
   dynamixel_usart_setup();
 
   weite_dynamixel_torque_enable(1, true);
-  delay(10000000);
+  delay(1000000);
+
+  printf("Ready\r\n");
 
   while (1)
   {
-    write_dynamixel_position(1, 10000);
-    delay(10000000);
     write_dynamixel_position(1, -10000);
     delay(10000000);
-    gpio_toggle(GPIO_LED_PORT, GPIO_LED_PIN);
+    read_dynamixel_present_position(1);
+    delay(10000000);
+    write_dynamixel_position(1, 10000);
+    delay(10000000);
+    read_dynamixel_present_position(1);
+    delay(10000000);
+    // gpio_toggle(GPIO_LED_PORT, GPIO_LED_PIN);
+    // printf(".");
   }
 
   return 0;
 }
 
-void usart1_isr(void)
+void uart4_isr(void)
 {
-  uint8_t indata;
-  if (((USART_CR1(USART1) & USART_CR1_RXNEIE) != 0) &&
-      ((USART_SR(USART1) & USART_SR_RXNE) != 0))
+  if ((USART_SR(UART4) & USART_SR_RXNE) != 0)
   {
-    indata = usart_recv(USART2);
+    uint8_t indata = usart_recv(UART4);
+    if (indata == 0x55)
+    {
+      gpio_toggle(GPIO_LED_PORT, GPIO_LED_PIN);
+    }
+    // usart_send_blocking(UART4, indata);
+    // printf("%d", indata);
   }
 }

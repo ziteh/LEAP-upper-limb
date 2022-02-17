@@ -12,6 +12,7 @@
 #include <libopencm3/cm3/nvic.h>
 
 #define UART_BAUD_RATE (57600)
+#define DYNAMIXEL_MOTOR_USART (USART1)
 
 /* PA5 = D13, User-LED. */
 #define GPIO_LED_PORT (GPIOA)
@@ -23,11 +24,13 @@
 
 /* PA0 = A0, UART4_TX. */
 #define GPIO_UART_TX_PORT (GPIOA)
-#define GPIO_UART_TX_PIN (GPIO0)
+// #define GPIO_UART_TX_PIN (GPIO0)
+#define GPIO_UART_TX_PIN (GPIO9)
 
 /* PA1 = A1, UART4_RX. */
 #define GPIO_UART_RX_PORT (GPIOA)
-#define GPIO_UART_RX_PIN (GPIO1)
+// #define GPIO_UART_RX_PIN (GPIO1)
+#define GPIO_UART_RX_PIN (GPIO10)
 
 #define GPIO_CONSOLE_UART_TX_PORT (GPIOA)
 #define GPIO_CONSOLE_UART_TX_PIN (GPIO2)
@@ -35,14 +38,22 @@
 #define GPIO_CONSOLE_UART_RX_PORT (GPIOA)
 #define GPIO_CONSOLE_UART_RX_PIN (GPIO3)
 
-uint8_t buffer[32] = {0};
-uint8_t buffer_index = 0;
-uint16_t buffer_packet_length = 0;
-bool buffer_end = false;
+volatile uint8_t buffer[32] = {0};
+volatile uint8_t buffer_index = 0;
+volatile uint16_t buffer_packet_length = 0;
+volatile bool buffer_end = false;
 
 int32_t present_position_decoder(uint8_t id, uint8_t *packet);
+int32_t read_dynamixel_present_position(uint8_t id);
+void write_dynamixel_position(uint8_t id, int32_t position);
+void weite_dynamixel_torque_enable(uint8_t id, bool enable);
 void clear_buffer(void);
-void delay(uint64_t volatile value)
+void delay(volatile uint64_t value);
+uint16_t update_crc(uint16_t crc_accum,
+                    uint8_t *data_blk_ptr,
+                    uint16_t data_blk_size);
+
+void delay(volatile uint64_t value)
 {
   while (value--)
   {
@@ -52,11 +63,12 @@ void delay(uint64_t volatile value)
 
 void rcc_setup(void)
 {
-  rcc_clock_setup_pll(&rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_180MHZ]);
+  rcc_clock_setup_pll(&rcc_hse_8mhz_3v3[RCC_CLOCK_3V3_168MHZ]);
 
   rcc_periph_clock_enable(RCC_GPIOA);
   rcc_periph_clock_enable(RCC_GPIOB);
-  rcc_periph_clock_enable(RCC_UART4);
+  rcc_periph_clock_enable(RCC_USART1);
+  // rcc_periph_clock_enable(RCC_UART4);
   rcc_periph_clock_enable(RCC_USART2);
 }
 
@@ -86,26 +98,27 @@ void console_usart_setup(void)
 
 void dynamixel_usart_setup(void)
 {
+  nvic_enable_irq(NVIC_USART1_IRQ);
+  // nvic_enable_irq(NVIC_UART4_IRQ);
+
   /* Tx. */
   gpio_mode_setup(GPIO_UART_TX_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO_UART_TX_PIN);
-  gpio_set_af(GPIO_UART_TX_PORT, GPIO_AF8, GPIO_UART_TX_PIN);
+  gpio_set_af(GPIO_UART_TX_PORT, GPIO_AF7, GPIO_UART_TX_PIN);
 
   /* Rx. */
   gpio_mode_setup(GPIO_UART_RX_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO_UART_RX_PIN);
-  gpio_set_af(GPIO_UART_RX_PORT, GPIO_AF8, GPIO_UART_RX_PIN);
+  gpio_set_af(GPIO_UART_RX_PORT, GPIO_AF7, GPIO_UART_RX_PIN);
 
-  nvic_enable_irq(NVIC_UART4_IRQ);
+  usart_set_baudrate(DYNAMIXEL_MOTOR_USART, UART_BAUD_RATE);
+  usart_set_databits(DYNAMIXEL_MOTOR_USART, 8);
+  usart_set_stopbits(DYNAMIXEL_MOTOR_USART, USART_STOPBITS_1);
+  usart_set_parity(DYNAMIXEL_MOTOR_USART, USART_PARITY_NONE);
+  usart_set_flow_control(DYNAMIXEL_MOTOR_USART, USART_FLOWCONTROL_NONE);
+  usart_set_mode(DYNAMIXEL_MOTOR_USART, USART_MODE_TX_RX);
 
-  usart_set_baudrate(UART4, UART_BAUD_RATE);
-  usart_set_databits(UART4, 8);
-  usart_set_stopbits(UART4, USART_STOPBITS_1);
-  usart_set_parity(UART4, USART_PARITY_NONE);
-  usart_set_flow_control(UART4, USART_FLOWCONTROL_NONE);
-  usart_set_mode(UART4, USART_MODE_TX_RX);
+  usart_enable_rx_interrupt(DYNAMIXEL_MOTOR_USART);
 
-  usart_enable_rx_interrupt(UART4);
-
-  usart_enable(UART4);
+  usart_enable(DYNAMIXEL_MOTOR_USART);
 }
 
 void led_setup(void)
@@ -205,11 +218,11 @@ void weite_dynamixel_torque_enable(uint8_t id, bool enable)
   gpio_set(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
   for (int i = 0; i < packet_length; i++)
   {
-    usart_send_blocking(UART4, packet[i]);
+    usart_send_blocking(DYNAMIXEL_MOTOR_USART, packet[i]);
   }
 
   /* Wait for transmission complete. */
-  while (!(USART_SR(UART4) & USART_SR_TC))
+  while (!(USART_SR(DYNAMIXEL_MOTOR_USART) & USART_SR_TC))
   {
     /* Do nothing. */
   }
@@ -253,11 +266,11 @@ void write_dynamixel_position(uint8_t id, int32_t position)
   gpio_set(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
   for (int i = 0; i < packet_length; i++)
   {
-    usart_send_blocking(UART4, packet[i]);
+    usart_send_blocking(DYNAMIXEL_MOTOR_USART, packet[i]);
   }
 
   /* Wait for transmission complete. */
-  while (!(USART_SR(UART4) & USART_SR_TC))
+  while (!(USART_SR(DYNAMIXEL_MOTOR_USART) & USART_SR_TC))
   {
     /* Do nothing. */
   }
@@ -300,11 +313,11 @@ int32_t read_dynamixel_present_position(uint8_t id)
   clear_buffer();
   for (int i = 0; i < packet_length; i++)
   {
-    usart_send_blocking(UART4, packet[i]);
+    usart_send_blocking(DYNAMIXEL_MOTOR_USART, packet[i]);
   }
 
   /* Wait for transmission complete. */
-  while (!(USART_SR(UART4) & USART_SR_TC))
+  while (!(USART_SR(DYNAMIXEL_MOTOR_USART) & USART_SR_TC))
   {
     /* Do nothing. */
   }
@@ -330,7 +343,7 @@ int32_t present_position_decoder(uint8_t id, uint8_t *packet)
   bool length2 = (packet[6] == 0x00);
   bool inst = (packet[7] == 0x55);
   bool err = (packet[8] == 0x00);
-  int32_t position;
+  int32_t position = 0;
 
   if ((header1 && header2 && header3 && rsrv && packrt_id && length1 && length2 && inst) == true)
   {
@@ -364,38 +377,40 @@ int main(void)
   dynamixel_usart_setup();
 
   weite_dynamixel_torque_enable(1, true);
-  delay(1000000);
+  delay(100000);
 
   printf("Ready\r\n");
 
   int32_t position;
   while (1)
   {
-    printf(".");
+    usart_send_blocking(USART2, '.');
     gpio_toggle(GPIO_LED_PORT, GPIO_LED_PIN);
     write_dynamixel_position(1, -10000);
     delay(10000000);
     position = read_dynamixel_present_position(1);
-    // printf("%ld", position);
-    printf(".");
+    // read_dynamixel_present_position(1);
+    printf("%ld", position);
+    // printf("0");
     delay(10000000);
 
     gpio_toggle(GPIO_LED_PORT, GPIO_LED_PIN);
     write_dynamixel_position(1, 10000);
     delay(10000000);
-    position = read_dynamixel_present_position(1);
-    printf("%ld", position);
+    // position = read_dynamixel_present_position(1);
+    // read_dynamixel_present_position(1);
+    // printf("%ld", position);
     delay(10000000);
   }
 
   return 0;
 }
 
-void uart4_isr(void)
+void usart1_isr(void)
 {
-  if ((USART_SR(UART4) & USART_SR_RXNE) != 0)
+  if ((USART_SR(DYNAMIXEL_MOTOR_USART) & USART_SR_RXNE) != 0)
   {
-    uint8_t indata = usart_recv(UART4);
+    uint8_t indata = usart_recv(DYNAMIXEL_MOTOR_USART);
     if (indata == 0xFF)
     {
       if (buffer[0] != 0xFF && buffer[1] != 0xFF && buffer[2] != 0xFD)
@@ -422,7 +437,7 @@ void uart4_isr(void)
     {
       buffer_packet_length = (buffer[5] | (buffer[6] << 8)) + 7;
     }
-    else if (buffer_index == buffer_packet_length-1 && buffer_index > 6)
+    else if (buffer_index == buffer_packet_length - 1 && buffer_index > 6)
     {
       buffer_end = true;
     }

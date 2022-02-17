@@ -35,6 +35,13 @@
 #define GPIO_CONSOLE_UART_RX_PORT (GPIOA)
 #define GPIO_CONSOLE_UART_RX_PIN (GPIO3)
 
+uint8_t buffer[32] = {0};
+uint8_t buffer_index = 0;
+uint16_t buffer_packet_length = 0;
+bool buffer_end = false;
+
+int32_t present_position_decoder(uint8_t id, uint8_t *packet);
+void clear_buffer(void);
 void delay(uint64_t volatile value)
 {
   while (value--)
@@ -258,7 +265,7 @@ void write_dynamixel_position(uint8_t id, int32_t position)
   gpio_clear(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
 }
 
-uint32_t read_dynamixel_present_position(uint8_t id)
+int32_t read_dynamixel_present_position(uint8_t id)
 {
   uint16_t packet_length = 14;
   uint8_t packet[packet_length];
@@ -290,6 +297,7 @@ uint32_t read_dynamixel_present_position(uint8_t id)
   packet[packet_length - 1] = ((crc >> 8) & 0xFF); /* CRC 2 (High). */
 
   gpio_set(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
+  clear_buffer();
   for (int i = 0; i < packet_length; i++)
   {
     usart_send_blocking(UART4, packet[i]);
@@ -301,6 +309,50 @@ uint32_t read_dynamixel_present_position(uint8_t id)
     /* Do nothing. */
   }
   gpio_clear(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
+
+  while (!buffer_end)
+  {
+    /* code */
+  }
+  int32_t position = present_position_decoder(id, buffer);
+  clear_buffer();
+  return position;
+}
+
+int32_t present_position_decoder(uint8_t id, uint8_t *packet)
+{
+  bool header1 = (packet[0] == 0xFF);
+  bool header2 = (packet[1] == 0xFF);
+  bool header3 = (packet[2] == 0xFD);
+  bool rsrv = (packet[3] == 0x00);
+  bool packrt_id = (packet[4] == id);
+  bool length1 = (packet[5] == 0x08);
+  bool length2 = (packet[6] == 0x00);
+  bool inst = (packet[7] == 0x55);
+  bool err = (packet[8] == 0x00);
+  int32_t position;
+
+  if ((header1 && header2 && header3 && rsrv && packrt_id && length1 && length2 && inst) == true)
+  {
+    uint8_t p1 = packet[9];
+    uint8_t p2 = packet[10];
+    uint8_t p3 = packet[11];
+    uint8_t p4 = packet[12];
+    position = p1 | (p2 << 8) | (p3 << 16) | (p4 << 24);
+  }
+
+  return position;
+}
+
+void clear_buffer(void)
+{
+  for (int i = 0; i < 32; i++)
+  {
+    buffer[i] = 0x00;
+  }
+  buffer_index = 0;
+  buffer_end = false;
+  buffer_packet_length = 0;
 }
 
 int main(void)
@@ -316,19 +368,24 @@ int main(void)
 
   printf("Ready\r\n");
 
+  int32_t position;
   while (1)
   {
+    printf(".");
     gpio_toggle(GPIO_LED_PORT, GPIO_LED_PIN);
     write_dynamixel_position(1, -10000);
     delay(10000000);
-    // read_dynamixel_present_position(1);
+    position = read_dynamixel_present_position(1);
+    // printf("%ld", position);
+    printf(".");
     delay(10000000);
+
+    gpio_toggle(GPIO_LED_PORT, GPIO_LED_PIN);
     write_dynamixel_position(1, 10000);
     delay(10000000);
-    // read_dynamixel_present_position(1);
+    position = read_dynamixel_present_position(1);
+    printf("%ld", position);
     delay(10000000);
-    // gpio_toggle(GPIO_LED_PORT, GPIO_LED_PIN);
-    // printf(".");
   }
 
   return 0;
@@ -339,11 +396,36 @@ void uart4_isr(void)
   if ((USART_SR(UART4) & USART_SR_RXNE) != 0)
   {
     uint8_t indata = usart_recv(UART4);
-    if (indata == 0x55)
+    if (indata == 0xFF)
     {
-      // gpio_toggle(GPIO_LED_PORT, GPIO_LED_PIN);
+      if (buffer[0] != 0xFF && buffer[1] != 0xFF && buffer[2] != 0xFD)
+      {
+        buffer_index = 0;
+        buffer_end = false;
+      }
+      else if (buffer[0] == 0xFF)
+      {
+        if (buffer[2] != 0xFD)
+        {
+          buffer_index = 1;
+        }
+      }
+      else if (buffer_end)
+      {
+        buffer_index = 0;
+        buffer_end = false;
+      }
     }
-    // usart_send_blocking(UART4, indata);
-    // printf("%d", indata);
+
+    buffer[buffer_index] = indata;
+    if (buffer_index == 6)
+    {
+      buffer_packet_length = (buffer[5] | (buffer[6] << 8)) + 7;
+    }
+    else if (buffer_index == buffer_packet_length-1 && buffer_index > 6)
+    {
+      buffer_end = true;
+    }
+    buffer_index++;
   }
 }

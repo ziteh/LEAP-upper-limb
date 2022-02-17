@@ -15,7 +15,7 @@ int _write(int file, char *ptr, int len)
   {
     for (i = 0; i < len; i++)
     {
-      usart_send_blocking(USART, ptr[i]);
+      usart_send_blocking(PRINTF_USART, ptr[i]);
     }
     return i;
   }

@@ -13,7 +13,7 @@
 #include <libopencm3/stm32/usart.h>
 
 /* Define which USART you actual used. */
-#define USART (USART2)
+#define PRINTF_USART (USART2)
 
 int _write(int file, char *ptr, int len);
 

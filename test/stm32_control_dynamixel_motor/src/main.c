@@ -1,7 +1,7 @@
 /**
  * @file   main.cpp
  * @author ZiTe (honmonoh@gmail.com)
- * @brief  Control DYNAMIXEL motor with RS-485 UART.
+ * @brief  Control DYNAMIXEL motor with RS-485 UART, using MAX485.
  */
 
 #include "printf.h"
@@ -15,7 +15,7 @@
 #define GPIO_LED_PORT (GPIOA)
 #define GPIO_LED_PIN (GPIO5)
 
-/* PB3 = D3. */
+/* PB3 = D3, MAX485 DE and RE pin. */
 #define GPIO_ENABLE_PORT (GPIOB)
 #define GPIO_ENABLE_PIN (GPIO3)
 
@@ -23,11 +23,11 @@
 #define DYNAMIXEL_USART (USART1)
 #define DYNAMIXEL_USART_IRQ (NVIC_USART1_IRQ)
 
-/* PA9 = D8, USART1_TX. */
+/* PA9 = D8, USART1_TX, MAX485 DI pin. */
 #define GPIO_DYNAMIXEL_UART_TX_PORT (GPIOA)
 #define GPIO_DYNAMIXEL_UART_TX_PIN (GPIO9)
 
-/* PA10 = D2, USART1_RX. */
+/* PA10 = D2, USART1_RX, MAX485 RO pin. */
 #define GPIO_DYNAMIXEL_UART_RX_PORT (GPIOA)
 #define GPIO_DYNAMIXEL_UART_RX_PIN (GPIO10)
 
@@ -66,6 +66,8 @@ int main(void)
   other_gpio_setup();
   console_usart_setup();
   dynamixel_usart_setup();
+
+  clear_buffer();
 
   weite_dynamixel_torque_enable(1, true);
   delay(100000);
@@ -369,7 +371,6 @@ int32_t read_dynamixel_present_position(uint8_t id)
 
   while (!buffer_end)
   {
-    /* code */
   }
   int32_t position = present_position_decoder(id, buffer);
   clear_buffer();
@@ -428,7 +429,8 @@ void usart1_isr(void)
     uint8_t indata = usart_recv(DYNAMIXEL_USART);
     if (indata == 0xFF)
     {
-      if (buffer[0] != 0xFF && buffer[1] != 0xFF && buffer[2] != 0xFD)
+      if ((buffer[0] != 0xFF && buffer[1] != 0xFF && buffer[2] != 0xFD) ||
+          (buffer_end))
       {
         buffer_index = 0;
         buffer_end = false;
@@ -439,11 +441,6 @@ void usart1_isr(void)
         {
           buffer_index = 1;
         }
-      }
-      else if (buffer_end)
-      {
-        buffer_index = 0;
-        buffer_end = false;
       }
     }
 

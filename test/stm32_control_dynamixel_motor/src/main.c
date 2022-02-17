@@ -111,7 +111,7 @@ void led_setup(void)
 
 void other_gpio_setup(void)
 {
-  gpio_mode_setup(GPIO_ENABLE_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLDOWN, GPIO_ENABLE_PIN);
+  gpio_mode_setup(GPIO_ENABLE_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_ENABLE_PIN);
   gpio_set_output_options(GPIO_ENABLE_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_100MHZ, GPIO_ENABLE_PIN);
 }
 
@@ -196,12 +196,16 @@ void weite_dynamixel_torque_enable(uint8_t id, bool enable)
   packet[12] = ((crc >> 8) & 0xFF); /* CRC 2 (High). */
 
   gpio_set(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
-  delay(100);
   for (int i = 0; i < packet_length; i++)
   {
     usart_send_blocking(UART4, packet[i]);
   }
-  delay(6000);
+
+  /* Wait for transmission complete. */
+  while (!(USART_SR(UART4) & USART_SR_TC))
+  {
+    /* Do nothing. */
+  }
   gpio_clear(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
 }
 
@@ -240,12 +244,17 @@ void write_dynamixel_position(uint8_t id, int32_t position)
   packet[15] = ((crc >> 8) & 0xFF); /* CRC 2 (High). */
 
   gpio_set(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
-  delay(100);
   for (int i = 0; i < packet_length; i++)
   {
     usart_send_blocking(UART4, packet[i]);
   }
-  delay(6000);
+
+  /* Wait for transmission complete. */
+  while (!(USART_SR(UART4) & USART_SR_TC))
+  {
+    /* Do nothing. */
+  }
+
   gpio_clear(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
 }
 
@@ -281,12 +290,16 @@ uint32_t read_dynamixel_present_position(uint8_t id)
   packet[packet_length - 1] = ((crc >> 8) & 0xFF); /* CRC 2 (High). */
 
   gpio_set(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
-  delay(100);
   for (int i = 0; i < packet_length; i++)
   {
     usart_send_blocking(UART4, packet[i]);
   }
-  delay(6000);
+
+  /* Wait for transmission complete. */
+  while (!(USART_SR(UART4) & USART_SR_TC))
+  {
+    /* Do nothing. */
+  }
   gpio_clear(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
 }
 
@@ -305,13 +318,14 @@ int main(void)
 
   while (1)
   {
+    gpio_toggle(GPIO_LED_PORT, GPIO_LED_PIN);
     write_dynamixel_position(1, -10000);
     delay(10000000);
-    read_dynamixel_present_position(1);
+    // read_dynamixel_present_position(1);
     delay(10000000);
     write_dynamixel_position(1, 10000);
     delay(10000000);
-    read_dynamixel_present_position(1);
+    // read_dynamixel_present_position(1);
     delay(10000000);
     // gpio_toggle(GPIO_LED_PORT, GPIO_LED_PIN);
     // printf(".");
@@ -327,7 +341,7 @@ void uart4_isr(void)
     uint8_t indata = usart_recv(UART4);
     if (indata == 0x55)
     {
-      gpio_toggle(GPIO_LED_PORT, GPIO_LED_PIN);
+      // gpio_toggle(GPIO_LED_PORT, GPIO_LED_PIN);
     }
     // usart_send_blocking(UART4, indata);
     // printf("%d", indata);

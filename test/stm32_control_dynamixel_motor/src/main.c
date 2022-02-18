@@ -162,7 +162,7 @@ void dynamixel_usart_setup(void)
   usart_set_flow_control(DYNAMIXEL_USART, USART_FLOWCONTROL_NONE);
   usart_set_mode(DYNAMIXEL_USART, USART_MODE_TX_RX);
 
-  usart_enable_rx_interrupt(DYNAMIXEL_USART);
+  // usart_enable_rx_interrupt(DYNAMIXEL_USART);
 
   usart_enable(DYNAMIXEL_USART);
 }
@@ -355,24 +355,138 @@ int32_t read_dynamixel_present_position(uint8_t id)
   packet[packet_length - 2] = (crc & 0xFF);        /* CRC 1 (Low). */
   packet[packet_length - 1] = ((crc >> 8) & 0xFF); /* CRC 2 (High). */
 
-  gpio_set(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
-  clear_buffer();
-  for (int i = 0; i < packet_length; i++)
+  bool received = false;
+  int32_t position = 0;
+  do
   {
-    usart_send_blocking(DYNAMIXEL_USART, packet[i]);
-  }
+    gpio_set(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
+    // clear_buffer();
+    for (int i = 0; i < packet_length; i++)
+    {
+      usart_send_blocking(DYNAMIXEL_USART, packet[i]);
+    }
 
-  /* Wait for transmission complete. */
-  while (!(USART_SR(DYNAMIXEL_USART) & USART_SR_TC))
-  {
-    /* Do nothing. */
-  }
-  gpio_clear(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
+    /* Wait for transmission complete. */
+    while (!(USART_SR(DYNAMIXEL_USART) & USART_SR_TC))
+    {
+      /* Do nothing. */
+    }
+    gpio_clear(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
 
-  while (!buffer_end)
-  {
-  }
-  int32_t position = present_position_decoder(id, buffer);
+    uint8_t buf[16] = {0};
+    uint8_t buf_index = 0;
+    uint8_t indata = 0;
+    bool done = false;
+    while (!done)
+    {
+      while (USART_SR(DYNAMIXEL_USART) & USART_SR_RXNE == 0)
+      {
+      }
+      indata = usart_recv(DYNAMIXEL_USART);
+      buf[buf_index] = indata;
+      switch (buf_index)
+      {
+      case 0: /* Header 1. */
+      case 1: /* Header 2. */
+      {
+        if (indata != 0xFF)
+        {
+          received == false;
+          done = true;
+        }
+      }
+      break;
+      case 2: /* Header 3. */
+      {
+        if (indata != 0xFD)
+        {
+          received == false;
+          done = true;
+        }
+      }
+      break;
+      case 3: /* RSRV. */
+      {
+        if (indata != 0x00)
+        {
+          received == false;
+          done = true;
+        }
+      }
+      break;
+      case 4: /* Packer ID. */
+      {
+        if (indata != id)
+        {
+          received == false;
+          done = true;
+        }
+      }
+      break;
+      case 5: /* Length 1. */
+      {
+        if (indata != 0x08)
+        {
+          received == false;
+          done = true;
+        }
+      }
+      break;
+      case 6: /* Length 2. */
+      {
+        if (indata != 0x00)
+        {
+          received == false;
+          done = true;
+        }
+      }
+      break;
+      case 7: /* Inst. */
+      {
+        if (indata != 0x55)
+        {
+          received == false;
+          done = true;
+        }
+      }
+      break;
+      // case 8: /* Error. */
+      // {
+      //   if (indata != 0x00)
+      //   {
+      //     received == false;
+      //     done = true;
+      //   }
+      // }
+      // break;
+      case 14: /* Last. */
+      {
+        uint16_t receive_crc = buf[13] | (buf[14] << 8);
+        uint16_t cal_crc = update_crc(0, buf, 13);
+        if (receive_crc == cal_crc)
+        {
+          received = true;
+          position = present_position_decoder(id, buf);
+        }
+        else
+        {
+          received == false;
+        }
+        done = true;
+      }
+      break;
+
+      default:
+        received == false;
+        done = true;
+        break;
+      }
+
+      buf_index++;
+    }
+
+  } while (!received);
+
   clear_buffer();
   return position;
 }
@@ -391,7 +505,7 @@ int32_t present_position_decoder(uint8_t id, uint8_t *packet)
   // bool err = (packet[8] == 0x00);
   int32_t position = 0;
 
-  if ((header1 && header2 && header3 && rsrv && packrt_id && length1 && length2 && inst && err) == true)
+  // if ((header1 && header2 && header3 && rsrv && packrt_id && length1 && length2 && inst && err) == true)
   {
     uint8_t p1 = packet[9];
     uint8_t p2 = packet[10];

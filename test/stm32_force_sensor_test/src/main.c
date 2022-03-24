@@ -11,7 +11,7 @@
 #include <libopencm3/stm32/usart.h>
 
 #define USART_BAUD_RATE (115200)
-#define MAIN_DELAY_VALUE (0) // 500000
+#define MAIN_DELAY_VALUE (500) // 500000
 
 #define GPIO_LED_PORT (GPIOA)
 #define GPIO_LED_PIN (GPIO5)

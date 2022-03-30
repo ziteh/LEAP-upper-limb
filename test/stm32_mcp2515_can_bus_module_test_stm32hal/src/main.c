@@ -4,6 +4,9 @@
  * @brief  Ref: https://visualgdb.com/tutorials/arm/stm32/spi/
  */
 
+#define TX
+// #define RX
+
 #include <stm32f3xx_hal.h>
 
 #define UART_BAUDRATE (9600)
@@ -81,21 +84,42 @@ void spi_end(void)
   HAL_GPIO_WritePin(GPIO_SPI_CS_PORT, GPIO_SPI_CS_PIN, GPIO_PIN_SET);
 }
 
+uint8_t rx_data[8] = {0};
+uint8_t tx_data[8] = {0x00, 0x01, 0x02, 0x03,
+                      0x04, 0x05, 0x06, 0x07};
+
 int main(void)
 {
   HAL_Init();
   clock_init();
   spi_init();
 
-  uint8_t data[8] = {0x00, 0x01, 0x02, 0x03,
-                     0x04, 0x05, 0x06, 0x07};
+  spi_start();
+
+  uint8_t init_data[] = {0xC0, 0x05, 0x0F, 0xE0, 0x00};
+  HAL_SPI_Transmit(&SPI_InitStruct, init_data, 5, HAL_MAX_DELAY);
+
+  uint8_t d[] = {0x03, 0x0E};
+  HAL_SPI_Transmit(&SPI_InitStruct, d, 2, HAL_MAX_DELAY);
+  HAL_SPI_Receive(&SPI_InitStruct, rx_data, 2, HAL_MAX_DELAY);
+
+  spi_end();
+  HAL_Delay(50);
 
   while (1)
   {
     spi_start();
-    HAL_SPI_Transmit(&SPI_InitStruct, data, 8, HAL_MAX_DELAY);
-    spi_end();
 
+    for (int i = 0; i < 8; i++)
+    {
+      uint8_t date[] = {0x02, (0x36 + i), tx_data[i]};
+      HAL_SPI_Transmit(&SPI_InitStruct, date, 3, HAL_MAX_DELAY);
+    }
+
+    uint8_t d[] = {0x02, 0x35, 0x08, 0x02, 0x30, 0x08};
+    HAL_SPI_Transmit(&SPI_InitStruct, d, 6, HAL_MAX_DELAY);
+
+    spi_end();
     HAL_Delay(1000);
   }
 

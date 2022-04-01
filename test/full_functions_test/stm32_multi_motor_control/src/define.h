@@ -14,6 +14,15 @@
 #include <libopencm3/stm32/adc.h>
 #include <libopencm3/cm3/nvic.h>
 
+/* PID. */
+#define PID_TIMER (TIM2)
+#define PID_TIMER_PRESCALER (rcc_apb1_frequency / 1000.0)
+#define PID_TIMER_PERIOD (100)
+#define PID_TIMER_IRQ (NVIC_TIM2_IRQ)
+#define PID_KP (1)
+#define PID_KI (0)
+#define PID_KD (0)
+
 /* EFE Joint. */
 
 /* PA1 = A1, ADC1-Ch1 */

@@ -106,7 +106,7 @@ int16_t convert_adc_value_to_degree(uint16_t adc_value, Joints_t joint);
 void clear_communication_variable(void);
 uint16_t get_adc_value(uint32_t adc, uint8_t channel);
 void set_dutycycle(float value);
-void set_joint_absolute_position(Joints_t joint, uint16_t position);
+void set_joint_absolute_position(Joints_t joint, uint16_t goal_adc_value, uint8_t speed);
 int16_t get_force_sensor_x();
 int16_t get_force_sensor_y();
 
@@ -117,6 +117,7 @@ void send_force_sensor_value(uint8_t id);
 void data_package_parser(uint16_t data);
 
 void usart2_isr(void);
+void tim2_isr(void);
 
 void set_motor_state(Joints_t joint, EnableState_t state);
 void set_motor_direction(Joints_t joint, Direction_t dir);
@@ -126,5 +127,14 @@ uint16_t get_joint_position(Joints_t joint);
 uint16_t get_force_sensor_value(Force_sensors_t force_sensor);
 
 void debug_send_force_sensor_value(void);
+double pid_compute(double goal_value,
+                   double input_value,
+                   double kp,
+                   double ki,
+                   double kd,
+                   double *last_input,
+                   double *last_sum,
+                   double max,
+                   double min);
 
 #endif /* MAIN_H_ */

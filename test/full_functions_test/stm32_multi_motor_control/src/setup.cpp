@@ -12,6 +12,7 @@ void setup_all(void)
   setup_usart();
   setup_pwm();
   setup_adc();
+  setup_timer();
   setup_others_gpio();
 }
 
@@ -23,7 +24,8 @@ void setup_clock(void)
   rcc_periph_clock_enable(RCC_GPIOB);
   rcc_periph_clock_enable(RCC_GPIOC);
   rcc_periph_clock_enable(RCC_TIM3);
-  // rcc_periph_clock_enable(RCC_TIM2);
+  rcc_periph_clock_enable(RCC_TIM2);
+  rcc_periph_reset_pulse(RST_TIM2);
   rcc_periph_clock_enable(RCC_USART2);
   rcc_periph_clock_enable(RCC_ADC1);
 }
@@ -236,6 +238,24 @@ void setup_usart(void)
 
   /* Enable. */
   usart_enable(USART2);
+}
+
+void setup_timer(void)
+{
+  /* PID. */
+  nvic_enable_irq(PID_TIMER_IRQ);
+
+  timer_set_mode(PID_TIMER,
+                 TIM_CR1_CKD_CK_INT,
+                 TIM_CR1_CMS_EDGE,
+                 TIM_CR1_DIR_UP);
+  timer_disable_preload(PID_TIMER);
+  timer_continuous_mode(PID_TIMER);
+
+  timer_set_prescaler(PID_TIMER, PID_TIMER_PRESCALER);
+  timer_set_period(PID_TIMER, PID_TIMER_PERIOD);
+
+  timer_enable_irq(PID_TIMER, TIM_DIER_CC1IE);
 }
 
 void setup_others_gpio(void)

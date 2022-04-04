@@ -1,0 +1,8 @@
+{
+  "files.associations": {
+    "*.ejs": "html",
+    "stm32f3xx_hal.h": "c",
+    "stm32f3xx_hal_uart.h": "c",
+    "stm32f3xx_hal_def.h": "c"
+  }
+}

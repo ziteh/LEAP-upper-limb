@@ -1,215 +1,406 @@
+/* USER CODE BEGIN Header */
 /**
- * @file   main.c
- * @author ZiTe (honmonoh@gmail.com)
- * @brief  3-Axis force sensor test with CAN bus.
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2022 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
  */
-
+/* USER CODE END Header */
+/* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-SPI_HandleTypeDef mcp2515_spi;
-UART_HandleTypeDef pc_usart;
-ADC_HandleTypeDef force_sensor_adc;
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
 
+/* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc1;
+
+SPI_HandleTypeDef hspi2;
+
+UART_HandleTypeDef huart2;
+
+/* USER CODE BEGIN PV */
+
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+static void MX_GPIO_Init(void);
+static void MX_ADC1_Init(void);
+static void MX_SPI2_Init(void);
+static void MX_USART2_UART_Init(void);
+/* USER CODE BEGIN PFP */
+
+/* USER CODE END PFP */
+
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+void SelectAdcChannel(uint32_t channel)
+{
+  ADC_ChannelConfTypeDef sConfig = {0};
+  sConfig.Channel = channel;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SingleDiff = ADC_SINGLE_ENDED;
+  sConfig.SamplingTime = ADC_SAMPLETIME_19CYCLES_5;
+  sConfig.OffsetNumber = ADC_OFFSET_NONE;
+  sConfig.Offset = 0;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+int _write(int file, char *ptr, int len)
+{
+  // int i;
+
+  if (file == 1)
+  {
+    HAL_UART_Transmit(&huart2, ptr, len, HAL_MAX_DELAY);
+    return len;
+  }
+
+  errno = EIO;
+  return -1;
+}
+/* USER CODE END 0 */
+
+/**
+ * @brief  The application entry point.
+ * @retval int
+ */
 int main(void)
 {
+  /* USER CODE BEGIN 1 */
+
+  /* USER CODE END 1 */
+
+  /* MCU Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
-  RCC_Init();
-  USART_Init();
-  SPI_Init();
-  ADC_Init();
+  /* USER CODE BEGIN Init */
 
-  printf("Ready\r\n");
+  /* USER CODE END Init */
 
-  /* Halt. */
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_ADC1_Init();
+  MX_SPI2_Init();
+  MX_USART2_UART_Init();
+  /* USER CODE BEGIN 2 */
+
+  HAL_UART_Transmit(&huart2, "Raedy\r\n", 5, HAL_MAX_DELAY);
+  uint32_t channel = ADC_CHANNEL_1;
+
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
   while (1)
   {
-    uint16_t value = Get_ADC_Value();
-    printf("%4d\r\n", value);
-    HAL_Delay(500);
-  }
+    /* USER CODE END WHILE */
+    HAL_ADC_Start(&hadc1);
+    HAL_StatusTypeDef state;
 
-  return 0;
+    do
+    {
+      state = HAL_ADC_PollForConversion(&hadc1, 15);
+      if (state == HAL_OK)
+      {
+        uint16_t value = HAL_ADC_GetValue(&hadc1) & 0xFFF;
+        printf("%4i\r\n", value);
+
+        switch (channel)
+        {
+        case ADC_CHANNEL_1:
+          channel = ADC_CHANNEL_2;
+          break;
+
+        case ADC_CHANNEL_2:
+          channel = ADC_CHANNEL_5;
+          break;
+
+        case ADC_CHANNEL_5:
+          channel = ADC_CHANNEL_11;
+          break;
+
+        default:
+        case ADC_CHANNEL_11:
+          channel = ADC_CHANNEL_1;
+          break;
+        }
+        SelectAdcChannel(channel);
+      }
+      else if (state == HAL_ERROR || state == HAL_TIMEOUT)
+      {
+        printf("EoT\r\n");
+        break;
+      }
+    } while (state == HAL_BUSY);
+
+    HAL_ADC_Stop(&hadc1);
+    HAL_Delay(200);
+    /* USER CODE BEGIN 3 */
+  }
+  /* USER CODE END 3 */
 }
 
-/* Setup. */
-void RCC_Init(void)
+/**
+ * @brief System Clock Configuration
+ * @retval None
+ */
+void SystemClock_Config(void)
 {
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
+
+  /** Initializes the RCC Oscillators according to the specified parameters
+   * in the RCC_OscInitTypeDef structure.
+   */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL16;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initializes the CPU, AHB and APB buses clocks
+   */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC1;
+  PeriphClkInit.Adc1ClockSelection = RCC_ADC1PLLCLK_DIV1;
+
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/**
+ * @brief ADC1 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_ADC1_Init(void)
+{
+
+  /* USER CODE BEGIN ADC1_Init 0 */
+
+  /* USER CODE END ADC1_Init 0 */
+
+  // ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC1_Init 1 */
+
+  /* USER CODE END ADC1_Init 1 */
+
+  /** Common config
+   */
+  hadc1.Instance = ADC1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
+  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.DiscontinuousConvMode = ENABLE;
+  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc1.Init.LowPowerAutoWait = DISABLE;
+  hadc1.Init.Overrun = ADC_OVR_DATA_OVERWRITTEN;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+   */
+  // sConfig.Channel = ADC_CHANNEL_1;
+  // sConfig.Rank = ADC_REGULAR_RANK_1;
+  // sConfig.SingleDiff = ADC_SINGLE_ENDED;
+  // sConfig.SamplingTime = ADC_SAMPLETIME_19CYCLES_5;
+  // sConfig.OffsetNumber = ADC_OFFSET_NONE;
+  // sConfig.Offset = 0;
+  // if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  // {
+  //   Error_Handler();
+  // }
+  /* USER CODE BEGIN ADC1_Init 2 */
+
+  /* USER CODE END ADC1_Init 2 */
+}
+
+/**
+ * @brief SPI2 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_SPI2_Init(void)
+{
+
+  /* USER CODE BEGIN SPI2_Init 0 */
+
+  /* USER CODE END SPI2_Init 0 */
+
+  /* USER CODE BEGIN SPI2_Init 1 */
+
+  /* USER CODE END SPI2_Init 1 */
+  /* SPI2 parameter configuration*/
+  hspi2.Instance = SPI2;
+  hspi2.Init.Mode = SPI_MODE_MASTER;
+  hspi2.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi2.Init.NSS = SPI_NSS_SOFT;
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
+  hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi2.Init.CRCPolynomial = 7;
+  hspi2.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
+  hspi2.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  if (HAL_SPI_Init(&hspi2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI2_Init 2 */
+
+  /* USER CODE END SPI2_Init 2 */
+}
+
+/**
+ * @brief USART2 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_USART2_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART2_Init 0 */
+
+  /* USER CODE END USART2_Init 0 */
+
+  /* USER CODE BEGIN USART2_Init 1 */
+
+  /* USER CODE END USART2_Init 1 */
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 115200;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart2.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART2_Init 2 */
+
+  /* USER CODE END USART2_Init 2 */
+}
+
+/**
+ * @brief GPIO Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_GPIO_Init(void)
+{
+
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
-
-  __HAL_RCC_USART2_CLK_ENABLE();
-  __HAL_RCC_SPI2_CLK_ENABLE();
-  __HAL_RCC_ADC1_CLK_ENABLE();
 }
 
-void USART_Init(void)
+/* USER CODE BEGIN 4 */
+
+/* USER CODE END 4 */
+
+/**
+ * @brief  This function is executed in case of error occurrence.
+ * @retval None
+ */
+void Error_Handler(void)
 {
-  GPIO_InitTypeDef GPIO_Tx;
-  GPIO_Tx.Pin = GPIO_USART_TX_PIN;
-  GPIO_Tx.Mode = GPIO_MODE_AF_PP;
-  GPIO_Tx.Speed = GPIO_SPEED_HIGH;
-  GPIO_Tx.Pull = GPIO_NOPULL;
-  GPIO_Tx.Alternate = GPIO_AF7_USART2;
-  HAL_GPIO_Init(GPIO_USART_TX_PORT, &GPIO_Tx);
-
-  GPIO_InitTypeDef GPIO_Rx;
-  GPIO_Rx.Pin = GPIO_USART_RX_PIN;
-  GPIO_Rx.Mode = GPIO_MODE_AF_PP;
-  GPIO_Rx.Speed = GPIO_SPEED_HIGH;
-  GPIO_Rx.Pull = GPIO_NOPULL;
-  GPIO_Rx.Alternate = GPIO_AF7_USART2;
-  HAL_GPIO_Init(GPIO_USART_RX_PORT, &GPIO_Rx);
-
-  pc_usart.Instance = USART2;
-  pc_usart.Init.BaudRate = USART_BAUDRATE;
-  pc_usart.Init.WordLength = UART_WORDLENGTH_8B;
-  pc_usart.Init.StopBits = UART_STOPBITS_1;
-  pc_usart.Init.Parity = UART_PARITY_NONE;
-  pc_usart.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  pc_usart.Init.Mode = USART_MODE_TX_RX;
-  HAL_UART_Init(&pc_usart);
-}
-
-void SPI_Init(void)
-{
-  GPIO_InitTypeDef GPIO_InitStruct;
-  GPIO_InitStruct.Pin = GPIO_SPI_CS_PIN;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
-  HAL_GPIO_Init(GPIO_SPI_CS_PORT, &GPIO_InitStruct);
-
-  GPIO_InitStruct.Pin = GPIO_SPI_SCK_PIN | GPIO_SPI_MISO_PIN | GPIO_SPI_MOSI_PIN;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
-  HAL_GPIO_Init(GPIO_SPI_SCK_PORT, &GPIO_InitStruct);
-
-  mcp2515_spi.Instance = SPI2;
-  mcp2515_spi.Init.Mode = SPI_MODE_MASTER;
-  mcp2515_spi.Init.Direction = SPI_DIRECTION_2LINES;
-  mcp2515_spi.Init.DataSize = SPI_DATASIZE_8BIT;
-  mcp2515_spi.Init.CLKPolarity = SPI_POLARITY_LOW;
-  mcp2515_spi.Init.CLKPhase = SPI_PHASE_1EDGE;
-  mcp2515_spi.Init.NSS = SPI_NSS_SOFT;
-  mcp2515_spi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
-  mcp2515_spi.Init.FirstBit = SPI_FIRSTBIT_MSB;
-  mcp2515_spi.Init.TIMode = SPI_TIMODE_DISABLE;
-  mcp2515_spi.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  mcp2515_spi.Init.CRCPolynomial = 10;
-  HAL_SPI_Init(&mcp2515_spi);
-
-  SPI_End();
-}
-
-void ADC_Init(void)
-{
-  GPIO_InitTypeDef GPIO_InitStruct;
-
-  GPIO_InitStruct.Pin = GPIO_ADC_A0_PIN;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-  HAL_GPIO_Init(GPIO_ADC_A0_PORT, &GPIO_InitStruct);
-
-  GPIO_InitStruct.Pin = GPIO_ADC_A1_PIN;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-  HAL_GPIO_Init(GPIO_ADC_A1_PORT, &GPIO_InitStruct);
-
-  GPIO_InitStruct.Pin = GPIO_ADC_A2_PIN;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-  HAL_GPIO_Init(GPIO_ADC_A2_PORT, &GPIO_InitStruct);
-
-  GPIO_InitStruct.Pin = GPIO_ADC_A3_PIN;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-  HAL_GPIO_Init(GPIO_ADC_A3_PORT, &GPIO_InitStruct);
-
-  force_sensor_adc.Instance = ADC1;
-  force_sensor_adc.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  force_sensor_adc.Init.ContinuousConvMode = ENABLE;
-  force_sensor_adc.Init.DiscontinuousConvMode = DISABLE;
-  force_sensor_adc.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  force_sensor_adc.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  force_sensor_adc.Init.NbrOfConversion = 1;
-  HAL_ADC_Init(&force_sensor_adc);
-
-  ADC_ChannelConfTypeDef ADC_ChConfig;
-  // ADC_ChConfig.Channel = ADC_A0_CHANNEL | ADC_A1_CHANNEL | ADC_A2_CHANNEL | ADC_A3_CHANNEL;
-  ADC_ChConfig.Channel = ADC_A0_CHANNEL;
-  ADC_ChConfig.Rank = ADC_REGULAR_RANK_1;
-  ADC_ChConfig.SamplingTime = ADC_SAMPLETIME_7CYCLES_5;
-  HAL_ADC_ConfigChannel(&force_sensor_adc, &ADC_ChConfig);
-}
-
-uint16_t Get_ADC_Value(void)
-{
-  HAL_ADC_Start(&force_sensor_adc);
-
-  while (HAL_ADC_PollForConversion(&force_sensor_adc, 5) != HAL_OK)
-  {
-  }
-
-  uint16_t value = HAL_ADC_GetValue(&force_sensor_adc);
-  HAL_ADC_Stop(&force_sensor_adc);
-  return value;
-}
-
-void SPI_End(void)
-{
-  HAL_GPIO_WritePin(GPIO_SPI_CS_PORT, GPIO_SPI_CS_PIN, GPIO_PIN_SET);
-}
-
-void SPI_Start(void)
-{
-  HAL_GPIO_WritePin(GPIO_SPI_CS_PORT, GPIO_SPI_CS_PIN, GPIO_PIN_RESET);
-}
-
-/* IT Handlers. */
-void SysTick_Handler(void)
-{
-  HAL_IncTick();
-}
-
-void NMI_Handler(void)
-{
-}
-
-void HardFault_Handler(void)
-{
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+  __disable_irq();
   while (1)
   {
   }
+  /* USER CODE END Error_Handler_Debug */
 }
 
-void MemManage_Handler(void)
+#ifdef USE_FULL_ASSERT
+/**
+ * @brief  Reports the name of the source file and the source line number
+ *         where the assert_param error has occurred.
+ * @param  file: pointer to the source file name
+ * @param  line: assert_param error line source number
+ * @retval None
+ */
+void assert_failed(uint8_t *file, uint32_t line)
 {
-  while (1)
-  {
-  }
+  /* USER CODE BEGIN 6 */
+  /* User can add his own implementation to report the file name and line number,
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* USER CODE END 6 */
 }
-
-void BusFault_Handler(void)
-{
-  while (1)
-  {
-  }
-}
-
-void UsageFault_Handler(void)
-{
-  while (1)
-  {
-  }
-}
-
-void SVC_Handler(void)
-{
-}
-
-void DebugMon_Handler(void)
-{
-}
-
-void PendSV_Handler(void)
-{
-}
+#endif /* USE_FULL_ASSERT */

@@ -1,60 +1,80 @@
+/* USER CODE BEGIN Header */
 /**
- * @file   main.h
- * @author ZiTe (honmonoh@gmail.com)
- * @brief  3-Axis force sensor test with CAN bus.
+ ******************************************************************************
+ * @file           : main.h
+ * @brief          : Header for main.c file.
+ *                   This file contains the common defines of the application.
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2022 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
  */
+/* USER CODE END Header */
 
-#pragma one
+/* Define to prevent recursive inclusion -------------------------------------*/
+#ifndef __MAIN_H
+#define __MAIN_H
 
-#include "printf.h"
-#include <stm32f3xx_hal.h>
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
-#define USART_BAUDRATE (115200)
+/* Includes ------------------------------------------------------------------*/
+#include "stm32f3xx_hal.h"
 
-/* Pin. */
-// #define GPIO_LED_PORT (GPIOB)
-// #define GPIO_LED_PIN (GPIO_PIN_13)
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+#include <stdio.h>
+#include <errno.h>
+  /* USER CODE END Includes */
 
-#define GPIO_USART_TX_PORT (GPIOA)
-#define GPIO_USART_TX_PIN (GPIO_PIN_2)
+  /* Exported types ------------------------------------------------------------*/
+  /* USER CODE BEGIN ET */
 
-#define GPIO_USART_RX_PORT (GPIOA)
-#define GPIO_USART_RX_PIN (GPIO_PIN_3)
+  /* USER CODE END ET */
 
-#define GPIO_SPI_SCK_PORT (GPIOB)
-#define GPIO_SPI_SCK_PIN (GPIO_PIN_13)
+  /* Exported constants --------------------------------------------------------*/
+  /* USER CODE BEGIN EC */
 
-#define GPIO_SPI_MISO_PORT (GPIOB)
-#define GPIO_SPI_MISO_PIN (GPIO_PIN_14)
+  /* USER CODE END EC */
 
-#define GPIO_SPI_MOSI_PORT (GPIOB)
-#define GPIO_SPI_MOSI_PIN (GPIO_PIN_15)
+  /* Exported macro ------------------------------------------------------------*/
+  /* USER CODE BEGIN EM */
 
-#define GPIO_SPI_CS_PORT (GPIOB)
-#define GPIO_SPI_CS_PIN (GPIO_PIN_6)
+  /* USER CODE END EM */
 
-#define GPIO_ADC_A0_PORT (GPIOA)
-#define GPIO_ADC_A0_PIN (GPIO_PIN_0)
-#define ADC_A0_CHANNEL (ADC_CHANNEL_1)
+  /* Exported functions prototypes ---------------------------------------------*/
+  void Error_Handler(void);
 
-#define GPIO_ADC_A1_PORT (GPIOA)
-#define GPIO_ADC_A1_PIN (GPIO_PIN_1)
-#define ADC_A1_CHANNEL (ADC_CHANNEL_2)
+/* USER CODE BEGIN EFP */
 
-#define GPIO_ADC_A2_PORT (GPIOA)
-#define GPIO_ADC_A2_PIN (GPIO_PIN_4)
-#define ADC_A2_CHANNEL (ADC_CHANNEL_5)
+/* USER CODE END EFP */
 
-#define GPIO_ADC_A3_PORT (GPIOB)
-#define GPIO_ADC_A3_PIN (GPIO_PIN_0)
-#define ADC_A3_CHANNEL (ADC_CHANNEL_9)
+/* Private defines -----------------------------------------------------------*/
+#define USART_TX_Pin GPIO_PIN_2
+#define USART_TX_GPIO_Port GPIOA
+#define USART_RX_Pin GPIO_PIN_3
+#define USART_RX_GPIO_Port GPIOA
+#define TMS_Pin GPIO_PIN_13
+#define TMS_GPIO_Port GPIOA
+#define TCK_Pin GPIO_PIN_14
+#define TCK_GPIO_Port GPIOA
+#define SWO_Pin GPIO_PIN_3
+#define SWO_GPIO_Port GPIOB
+  /* USER CODE BEGIN Private defines */
 
-void RCC_Init(void);
-void USART_Init(void);
-void SPI_Init(void);
-void ADC_Init(void);
+  /* USER CODE END Private defines */
 
-void SPI_End(void);
-void SPI_Start(void);
+#ifdef __cplusplus
+}
+#endif
 
-uint16_t Get_ADC_Value(void);
+#endif /* __MAIN_H */

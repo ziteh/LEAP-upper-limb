@@ -32,6 +32,7 @@ extern "C"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "mcp2515.h"
 #include <stdio.h>
 #include <errno.h>
   /* USER CODE END Includes */
@@ -69,7 +70,13 @@ extern "C"
 #define TCK_GPIO_Port GPIOA
 #define SWO_Pin GPIO_PIN_3
 #define SWO_GPIO_Port GPIOB
+
   /* USER CODE BEGIN Private defines */
+
+#define ADC_A0_CHANNEL (ADC_CHANNEL_1)
+#define ADC_A1_CHANNEL (ADC_CHANNEL_2)
+#define ADC_A2_CHANNEL (ADC_CHANNEL_5)
+#define ADC_A3_CHANNEL (ADC_CHANNEL_11)
 
   /* USER CODE END Private defines */
 

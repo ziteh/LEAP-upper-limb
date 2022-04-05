@@ -55,40 +55,20 @@ static void MX_GPIO_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_USART2_UART_Init(void);
+
 /* USER CODE BEGIN PFP */
+
+int16_t Get_Force_Sensor_X(void);
+int16_t Get_Force_Sensor_Y(void);
+int16_t Get_Force_Sensor_Z(void);
+uint16_t Get_ADC_Value(uint32_t channel);
+void Select_ADC_Channel(uint32_t channel);
+int _write(int file, char *ptr, int len);
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void SelectAdcChannel(uint32_t channel)
-{
-  ADC_ChannelConfTypeDef sConfig = {0};
-  sConfig.Channel = channel;
-  sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SingleDiff = ADC_SINGLE_ENDED;
-  sConfig.SamplingTime = ADC_SAMPLETIME_19CYCLES_5;
-  sConfig.OffsetNumber = ADC_OFFSET_NONE;
-  sConfig.Offset = 0;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-}
-
-int _write(int file, char *ptr, int len)
-{
-  // int i;
-
-  if (file == 1)
-  {
-    HAL_UART_Transmit(&huart2, ptr, len, HAL_MAX_DELAY);
-    return len;
-  }
-
-  errno = EIO;
-  return -1;
-}
 /* USER CODE END 0 */
 
 /**
@@ -123,61 +103,83 @@ int main(void)
   MX_SPI2_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+  mcp2515_init();
 
-  HAL_UART_Transmit(&huart2, "Raedy\r\n", 5, HAL_MAX_DELAY);
-  uint32_t channel = ADC_CHANNEL_1;
+  printf("\r\n3-Axis Force Sensor, Ready.\r\n");
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
-    HAL_ADC_Start(&hadc1);
-    HAL_StatusTypeDef state;
+    int16_t value_x = Get_Force_Sensor_X();
+    int16_t value_y = Get_Force_Sensor_Y();
+    int16_t value_z = Get_Force_Sensor_Z();
 
-    do
-    {
-      state = HAL_ADC_PollForConversion(&hadc1, 15);
-      if (state == HAL_OK)
-      {
-        uint16_t value = HAL_ADC_GetValue(&hadc1) & 0xFFF;
-        printf("%4i\r\n", value);
+    printf("X: %5i, Y: %5i, Z: %5i\r\n", value_x, value_y, value_z);
 
-        switch (channel)
-        {
-        case ADC_CHANNEL_1:
-          channel = ADC_CHANNEL_2;
-          break;
-
-        case ADC_CHANNEL_2:
-          channel = ADC_CHANNEL_5;
-          break;
-
-        case ADC_CHANNEL_5:
-          channel = ADC_CHANNEL_11;
-          break;
-
-        default:
-        case ADC_CHANNEL_11:
-          channel = ADC_CHANNEL_1;
-          break;
-        }
-        SelectAdcChannel(channel);
-      }
-      else if (state == HAL_ERROR || state == HAL_TIMEOUT)
-      {
-        printf("EoT\r\n");
-        break;
-      }
-    } while (state == HAL_BUSY);
-
-    HAL_ADC_Stop(&hadc1);
-    HAL_Delay(200);
-    /* USER CODE BEGIN 3 */
+    HAL_Delay(100);
   }
-  /* USER CODE END 3 */
+}
+
+int16_t Get_Force_Sensor_X(void)
+{
+  uint16_t value1 = Get_ADC_Value(ADC_A0_CHANNEL);
+  uint16_t value2 = Get_ADC_Value(ADC_A1_CHANNEL);
+  return value2 - value1;
+}
+
+int16_t Get_Force_Sensor_Y(void)
+{
+  uint16_t value1 = Get_ADC_Value(ADC_A2_CHANNEL);
+  uint16_t value2 = Get_ADC_Value(ADC_A3_CHANNEL);
+  return value2 - value1;
+}
+
+int16_t Get_Force_Sensor_Z(void)
+{
+  // uint16_t value1 = Get_ADC_Value(ADC_A2_CHANNEL);
+  // uint16_t value2 = Get_ADC_Value(ADC_A3_CHANNEL);
+  return 0;
+}
+
+uint16_t Get_ADC_Value(uint32_t channel)
+{
+  Select_ADC_Channel(channel);
+  HAL_ADC_Start(&hadc1);
+  while (HAL_ADC_PollForConversion(&hadc1, 10) != HAL_OK)
+  {
+  }
+  HAL_ADC_Stop(&hadc1);
+  uint16_t value = HAL_ADC_GetValue(&hadc1) & 0xFFF;
+  return value;
+}
+
+void Select_ADC_Channel(uint32_t channel)
+{
+  ADC_ChannelConfTypeDef sConfig = {0};
+  sConfig.Channel = channel;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SingleDiff = ADC_SINGLE_ENDED;
+  sConfig.SamplingTime = ADC_SAMPLETIME_19CYCLES_5;
+  sConfig.OffsetNumber = ADC_OFFSET_NONE;
+  sConfig.Offset = 0;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+int _write(int file, char *ptr, int len)
+{
+  if (file == 1)
+  {
+    HAL_UART_Transmit(&huart2, ptr, len, HAL_MAX_DELAY);
+    return len;
+  }
+
+  errno = EIO;
+  return -1;
 }
 
 /**

@@ -101,6 +101,8 @@ int main(void)
   MX_TIM10_Init();
   /* USER CODE BEGIN 2 */
 
+  printf("\r\nLEAP-Up Ready\r\n");
+
   /* USER CODE END 2 */
 
   /* Infinite loop */

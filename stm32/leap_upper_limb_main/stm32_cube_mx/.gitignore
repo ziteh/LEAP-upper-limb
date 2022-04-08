@@ -1,0 +1,6 @@
+# STM32CubeMx
+[Cc]ore/
+[Dd]rivers/
+.cproject
+.project
+*.ld

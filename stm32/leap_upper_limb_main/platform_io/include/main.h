@@ -34,6 +34,7 @@ extern "C"
 /* USER CODE BEGIN Includes */
 #include "printf.h"
 #include "force_sensor.h"
+#include "kinematics.h"
 
   /* USER CODE END Includes */
 

@@ -232,6 +232,57 @@ uint16_t update_crc(uint16_t crc_accum,
   return crc_accum;
 }
 
+void write_dynamixel_data(uint8_t id, uint8_t instruction, uint16_t address, uint8_t *data, uint16_t data_length)
+{
+  uint32_t packet_length = 12 + data_length;
+  uint8_t packet[packet_length];
+  packet[0] = 0xFF; /* Header 1. */
+  packet[1] = 0xFF; /* Hedaer 2. */
+  packet[2] = 0xFD; /* Hedaer 3. */
+  packet[3] = 0x00; /* Reserved. */
+
+  packet[4] = id; /* Packet ID. */
+
+  /* Length = Parameter length + 3 = Data length + 2(Address) + 3. */
+  packet[5] = (data_length + 5) & 0xFF;        /* Length 1 (Low-order byte). */
+  packet[6] = ((data_length + 5) >> 8) & 0xFF; /* Lenget 2 (High-order byte). */
+
+  packet[7] = instruction; /* Instrucion. */
+
+  /* Parameter 1~2: Starting address. */
+  packet[8] = (address & 0xFF);        /* Address 1 (Low-order byte). */
+  packet[9] = ((address >> 8) & 0xFF); /* Address 2 (High-order byte). */
+
+  /* Parameter 3~x: Data bytes. */
+  for (int i = 0; i < data_length; i++)
+  {
+    packet[10 + i] = data[i];
+  }
+
+  /* CRC. */
+  uint16_t crc = update_crc(0, packet, packet_length - 2); /* Calculating CRC. */
+  packet[packet_length - 2] = (crc & 0xFF);                /* CRC 1 (Low-order byte). */
+  packet[packet_length - 1] = ((crc >> 8) & 0xFF);         /* CRC 2 (High-order byte). */
+
+  /* MAX485 enable Tx, disable Rx. */
+  gpio_set(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
+
+  /* Send packet. */
+  for (uint32_t i = 0; i < packet_length; i++)
+  {
+    usart_send_blocking(DYNAMIXEL_USART, packet[i]);
+  }
+
+  /* Wait for transmission complete. */
+  while (!(USART_SR(DYNAMIXEL_USART) & USART_SR_TC))
+  {
+    /* Do nothing. */
+  }
+
+  /* MAX485 enable Rx, disable Tx. */
+  gpio_clear(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
+}
+
 void weite_dynamixel_torque_enable(uint8_t id, bool enable)
 {
   uint16_t packet_length = 13;

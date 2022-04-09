@@ -11,6 +11,8 @@
 #include <libopencm3/stm32/usart.h>
 #include <libopencm3/cm3/nvic.h>
 
+#define MOTOR_ID (10)
+
 /* PA5 = D13, User-LED. */
 #define GPIO_LED_PORT (GPIOA)
 #define GPIO_LED_PIN (GPIO5)
@@ -41,7 +43,7 @@
 #define GPIO_CONSOLE_UART_RX_PORT (GPIOA)
 #define GPIO_CONSOLE_UART_RX_PIN (GPIO3)
 
-uint8_t buffer[32] = {0};
+uint8_t buffer[128] = {0};
 volatile uint8_t buffer_index = 0;
 volatile uint16_t buffer_packet_length = 0;
 volatile bool buffer_end = false;
@@ -69,7 +71,7 @@ int main(void)
 
   clear_buffer();
 
-  weite_dynamixel_torque_enable(1, true);
+  weite_dynamixel_torque_enable(MOTOR_ID, true);
   delay(100000);
 
   printf("Ready\r\n");
@@ -77,10 +79,10 @@ int main(void)
   int32_t position;
   while (1)
   {
-    write_dynamixel_position(1, 10000);
+    write_dynamixel_position(MOTOR_ID, 10000);
     delay(10000000);
 
-    position = read_dynamixel_present_position(1);
+    position = read_dynamixel_present_position(MOTOR_ID);
     usart_send_blocking(USART2, (position & 0xFF));
     usart_send_blocking(USART2, ((position >> 8) & 0xFF));
     usart_send_blocking(USART2, ((position >> 16) & 0xFF));
@@ -91,10 +93,10 @@ int main(void)
 
     gpio_toggle(GPIO_LED_PORT, GPIO_LED_PIN);
 
-    write_dynamixel_position(1, -10000);
+    write_dynamixel_position(MOTOR_ID, -10000);
     delay(10000000);
 
-    position = read_dynamixel_present_position(1);
+    position = read_dynamixel_present_position(MOTOR_ID);
     usart_send_blocking(USART2, (position & 0xFF));
     usart_send_blocking(USART2, ((position >> 8) & 0xFF));
     usart_send_blocking(USART2, ((position >> 16) & 0xFF));
@@ -162,7 +164,7 @@ void dynamixel_usart_setup(void)
   usart_set_flow_control(DYNAMIXEL_USART, USART_FLOWCONTROL_NONE);
   usart_set_mode(DYNAMIXEL_USART, USART_MODE_TX_RX);
 
-  // usart_enable_rx_interrupt(DYNAMIXEL_USART);
+  usart_enable_rx_interrupt(DYNAMIXEL_USART);
 
   usart_enable(DYNAMIXEL_USART);
 }
@@ -309,7 +311,10 @@ void write_dynamixel_position(uint8_t id, int32_t position)
   packet[14] = (crc & 0xFF);        /* CRC 1 (Low). */
   packet[15] = ((crc >> 8) & 0xFF); /* CRC 2 (High). */
 
+  /* MAX485 enable Tx, disable Rx. */
   gpio_set(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
+
+  /* Send packet. */
   for (int i = 0; i < packet_length; i++)
   {
     usart_send_blocking(DYNAMIXEL_USART, packet[i]);
@@ -321,6 +326,7 @@ void write_dynamixel_position(uint8_t id, int32_t position)
     /* Do nothing. */
   }
 
+  /* MAX485 enable Rx, disable Tx. */
   gpio_clear(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
 }
 
@@ -341,12 +347,13 @@ int32_t read_dynamixel_present_position(uint8_t id)
 
   packet[7] = 0x02; /* Instrucion. */
 
-  /* Address. */
-  packet[8] = (611 & 0xFF);
-  packet[9] = ((611 >> 8) & 0xFF);
+  /* Parameter 1-2. Address. */
+  packet[8] = (611 & 0xFF);        /* Low-order byte from the starting address. */
+  packet[9] = ((611 >> 8) & 0xFF); /* High-order byte from the starting address. */
 
-  packet[10] = 0x04;
-  packet[11] = 0x00;
+  /* Parameter 3-4. Byte length. */
+  packet[10] = 0x04; /* Low-order byte from the data length. */
+  packet[11] = 0x00; /* High-order byte from the data length. */
 
   /* Calculating CRC. */
   uint16_t crc = update_crc(0, packet, packet_length - 2);
@@ -355,139 +362,139 @@ int32_t read_dynamixel_present_position(uint8_t id)
   packet[packet_length - 2] = (crc & 0xFF);        /* CRC 1 (Low). */
   packet[packet_length - 1] = ((crc >> 8) & 0xFF); /* CRC 2 (High). */
 
-  bool received = false;
+  // bool received = false;
   int32_t position = 0;
-  do
+  // do
+  // {
+  gpio_set(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
+  // clear_buffer();
+  for (int i = 0; i < packet_length; i++)
   {
-    gpio_set(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
-    // clear_buffer();
-    for (int i = 0; i < packet_length; i++)
-    {
-      usart_send_blocking(DYNAMIXEL_USART, packet[i]);
-    }
+    usart_send_blocking(DYNAMIXEL_USART, packet[i]);
+  }
 
-    /* Wait for transmission complete. */
-    while (!(USART_SR(DYNAMIXEL_USART) & USART_SR_TC))
-    {
-      /* Do nothing. */
-    }
-    gpio_clear(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
+  /* Wait for transmission complete. */
+  while (!(USART_SR(DYNAMIXEL_USART) & USART_SR_TC))
+  {
+    /* Do nothing. */
+  }
+  gpio_clear(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
 
-    uint8_t buf[16] = {0};
-    uint8_t buf_index = 0;
-    uint8_t indata = 0;
-    bool done = false;
-    while (!done)
-    {
-      while (USART_SR(DYNAMIXEL_USART) & USART_SR_RXNE == 0)
-      {
-      }
-      indata = usart_recv(DYNAMIXEL_USART);
-      buf[buf_index] = indata;
-      switch (buf_index)
-      {
-      case 0: /* Header 1. */
-      case 1: /* Header 2. */
-      {
-        if (indata != 0xFF)
-        {
-          received == false;
-          done = true;
-        }
-      }
-      break;
-      case 2: /* Header 3. */
-      {
-        if (indata != 0xFD)
-        {
-          received == false;
-          done = true;
-        }
-      }
-      break;
-      case 3: /* RSRV. */
-      {
-        if (indata != 0x00)
-        {
-          received == false;
-          done = true;
-        }
-      }
-      break;
-      case 4: /* Packer ID. */
-      {
-        if (indata != id)
-        {
-          received == false;
-          done = true;
-        }
-      }
-      break;
-      case 5: /* Length 1. */
-      {
-        if (indata != 0x08)
-        {
-          received == false;
-          done = true;
-        }
-      }
-      break;
-      case 6: /* Length 2. */
-      {
-        if (indata != 0x00)
-        {
-          received == false;
-          done = true;
-        }
-      }
-      break;
-      case 7: /* Inst. */
-      {
-        if (indata != 0x55)
-        {
-          received == false;
-          done = true;
-        }
-      }
-      break;
-      // case 8: /* Error. */
-      // {
-      //   if (indata != 0x00)
-      //   {
-      //     received == false;
-      //     done = true;
-      //   }
-      // }
-      // break;
-      case 14: /* Last. */
-      {
-        uint16_t receive_crc = buf[13] | (buf[14] << 8);
-        uint16_t cal_crc = update_crc(0, buf, 13);
-        if (receive_crc == cal_crc)
-        {
-          received = true;
-          position = present_position_decoder(id, buf);
-        }
-        else
-        {
-          received == false;
-        }
-        done = true;
-      }
-      break;
+  // uint8_t buf[16] = {0};
+  // uint8_t buf_index = 0;
+  // uint8_t indata = 0;
+  // bool done = false;
+  // while (!done)
+  // {
+  //   while (USART_SR(DYNAMIXEL_USART) & USART_SR_RXNE == 0)
+  //   {
+  //   }
+  //   indata = usart_recv(DYNAMIXEL_USART);
+  //   buf[buf_index] = indata;
+  //   switch (buf_index)
+  //   {
+  //   case 0: /* Header 1. */
+  //   case 1: /* Header 2. */
+  //   {
+  //     if (indata != 0xFF)
+  //     {
+  //       received == false;
+  //       done = true;
+  //     }
+  //   }
+  //   break;
+  //   case 2: /* Header 3. */
+  //   {
+  //     if (indata != 0xFD)
+  //     {
+  //       received == false;
+  //       done = true;
+  //     }
+  //   }
+  //   break;
+  //   case 3: /* RSRV. */
+  //   {
+  //     if (indata != 0x00)
+  //     {
+  //       received == false;
+  //       done = true;
+  //     }
+  //   }
+  //   break;
+  //   case 4: /* Packer ID. */
+  //   {
+  //     if (indata != id)
+  //     {
+  //       received == false;
+  //       done = true;
+  //     }
+  //   }
+  //   break;
+  //   case 5: /* Length 1. */
+  //   {
+  //     if (indata != 0x08)
+  //     {
+  //       received == false;
+  //       done = true;
+  //     }
+  //   }
+  //   break;
+  //   case 6: /* Length 2. */
+  //   {
+  //     if (indata != 0x00)
+  //     {
+  //       received == false;
+  //       done = true;
+  //     }
+  //   }
+  //   break;
+  //   case 7: /* Inst. */
+  //   {
+  //     if (indata != 0x55)
+  //     {
+  //       received == false;
+  //       done = true;
+  //     }
+  //   }
+  //   break;
+  //   // case 8: /* Error. */
+  //   // {
+  //   //   if (indata != 0x00)
+  //   //   {
+  //   //     received == false;
+  //   //     done = true;
+  //   //   }
+  //   // }
+  //   // break;
+  //   case 14: /* Last. */
+  //   {
+  //     uint16_t receive_crc = buf[13] | (buf[14] << 8);
+  //     uint16_t cal_crc = update_crc(0, buf, 13);
+  //     if (receive_crc == cal_crc)
+  //     {
+  //       received = true;
+  //       position = present_position_decoder(id, buf);
+  //     }
+  //     else
+  //     {
+  //       received == false;
+  //     }
+  //     done = true;
+  //   }
+  //   break;
 
-      default:
-        received == false;
-        done = true;
-        break;
-      }
+  //   default:
+  //     received == false;
+  //     done = true;
+  //     break;
+  //   }
 
-      buf_index++;
-    }
+  //   buf_index++;
+  // }
 
-  } while (!received);
+  // } while (!received);
 
-  clear_buffer();
+  // clear_buffer();
   return position;
 }
 
@@ -519,7 +526,7 @@ int32_t present_position_decoder(uint8_t id, uint8_t *packet)
 
 void clear_buffer(void)
 {
-  for (int i = 0; i < 32; i++)
+  for (int i = 0; i < 128; i++)
   {
     buffer[i] = 0x00;
   }
@@ -541,32 +548,39 @@ void usart1_isr(void)
   if ((USART_SR(DYNAMIXEL_USART) & USART_SR_RXNE) != 0)
   {
     uint8_t indata = usart_recv(DYNAMIXEL_USART);
-    if (indata == 0xFF)
-    {
-      if ((buffer[0] != 0xFF && buffer[1] != 0xFF && buffer[2] != 0xFD) ||
-          (buffer_end))
-      {
-        buffer_index = 0;
-        buffer_end = false;
-      }
-      else if (buffer[0] == 0xFF)
-      {
-        if (buffer[2] != 0xFD)
-        {
-          buffer_index = 1;
-        }
-      }
-    }
+    // if (indata == 0xFF)
+    // {
+    //   if ((buffer[0] != 0xFF && buffer[1] != 0xFF && buffer[2] != 0xFD) ||
+    //       (buffer_end))
+    //   {
+    //     buffer_index = 0;
+    //     buffer_end = false;
+    //   }
+    //   else if (buffer[0] == 0xFF)
+    //   {
+    //     if (buffer[2] != 0xFD)
+    //     {
+    //       buffer_index = 1;
+    //     }
+    //   }
+    // }
 
     buffer[buffer_index] = indata;
-    if (buffer_index == 6)
+    // if (buffer_index == 6)
+    // {
+    //   buffer_packet_length = (buffer[5] | (buffer[6] << 8)) + 7;
+    // }
+    // else if (buffer_index == buffer_packet_length - 1 && buffer_index > 6)
+    // {
+    //   buffer_end = true;
+    // }
+    if (buffer_index < 127)
     {
-      buffer_packet_length = (buffer[5] | (buffer[6] << 8)) + 7;
+      buffer_index++;
     }
-    else if (buffer_index == buffer_packet_length - 1 && buffer_index > 6)
+    else
     {
-      buffer_end = true;
+      buffer_index = 0;
     }
-    buffer_index++;
   }
 }

@@ -232,7 +232,7 @@ uint16_t update_crc(uint16_t crc_accum,
   return crc_accum;
 }
 
-void write_dynamixel_data(uint8_t id, uint8_t instruction, uint16_t address, uint8_t *data, uint16_t data_length)
+void dynamixel2_send_packet(uint8_t id, uint8_t instruction, uint16_t address, uint8_t *data, uint16_t data_length)
 {
   uint32_t packet_length = 12 + data_length;
   uint8_t packet[packet_length];

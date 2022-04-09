@@ -1,6 +1,8 @@
 {
   "files.associations": {
     "*.ejs": "html",
-    "printf.h": "c"
+    "printf.h": "c",
+    "adc.h": "c",
+    "stm32f4xx_hal_adc_ex.h": "c"
   }
 }

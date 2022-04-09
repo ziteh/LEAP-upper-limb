@@ -33,6 +33,7 @@ extern "C"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "printf.h"
+#include "force_sensor.h"
 
   /* USER CODE END Includes */
 

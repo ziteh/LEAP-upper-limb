@@ -25,7 +25,8 @@ typedef enum
   Z
 } ForceSensor_AxisTypeDef;
 
-int16_t ForceSensor_GetValue(ForceSensor_AxisTypeDef axis);
-void ForceSensor_PrintValue(void);
+void ForceSensor_GetValue(double theta, double *out_x, double *out_y, double *out_z);
+int16_t ForceSensor_GetRawValue(ForceSensor_AxisTypeDef axis);
+void ForceSensor_PrintRawValue(void);
 
 #endif /* __FORCE_SENSOR_H */

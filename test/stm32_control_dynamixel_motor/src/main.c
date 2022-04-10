@@ -320,7 +320,7 @@ bool dynamixel2_get_status_packet(uint8_t *packet, uint16_t *packet_length)
 
   /* Catch. */
   *packet_length = packet_ending_index - packet_starting_index + 1;
-  for (uint16_t i = 0; i < &packet_length; i++)
+  for (uint16_t i = 0; i < *packet_length; i++)
   {
     packet[i] = buffer[packet_starting_index + i];
   }
@@ -383,7 +383,7 @@ bool dynamixel2_parse_status_packet(uint8_t *packet, uint32_t packet_length, uin
 
     uint16_t length = packet[5] + ((uint16_t)(packet[6] << 8) & 0xFF00);
     *params_length = length - 3 - 1;
-    for (uint16_t i = 0; i < &params_length; i++)
+    for (uint16_t i = 0; i < *params_length; i++)
     {
       params[i] = packet[i + 9];
     }

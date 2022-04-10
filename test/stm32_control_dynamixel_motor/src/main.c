@@ -59,7 +59,7 @@ void led_setup(void);
 void other_gpio_setup(void);
 int32_t present_position_decoder(uint8_t id, uint8_t *packet);
 int32_t read_dynamixel_present_position(uint8_t id);
-void write_dynamixel_position(uint8_t id, int32_t position);
+void dynamixel2_set_goal_position(uint8_t id, int32_t position);
 void dynamixel2_set_torque_enable(uint8_t id, bool enable);
 void clear_buffer(void);
 void delay(volatile uint64_t value);
@@ -106,7 +106,7 @@ int main(void)
   int32_t position;
   while (1)
   {
-    write_dynamixel_position(MOTOR_ID, 10000);
+    dynamixel2_set_goal_position(MOTOR_ID, 10000);
     delay(10000000);
 
     position = read_dynamixel_present_position(MOTOR_ID);
@@ -120,7 +120,7 @@ int main(void)
 
     gpio_toggle(GPIO_LED_PORT, GPIO_LED_PIN);
 
-    write_dynamixel_position(MOTOR_ID, -10000);
+    dynamixel2_set_goal_position(MOTOR_ID, -10000);
     delay(10000000);
 
     position = read_dynamixel_present_position(MOTOR_ID);
@@ -336,57 +336,27 @@ void dynamixel2_set_torque_enable(uint8_t id, bool enable)
   dynamixel2_write(id, address, &data, 1);
 }
 
-void write_dynamixel_position(uint8_t id, int32_t position)
+void dynamixel2_set_goal_position(uint8_t id, int32_t position)
 {
-  uint16_t packet_length = 16;
-  uint8_t packet[packet_length];
-  packet[0] = 0xFF; /* Header 1. */
-  packet[1] = 0xFF; /* Hedaer 2. */
-  packet[2] = 0xFD; /* Hedaer 3. */
-  packet[3] = 0x00; /* Reserved. */
+  uint16_t address = 596;
+  uint8_t data[4];
+  data[0] = (uint8_t)(position & 0xFF);
+  data[1] = (uint8_t)((position >> 8) & 0xFF);
+  data[2] = (uint8_t)((position >> 16) & 0xFF);
+  data[3] = (uint8_t)((position >> 24) & 0xFF);
 
-  packet[4] = id; /* Packer ID. */
+  dynamixel2_write(id, address, data, 4);
+}
 
-  /* Length = paras + 3. */
-  packet[5] = 0x09; /* Length 1 (Low). */
-  packet[6] = 0x00; /* Lenget 2 (High). */
-
-  packet[7] = 0x03; /* Instrucion. */
-
-  /* Address. */
-  packet[8] = 0x54;
-  packet[9] = 0x02;
-
-  /* Position. */
-  packet[10] = (position & 0xFF);
-  packet[11] = ((position >> 8) & 0xFF);
-  packet[12] = ((position >> 16) & 0xFF);
-  packet[13] = ((position >> 24) & 0xFF);
-
-  /* Calculating CRC. */
-  uint16_t crc = update_crc(0, packet, packet_length - 2);
-
-  /* CRC. */
-  packet[14] = (crc & 0xFF);        /* CRC 1 (Low). */
-  packet[15] = ((crc >> 8) & 0xFF); /* CRC 2 (High). */
-
-  /* MAX485 enable Tx, disable Rx. */
-  gpio_set(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
-
-  /* Send packet. */
-  for (int i = 0; i < packet_length; i++)
-  {
-    usart_send_blocking(DYNAMIXEL_USART, packet[i]);
-  }
-
-  /* Wait for transmission complete. */
-  while (!(USART_SR(DYNAMIXEL_USART) & USART_SR_TC))
-  {
-    /* Do nothing. */
-  }
-
-  /* MAX485 enable Rx, disable Tx. */
-  gpio_clear(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
+void dynamixel2_reset(u_int8_t id)
+{
+  /*
+     0xFF: Reset all.
+     0x01: Reset all except ID.
+     0x02: reset all except ID and Baudrate.
+  */
+  uint8_t parameter = 0x02;
+  dynamixel2_send_packet(id, factory_reset, &parameter, 1);
 }
 
 int32_t read_dynamixel_present_position(uint8_t id)

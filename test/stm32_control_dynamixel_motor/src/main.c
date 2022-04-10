@@ -43,6 +43,9 @@
 #define GPIO_CONSOLE_UART_RX_PORT (GPIOA)
 #define GPIO_CONSOLE_UART_RX_PIN (GPIO3)
 
+#define GET_LOW_ORDER_BYTE(bytes) ((uint8_t)(((uint16_t)(bytes)) & 0xFF))
+#define GET_HIGH_ORDER_BYTE(bytes) ((uint8_t)((((uint16_t)(bytes)) >> 8) & 0xFF))
+
 uint8_t buffer[128] = {0};
 volatile uint8_t buffer_index = 0;
 volatile uint16_t buffer_packet_length = 0;
@@ -276,7 +279,7 @@ void max485_send(uint8_t *data, uint32_t length)
   gpio_clear(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
 }
 
-void dynamixel2_send_packet(uint8_t id, uint8_t instruction, uint8_t *params, uint16_t params_length)
+void dynamixel2_send_packet(uint8_t id, dynamixel2_instruction_t inst, uint8_t *params, uint16_t params_length)
 {
   uint32_t packet_length = 10 + params_length;
   uint8_t packet[packet_length];
@@ -288,10 +291,10 @@ void dynamixel2_send_packet(uint8_t id, uint8_t instruction, uint8_t *params, ui
   packet[4] = id; /* Packet ID. */
 
   /* Length = Parameter length + 3. */
-  packet[5] = (params_length + 3) & 0xFF;        /* Length 1 (Low-order byte). */
-  packet[6] = ((params_length + 3) >> 8) & 0xFF; /* Lenget 2 (High-order byte). */
+  packet[5] = GET_LOW_ORDER_BYTE(params_length + 3);  /* Length 1 (Low-order byte). */
+  packet[6] = GET_HIGH_ORDER_BYTE(params_length + 3); /* Lenget 2 (High-order byte). */
 
-  packet[7] = instruction; /* Instrucion. */
+  packet[7] = (uint8_t)inst; /* Instrucion. */
 
   /* Parameter 1~X. */
   for (uint16_t i = 0; i < params_length; i++)
@@ -301,15 +304,28 @@ void dynamixel2_send_packet(uint8_t id, uint8_t instruction, uint8_t *params, ui
 
   /* CRC. */
   uint16_t crc = update_crc(0, packet, packet_length - 2); /* Calculating CRC. */
-  packet[packet_length - 2] = (crc & 0xFF);                /* CRC 1 (Low-order byte). */
-  packet[packet_length - 1] = ((crc >> 8) & 0xFF);         /* CRC 2 (High-order byte). */
+  packet[packet_length - 2] = GET_LOW_ORDER_BYTE(crc);     /* CRC 1 (Low-order byte). */
+  packet[packet_length - 1] = GET_HIGH_ORDER_BYTE(crc);    /* CRC 2 (High-order byte). */
 
   max485_send(packet, packet_length);
 }
 
 void dynamixel2_write(uint8_t id, uint16_t address, uint8_t *data, uint16_t data_length)
 {
-  uint8_t instruction = 0x03;
+  uint32_t params_length = data_length + 2;
+  uint8_t params[params_length];
+
+  /* Parameter 1~2: Starting address. */
+  params[0] = GET_LOW_ORDER_BYTE(address);
+  params[1] = GET_HIGH_ORDER_BYTE(address);
+
+  /* Parameter 3~X: Data. */
+  for (u_int16_t i = 0; i < data_length; i++)
+  {
+    params[2 + i] = data[i];
+  }
+
+  dynamixel2_send_packet(id, write, params, params_length);
 }
 
 void weite_dynamixel_torque_enable(uint8_t id, bool enable)

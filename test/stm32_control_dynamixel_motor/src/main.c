@@ -43,6 +43,7 @@
 #define GPIO_CONSOLE_UART_RX_PORT (GPIOA)
 #define GPIO_CONSOLE_UART_RX_PIN (GPIO3)
 
+#define DYNAMIXEL2_BROADCAST_ID ((uint8_t)0xFE)
 #define GET_LOW_ORDER_BYTE(bytes) ((uint8_t)(((uint16_t)(bytes)) & 0xFF))
 #define GET_HIGH_ORDER_BYTE(bytes) ((uint8_t)((((uint16_t)(bytes)) >> 8) & 0xFF))
 
@@ -320,7 +321,7 @@ void dynamixel2_write(uint8_t id, uint16_t address, uint8_t *data, uint16_t data
   params[1] = GET_HIGH_ORDER_BYTE(address);
 
   /* Parameter 3~X: Data. */
-  for (u_int16_t i = 0; i < data_length; i++)
+  for (uint16_t i = 0; i < data_length; i++)
   {
     params[2 + i] = data[i];
   }

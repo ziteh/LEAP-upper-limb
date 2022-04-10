@@ -280,6 +280,75 @@ void max485_send(uint8_t *data, uint32_t length)
   gpio_clear(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
 }
 
+bool dynamixel2_get_status_packet(uint8_t *packet, uint16_t *packet_length)
+{
+  if (buffer_index < 10)
+  {
+    /* Receive didn't complete. */
+    return false;
+  }
+
+  uint16_t packet_starting_index = 0;
+  bool header_ok = false;
+
+  /* Find the head of packet. */
+  while (!header_ok)
+  {
+    bool header1 = buffer[packet_starting_index] == 0xFF;
+    bool header2 = buffer[packet_starting_index + 1] == 0xFF;
+    bool header3 = buffer[packet_starting_index + 2] == 0xFD;
+    if (!(header1 && header2 && header3))
+    {
+      if (packet_starting_index < (buffer_index - 10))
+      {
+        packet_starting_index++;
+        continue;
+      }
+      else
+      {
+        /* Receive didn't complete. */
+        return false;
+      }
+    }
+    else
+    {
+      header_ok = true;
+    }
+  }
+
+  uint16_t length = buffer[packet_starting_index + 5] + (buffer[packet_starting_index + 6] << 8);
+  uint16_t packet_ending_index = packet_starting_index + (length - 3) + 9;
+
+  if (packet_ending_index > buffer_index)
+  {
+    /* Receive didn't complete. */
+    return false;
+  }
+
+  /* Catch. */
+  *packet_length = packet_ending_index - packet_starting_index + 1;
+  for (uint16_t i = 0; i < &packet_length; i++)
+  {
+    packet[i] = buffer[packet_starting_index + i];
+  }
+
+  /* Clear. */
+  for (uint16_t i = 0; i < (packet_ending_index + 1); i++)
+  {
+    buffer[i] = 0;
+  }
+
+  /* Move. */
+  for (uint16_t i = 0; i < (buffer_index - packet_ending_index); i++)
+  {
+    buffer[i] = buffer[packet_ending_index + i + 1];
+    buffer[packet_ending_index + i + 1] = 0;
+  }
+  buffer_index = buffer_index - packet_ending_index;
+
+  return true;
+}
+
 void dynamixel2_send_packet(uint8_t id, dynamixel2_instruction_t inst, uint8_t *params, uint16_t params_length)
 {
   uint32_t packet_length = 10 + params_length;

@@ -64,6 +64,8 @@ void dynamixel2_reset(u_int8_t id);
 int32_t dynamixel2_read_present_position(uint8_t id);
 void dynamixel2_set_goal_position(uint8_t id, int32_t position);
 void dynamixel2_set_torque_enable(uint8_t id, bool enable);
+bool dynamixel2_parse_status_packet(uint8_t *packet, uint32_t packet_length, uint8_t *id, uint8_t *params, uint16_t *params_length, uint8_t *error, bool *crc_check);
+bool dynamixel2_get_status_packet(uint8_t *packet, uint16_t *packet_length);
 void clear_buffer(void);
 void delay(volatile uint64_t value);
 uint16_t update_crc(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk_size);
@@ -99,11 +101,10 @@ int main(void)
   console_usart_setup();
   dynamixel_usart_setup();
 
-  clear_buffer();
-
   dynamixel2_set_torque_enable(MOTOR_ID, true);
   delay(100000);
 
+  clear_buffer();
   printf("Ready\r\n");
 
   int32_t position;
@@ -461,7 +462,7 @@ bool dynamixel2_read(uint8_t id, uint16_t address, uint16_t data_length, uint8_t
 void dynamixel2_set_torque_enable(uint8_t id, bool enable)
 {
   uint16_t address = 562;
-  uint8_t data = enable ? 0x01 : 0x00;
+  uint8_t data = enable ? 1 : 0;
   dynamixel2_write(id, address, &data, 1);
 }
 

@@ -12,7 +12,8 @@
 #include <libopencm3/stm32/usart.h>
 #include <libopencm3/cm3/nvic.h>
 
-#define MOTOR_ID (10)
+#define ID_1 (10)
+#define ID_2 (6)
 
 /* PA5 = D13, User-LED. */
 #define GPIO_LED_PORT (GPIOA)
@@ -64,32 +65,37 @@ int main(void)
   console_usart_setup();
   dynamixel_usart_setup();
 
-  dynamixel2_set_torque_enable(MOTOR_ID, true);
+  dynamixel2_set_torque_enable(ID_1, true);
+  dynamixel2_set_torque_enable(ID_2, true);
   delay(100000);
 
   dynamixel2_clear_receive_buffer();
   printf("Ready\r\n");
 
-  int32_t position;
+  int32_t goal_position = 10000;
   while (1)
   {
-    dynamixel2_set_goal_position(MOTOR_ID, 10000);
+    dynamixel2_set_goal_position(ID_1, goal_position);
+    delay(50000);
+    dynamixel2_set_goal_position(ID_2, goal_position);
     delay(10000000);
 
-    position = dynamixel2_read_present_position(MOTOR_ID);
-    printf("%li\r\n", position);
-    delay(10000000);
-
-    gpio_toggle(GPIO_LED_PORT, GPIO_LED_PIN);
-
-    dynamixel2_set_goal_position(MOTOR_ID, -10000);
-    delay(10000000);
-
-    position = dynamixel2_read_present_position(MOTOR_ID);
-    printf("%li\r\n", position);
+    uint32_t p1 = dynamixel2_read_present_position(ID_1);
+    delay(50000);
+    uint32_t p2 = dynamixel2_read_present_position(ID_2);
+    printf("ID%i: %li.ID%i: %li\r\n", ID_1, p1, ID_2, p2);
     delay(10000000);
 
     gpio_toggle(GPIO_LED_PORT, GPIO_LED_PIN);
+
+    if (goal_position == 10000)
+    {
+      goal_position = -goal_position;
+    }
+    else
+    {
+      goal_position = 10000;
+    }
   }
 
   return 0;

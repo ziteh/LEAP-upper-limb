@@ -47,7 +47,9 @@
 #define GET_LOW_ORDER_BYTE(bytes) ((uint8_t)(((uint16_t)(bytes)) & 0xFF))
 #define GET_HIGH_ORDER_BYTE(bytes) ((uint8_t)((((uint16_t)(bytes)) >> 8) & 0xFF))
 
-uint8_t buffer[128] = {0};
+#define BUFFER_LENGTH (128)
+
+uint8_t buffer[BUFFER_LENGTH] = {0};
 volatile uint8_t buffer_index = 0;
 volatile uint16_t buffer_packet_length = 0;
 volatile bool buffer_end = false;
@@ -57,7 +59,8 @@ void console_usart_setup(void);
 void dynamixel_usart_setup(void);
 void led_setup(void);
 void other_gpio_setup(void);
-int32_t present_position_decoder(uint8_t id, uint8_t *packet);
+
+void dynamixel2_reset(u_int8_t id);
 int32_t dynamixel2_read_present_position(uint8_t id);
 void dynamixel2_set_goal_position(uint8_t id, int32_t position);
 void dynamixel2_set_torque_enable(uint8_t id, bool enable);
@@ -110,12 +113,7 @@ int main(void)
     delay(10000000);
 
     position = dynamixel2_read_present_position(MOTOR_ID);
-    usart_send_blocking(USART2, (position & 0xFF));
-    usart_send_blocking(USART2, ((position >> 8) & 0xFF));
-    usart_send_blocking(USART2, ((position >> 16) & 0xFF));
-    usart_send_blocking(USART2, ((position >> 24) & 0xFF));
-    usart_send_blocking(USART2, '\r');
-    usart_send_blocking(USART2, '\n');
+    printf("%i\r\n", position);
     delay(10000000);
 
     gpio_toggle(GPIO_LED_PORT, GPIO_LED_PIN);
@@ -124,12 +122,7 @@ int main(void)
     delay(10000000);
 
     position = dynamixel2_read_present_position(MOTOR_ID);
-    usart_send_blocking(USART2, (position & 0xFF));
-    usart_send_blocking(USART2, ((position >> 8) & 0xFF));
-    usart_send_blocking(USART2, ((position >> 16) & 0xFF));
-    usart_send_blocking(USART2, ((position >> 24) & 0xFF));
-    usart_send_blocking(USART2, '\r');
-    usart_send_blocking(USART2, '\n');
+    printf("%i\r\n", position);
     delay(10000000);
 
     gpio_toggle(GPIO_LED_PORT, GPIO_LED_PIN);
@@ -382,13 +375,8 @@ void dynamixel2_send_packet(uint8_t id, dynamixel2_instruction_t inst, uint8_t *
 
 bool dynamixel2_parse_status_packet(uint8_t *packet, uint32_t packet_length, uint8_t *id, uint8_t *params, uint16_t *params_length, uint8_t *error, bool *crc_check)
 {
-  bool header1 = packet[0] == 0xFF;
-  bool header2 = packet[1] == 0xFF;
-  bool header3 = packet[2] == 0xFD;
-  bool rsrv = packet[3] == 0x00;
-  bool inst = packet[7] == 0x55;
-
-  if (header1 && header2 && header3 && rsrv && inst)
+  /* Check instruction. */
+  if (packet[7] == 0x55)
   {
     *id = packet[4];
     *error = packet[8];
@@ -429,9 +417,9 @@ void dynamixel2_write(uint8_t id, uint16_t address, uint8_t *data, uint16_t data
   dynamixel2_send_packet(id, write, params, params_length);
 }
 
-void dynamixel2_read(uint8_t id, uint16_t address, uint16_t data_length, uint8_t *return_data, uint16_t *return_data_length)
+bool dynamixel2_read(uint8_t id, uint16_t address, uint16_t data_length, uint8_t *return_data, uint16_t *return_data_length)
 {
-  u_int8_t params[4];
+  uint8_t params[4];
 
   /* Parameter 1~2: Starting address. */
   params[0] = GET_LOW_ORDER_BYTE(address);
@@ -441,7 +429,33 @@ void dynamixel2_read(uint8_t id, uint16_t address, uint16_t data_length, uint8_t
   params[2] = GET_LOW_ORDER_BYTE(data_length);
   params[3] = GET_HIGH_ORDER_BYTE(data_length);
 
+  clear_buffer();
   dynamixel2_send_packet(id, read, params, 4);
+
+  uint8_t status_packet[64];
+  uint16_t status_packet_length;
+  uint32_t timeout = 0xAFFFFFFF;
+  while (!dynamixel2_get_status_packet(status_packet, &status_packet_length))
+  {
+    timeout--;
+    if (timeout == 0)
+    {
+      return false; /* Timeout. */
+    }
+  }
+
+  uint8_t id_r;
+  uint8_t error;
+  bool crc_check;
+  dynamixel2_parse_status_packet(status_packet,
+                                 status_packet_length,
+                                 &id_r,
+                                 return_data,
+                                 return_data_length,
+                                 &error,
+                                 &crc_check);
+
+  return (id_r == id) && (error == 0x00) && (crc_check);
 }
 
 void dynamixel2_set_torque_enable(uint8_t id, bool enable)
@@ -491,13 +505,11 @@ int32_t dynamixel2_read_present_position(uint8_t id)
 
 void clear_buffer(void)
 {
-  for (int i = 0; i < 128; i++)
+  for (int i = 0; i < BUFFER_LENGTH; i++)
   {
-    buffer[i] = 0x00;
+    buffer[i] = 0;
   }
   buffer_index = 0;
-  buffer_end = false;
-  buffer_packet_length = 0;
 }
 
 void delay(volatile uint64_t value)
@@ -513,33 +525,9 @@ void usart1_isr(void)
   if ((USART_SR(DYNAMIXEL_USART) & USART_SR_RXNE) != 0)
   {
     uint8_t indata = usart_recv(DYNAMIXEL_USART);
-    // if (indata == 0xFF)
-    // {
-    //   if ((buffer[0] != 0xFF && buffer[1] != 0xFF && buffer[2] != 0xFD) ||
-    //       (buffer_end))
-    //   {
-    //     buffer_index = 0;
-    //     buffer_end = false;
-    //   }
-    //   else if (buffer[0] == 0xFF)
-    //   {
-    //     if (buffer[2] != 0xFD)
-    //     {
-    //       buffer_index = 1;
-    //     }
-    //   }
-    // }
-
     buffer[buffer_index] = indata;
-    // if (buffer_index == 6)
-    // {
-    //   buffer_packet_length = (buffer[5] | (buffer[6] << 8)) + 7;
-    // }
-    // else if (buffer_index == buffer_packet_length - 1 && buffer_index > 6)
-    // {
-    //   buffer_end = true;
-    // }
-    if (buffer_index < 127)
+
+    if (buffer_index < (BUFFER_LENGTH - 1))
     {
       buffer_index++;
     }

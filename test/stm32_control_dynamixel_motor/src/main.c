@@ -61,6 +61,29 @@ void clear_buffer(void);
 void delay(volatile uint64_t value);
 uint16_t update_crc(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk_size);
 
+typedef enum
+{
+  ping = 0x01,
+  read = 0x02,
+  write = 0x03,
+
+  reg_write = 0x04,
+  action = 0x05,
+
+  factory_reset = 0x06,
+  reboot = 0x08,
+  clear = 0x10,
+  control_table_backup = 0x20,
+
+  sync_read = 0x82,
+  sync_write = 0x83,
+  fast_sync_read = 0x8A,
+
+  bulk_read = 0x92,
+  bulk_write = 0x93,
+  fast_bulk_read = 0x9A
+} dynamixel2_instruction_t;
+
 int main(void)
 {
   rcc_setup();
@@ -282,6 +305,11 @@ void dynamixel2_send_packet(uint8_t id, uint8_t instruction, uint8_t *params, ui
   packet[packet_length - 1] = ((crc >> 8) & 0xFF);         /* CRC 2 (High-order byte). */
 
   max485_send(packet, packet_length);
+}
+
+void dynamixel2_write(uint8_t id, uint16_t address, uint8_t *data, uint16_t data_length)
+{
+  uint8_t instruction = 0x03;
 }
 
 void weite_dynamixel_torque_enable(uint8_t id, bool enable)

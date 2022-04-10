@@ -60,7 +60,7 @@ void other_gpio_setup(void);
 int32_t present_position_decoder(uint8_t id, uint8_t *packet);
 int32_t read_dynamixel_present_position(uint8_t id);
 void write_dynamixel_position(uint8_t id, int32_t position);
-void weite_dynamixel_torque_enable(uint8_t id, bool enable);
+void dynamixel2_set_torque_enable(uint8_t id, bool enable);
 void clear_buffer(void);
 void delay(volatile uint64_t value);
 uint16_t update_crc(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk_size);
@@ -98,7 +98,7 @@ int main(void)
 
   clear_buffer();
 
-  weite_dynamixel_torque_enable(MOTOR_ID, true);
+  dynamixel2_set_torque_enable(MOTOR_ID, true);
   delay(100000);
 
   printf("Ready\r\n");
@@ -329,49 +329,11 @@ void dynamixel2_write(uint8_t id, uint16_t address, uint8_t *data, uint16_t data
   dynamixel2_send_packet(id, write, params, params_length);
 }
 
-void weite_dynamixel_torque_enable(uint8_t id, bool enable)
+void dynamixel2_set_torque_enable(uint8_t id, bool enable)
 {
-  uint16_t packet_length = 13;
-  uint8_t packet[packet_length];
-  packet[0] = 0xFF; /* Header 1. */
-  packet[1] = 0xFF; /* Hedaer 2. */
-  packet[2] = 0xFD; /* Hedaer 3. */
-  packet[3] = 0x00; /* Reserved. */
-
-  packet[4] = id; /* Packer ID. */
-
-  /* Length = paras + 3. */
-  packet[5] = 0x06; /* Length 1 (Low). */
-  packet[6] = 0x00; /* Lenget 2 (High). */
-
-  packet[7] = 0x03; /* Instrucion. */
-
-  /* Address. */
-  packet[8] = (562 & 0xFF);
-  packet[9] = ((562 >> 8) & 0xFF);
-
-  /* Position. */
-  packet[10] = enable ? 0x01 : 0x00;
-
-  /* Calculating CRC. */
-  uint16_t crc = update_crc(0, packet, packet_length - 2);
-
-  /* CRC. */
-  packet[11] = (crc & 0xFF);        /* CRC 1 (Low). */
-  packet[12] = ((crc >> 8) & 0xFF); /* CRC 2 (High). */
-
-  gpio_set(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
-  for (int i = 0; i < packet_length; i++)
-  {
-    usart_send_blocking(DYNAMIXEL_USART, packet[i]);
-  }
-
-  /* Wait for transmission complete. */
-  while (!(USART_SR(DYNAMIXEL_USART) & USART_SR_TC))
-  {
-    /* Do nothing. */
-  }
-  gpio_clear(GPIO_ENABLE_PORT, GPIO_ENABLE_PIN);
+  uint16_t address = 562;
+  uint8_t data = enable ? 0x01 : 0x00;
+  dynamixel2_write(id, address, &data, 1);
 }
 
 void write_dynamixel_position(uint8_t id, int32_t position)

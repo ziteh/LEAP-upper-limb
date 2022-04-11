@@ -2,7 +2,7 @@
 /**
  ******************************************************************************
  * @file           : main.c
- * @brief          : Main STM32 program body of LEAP-Up
+ * @brief          : Main STM32 program body of LEAP-Up(Lightweight Exoskeleton with Assistive Power, Upper Limb)
  ******************************************************************************
  * @attention
  *
@@ -43,8 +43,13 @@ ADC_HandleTypeDef hadc1;
 SPI_HandleTypeDef hspi2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim10;
+UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
+uint8_t uart1_rx_buffer[32] = {0};
+
+uint8_t DYNAMIXEL_BUFFER[DYNAMIXEL_BUFFER_LENGTH] = {0};
+uint16_t DYNAMIXEL_BUFFER_INDEX = 0;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -52,6 +57,7 @@ UART_HandleTypeDef huart2;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_SPI2_Init(void);
@@ -94,6 +100,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_ADC1_Init();
   MX_SPI2_Init();
@@ -101,19 +108,45 @@ int main(void)
   MX_TIM10_Init();
   /* USER CODE BEGIN 2 */
 
+  uint32_t goal_position = 10000;
+
+  /* Starting DYNAMIXEL receive. */
+  HAL_UART_Receive_IT(&huart1, uart1_rx_buffer, 1);
+
+  dynamixel2_set_torque_enable(DYNAMIXEL_MOTOR_ID_SFE, true);
+  dynamixel2_clear_receive_buffer();
+
+  HAL_Delay(1000);
   printf("\r\nLEAP-Up Ready\r\n");
+  HAL_Delay(1000);
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
+    dynamixel2_set_goal_position(DYNAMIXEL_MOTOR_ID_SFE, goal_position);
+    HAL_Delay(1000);
+    uint32_t p = dynamixel2_read_present_position(DYNAMIXEL_MOTOR_ID_SFE);
+    printf("%li\r\n", p);
+    HAL_Delay(1000);
 
-    /* USER CODE BEGIN 3 */
+    HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+
+    goal_position = -goal_position;
   }
-  /* USER CODE END 3 */
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  if (huart->Instance == USART1)
+  {
+    /* DYNAMIXEL handler. */
+    dynamixel2_receive_callback(uart1_rx_buffer[0]);
+
+    /* Start a new receive. */
+    HAL_UART_Receive_IT(huart, uart1_rx_buffer, 1);
+  }
 }
 
 /**
@@ -340,6 +373,38 @@ static void MX_TIM10_Init(void)
 }
 
 /**
+ * @brief USART1 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART2_Init 0 */
+
+  /* USER CODE END USART2_Init 0 */
+
+  /* USER CODE BEGIN USART2_Init 1 */
+
+  /* USER CODE END USART2_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 57600;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART2_Init 2 */
+
+  /* USER CODE END USART2_Init 2 */
+}
+
+/**
  * @brief USART2 Initialization Function
  * @param None
  * @retval None
@@ -401,6 +466,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : MAX485_DE_RE_Pin */
+  GPIO_InitStruct.Pin = MAX485_DE_RE_GPIO_PIN;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+  HAL_GPIO_Init(MAX485_DE_RE_GPIO_PORT, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);

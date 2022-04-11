@@ -35,6 +35,7 @@ extern "C"
 #include "printf.h"
 #include "force_sensor.h"
 #include "kinematics.h"
+#include "dynamixel_2_0.h"
 
   /* USER CODE END Includes */
 
@@ -74,6 +75,10 @@ extern "C"
 #define USART_TX_GPIO_Port GPIOA
 #define USART_RX_Pin GPIO_PIN_3
 #define USART_RX_GPIO_Port GPIOA
+#define DYNAMIXEL_USART_TX_Pin GPIO_PIN_9
+#define DYNAMIXEL_USART_TX_GPIO_Port GPIOA
+#define DYNAMIXEL_USART_RX_Pin GPIO_PIN_10
+#define DYNAMIXEL_USART_RX_GPIO_Port GPIOA
 #define Force_sensor_y1_Pin GPIO_PIN_4
 #define Force_sensor_y1_GPIO_Port GPIOA
 #define LD2_Pin GPIO_PIN_5
@@ -87,6 +92,9 @@ extern "C"
 #define SWO_Pin GPIO_PIN_3
 #define SWO_GPIO_Port GPIOB
   /* USER CODE BEGIN Private defines */
+
+#define DYNAMIXEL_MOTOR_ID_SFE (10)
+#define DYNAMIXEL_MOTOR_ID_EFE (6)
 
   /* USER CODE END Private defines */
 

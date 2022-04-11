@@ -18,8 +18,8 @@ bool dynamixel2_get_status_packet(uint8_t *packet, uint16_t *packet_length);
 #if defined(USE_STM32HAL)
 extern USART_HandleTypeDef MAX485_UART;
 #endif
-extern uint8_t BUFFER[];
-extern uint16_t BUFFER_INDEX;
+extern uint8_t DYNAMIXEL_BUFFER[];
+extern uint16_t DYNAMIXEL_BUFFER_INDEX;
 
 void max485_send(uint8_t *data, uint32_t length)
 {
@@ -198,7 +198,7 @@ void dynamixel2_receive_callback(uint8_t received_data)
 {
   buffer[buffer_index] = received_data;
 
-  if (buffer_index < (BUFFER_LENGTH - 1))
+  if (buffer_index < (DYNAMIXEL_BUFFER_LENGTH - 1))
   {
     buffer_index++;
   }
@@ -210,7 +210,7 @@ void dynamixel2_receive_callback(uint8_t received_data)
 
 void dynamixel2_clear_receive_buffer(void)
 {
-  for (int i = 0; i < BUFFER_LENGTH; i++)
+  for (int i = 0; i < DYNAMIXEL_BUFFER_LENGTH; i++)
   {
     buffer[i] = 0;
   }

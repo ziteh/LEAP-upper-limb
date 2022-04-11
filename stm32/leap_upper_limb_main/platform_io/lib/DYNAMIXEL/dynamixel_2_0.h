@@ -30,9 +30,9 @@
 #error
 #endif
 
-#define BUFFER (buffer)
-#define BUFFER_INDEX (buffer_index)
-#define BUFFER_LENGTH (128)
+#define DYNAMIXEL_BUFFER (buffer)
+#define DYNAMIXEL_BUFFER_INDEX (buffer_index)
+#define DYNAMIXEL_BUFFER_LENGTH (128)
 
 #define DYNAMIXEL2_BROADCAST_ID ((uint8_t)0xFE)
 

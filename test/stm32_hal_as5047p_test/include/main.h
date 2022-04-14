@@ -1,4 +1,3 @@
-/* USER CODE BEGIN Header */
 /**
  ******************************************************************************
  * @file           : main.h
@@ -16,7 +15,6 @@
  *
  ******************************************************************************
  */
-/* USER CODE END Header */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __MAIN_H
@@ -27,38 +25,13 @@ extern "C"
 {
 #endif
 
-/* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
 
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
 #include "printf.h"
+#include "as5047p.h"
 
-  /* USER CODE END Includes */
-
-  /* Exported types ------------------------------------------------------------*/
-  /* USER CODE BEGIN ET */
-
-  /* USER CODE END ET */
-
-  /* Exported constants --------------------------------------------------------*/
-  /* USER CODE BEGIN EC */
-
-  /* USER CODE END EC */
-
-  /* Exported macro ------------------------------------------------------------*/
-  /* USER CODE BEGIN EM */
-
-  /* USER CODE END EM */
-
-  /* Exported functions prototypes ---------------------------------------------*/
   void Error_Handler(void);
 
-/* USER CODE BEGIN EFP */
-
-/* USER CODE END EFP */
-
-/* Private defines -----------------------------------------------------------*/
 #define B1_Pin GPIO_PIN_13
 #define B1_GPIO_Port GPIOC
 #define B1_EXTI_IRQn EXTI15_10_IRQn
@@ -83,9 +56,6 @@ extern "C"
 #define TCK_GPIO_Port GPIOA
 #define SWO_Pin GPIO_PIN_3
 #define SWO_GPIO_Port GPIOB
-  /* USER CODE BEGIN Private defines */
-
-  /* USER CODE END Private defines */
 
 #ifdef __cplusplus
 }

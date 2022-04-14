@@ -36,6 +36,12 @@
 
 #define DYNAMIXEL2_BROADCAST_ID ((uint8_t)0xFE)
 
+#define H54_DEGREE_TO_POSITION(deg) ((double)deg * (250961.5 / 180.0))
+#define H54_POSITION_TO_DEGREE(pos) ((int32_t)pos * (180.0 / 250961.5))
+
+#define H42_DEGREE_TO_POSITION(deg) ((double)deg * (151875 / 180.0))
+#define H42_POSITION_TO_DEGREE(pos) ((int32_t)pos * (180.0 / 151875))
+
 typedef enum
 {
   ping = 0x01,

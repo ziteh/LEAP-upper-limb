@@ -14,7 +14,7 @@ void InverseKinematics2(double x, double y, double l1, double l2, double *out_r1
   double r2 = 2 * atan2(sqrt(pow(l1 + l2, 2) - pow(x, 2) + pow(y, 2)),
                         sqrt(pow(x, 2) + pow(y, 2) - pow(l1 - l2, 2)));
 
-  double r1 = -(atan2(x, y) + atan2(l2 * sin(r2), l1 + l2 * cos(r2)));
+  double r1 = -(atan2(y, x) + atan2(l2 * sin(r2), l1 + l2 * cos(r2)));
 
   *out_r1 = RAD_TO_DEGREE(r1);
   *out_r2 = RAD_TO_DEGREE(r2);

@@ -4,6 +4,8 @@
     "printf.h": "c",
     "adc.h": "c",
     "stm32f4xx_hal_adc_ex.h": "c",
-    "stm32f4xx_it.h": "c"
+    "stm32f4xx_it.h": "c",
+    "dynamixel_2_0.h": "c",
+    "force_sensor.h": "c"
   }
 }

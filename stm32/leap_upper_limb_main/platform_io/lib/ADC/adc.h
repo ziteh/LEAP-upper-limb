@@ -8,6 +8,6 @@
 
 #include "stm32f4xx_hal.h"
 
-uint16_t ADC_GetValue(ADC_HandleTypeDef *hadc, uint32_t channel);
+int ADC_GetValue(ADC_HandleTypeDef *hadc, uint32_t channel, uint16_t *value);
 
 #endif /* __ADC_H */

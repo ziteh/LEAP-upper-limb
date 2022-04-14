@@ -33,9 +33,6 @@ extern "C"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "printf.h"
-#include "force_sensor.h"
-#include "kinematics.h"
-#include "dynamixel_2_0.h"
 
   /* USER CODE END Includes */
 
@@ -54,8 +51,6 @@ extern "C"
 
   /* USER CODE END EM */
 
-  void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
-
   /* Exported functions prototypes ---------------------------------------------*/
   void Error_Handler(void);
 
@@ -67,24 +62,21 @@ extern "C"
 #define B1_Pin GPIO_PIN_13
 #define B1_GPIO_Port GPIOC
 #define B1_EXTI_IRQn EXTI15_10_IRQn
-#define Force_sensor_x1_Pin GPIO_PIN_0
-#define Force_sensor_x1_GPIO_Port GPIOA
-#define Force_sensor_x2_Pin GPIO_PIN_1
-#define Force_sensor_x2_GPIO_Port GPIOA
+
 #define USART_TX_Pin GPIO_PIN_2
 #define USART_TX_GPIO_Port GPIOA
 #define USART_RX_Pin GPIO_PIN_3
 #define USART_RX_GPIO_Port GPIOA
-#define DYNAMIXEL_USART_TX_Pin GPIO_PIN_9
-#define DYNAMIXEL_USART_TX_GPIO_Port GPIOA
-#define DYNAMIXEL_USART_RX_Pin GPIO_PIN_10
-#define DYNAMIXEL_USART_RX_GPIO_Port GPIOA
-#define Force_sensor_y1_Pin GPIO_PIN_4
-#define Force_sensor_y1_GPIO_Port GPIOA
-#define LD2_Pin GPIO_PIN_5
-#define LD2_GPIO_Port GPIOA
-#define Force_sensor_y2_Pin GPIO_PIN_0
-#define Force_sensor_y2_GPIO_Port GPIOB
+
+#define AS5047P_SCK_Pin GPIO_PIN_5
+#define AS5047P_SCK_GPIO_Port GPIOA
+#define AS5047P_MISO_Pin GPIO_PIN_6
+#define AS5047P_MISO_GPIO_Port GPIOA
+#define AS5047P_MOSI_Pin GPIO_PIN_7
+#define AS5047P_MOSI_GPIO_Port GPIOA
+#define AS5047P_SS_Pin GPIO_PIN_6
+#define AS5047P_SS_GPIO_Port GPIOB
+
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
@@ -92,12 +84,6 @@ extern "C"
 #define SWO_Pin GPIO_PIN_3
 #define SWO_GPIO_Port GPIOB
   /* USER CODE BEGIN Private defines */
-
-#define DYNAMIXEL_MOTOR_ID_SFE (10)
-#define DYNAMIXEL_MOTOR_ID_EFE (6)
-
-#define L1 (265)
-#define L2 (295)
 
   /* USER CODE END Private defines */
 

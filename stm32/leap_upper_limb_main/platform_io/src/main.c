@@ -64,7 +64,10 @@ static void MX_SPI2_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM10_Init(void);
 /* USER CODE BEGIN PFP */
-
+void Arm_Process(void);
+void Arm_Move_Absolute(double x, double y);
+void Arm_Move_Relative(double x, double y);
+void Arm_Get(double *x, double *y);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -108,13 +111,18 @@ int main(void)
   MX_TIM10_Init();
   /* USER CODE BEGIN 2 */
 
-  uint32_t goal_position = 10000;
-
   /* Starting DYNAMIXEL receive. */
   HAL_UART_Receive_IT(&huart1, uart1_rx_buffer, 1);
 
   dynamixel2_set_torque_enable(DYNAMIXEL_MOTOR_ID_SFE, true);
+  HAL_Delay(1000);
+  dynamixel2_set_torque_enable(DYNAMIXEL_MOTOR_ID_EFE, true);
   dynamixel2_clear_receive_buffer();
+
+  HAL_Delay(200);
+  dynamixel2_set_goal_position(DYNAMIXEL_MOTOR_ID_SFE, 0);
+  HAL_Delay(200);
+  dynamixel2_set_goal_position(DYNAMIXEL_MOTOR_ID_EFE, 0);
 
   HAL_Delay(1000);
   printf("\r\nLEAP-Up Ready\r\n");
@@ -125,16 +133,99 @@ int main(void)
   /* Infinite loop */
   while (1)
   {
-    dynamixel2_set_goal_position(DYNAMIXEL_MOTOR_ID_SFE, goal_position);
-    HAL_Delay(1000);
-    uint32_t p = dynamixel2_read_present_position(DYNAMIXEL_MOTOR_ID_SFE);
-    printf("%li\r\n", p);
-    HAL_Delay(1000);
+    ForceSensor_PrintRawValue();
 
     HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-
-    goal_position = -goal_position;
+    HAL_Delay(100);
   }
+}
+
+void Arm_Process(void)
+{
+  int32_t sfe_raw = dynamixel2_read_present_position(DYNAMIXEL_MOTOR_ID_SFE);
+  HAL_Delay(100);
+  int32_t efe_raw = dynamixel2_read_present_position(DYNAMIXEL_MOTOR_ID_EFE);
+
+  double sfe_deg = -H54_POSITION_TO_DEGREE(sfe_raw);
+  double efe_deg = -H42_POSITION_TO_DEGREE(efe_raw);
+
+  double present_x, present_y;
+  ForwardKinematics2(sfe_deg, efe_deg, L1, L2, &present_x, &present_y);
+
+  int16_t fs_x, fs_y, fs_z;
+  ForceSensor_GetRawValue(&fs_x, &fs_y, &fs_z);
+
+  double fs_x_c, fs_y_c, fs_z_c;
+  ForceSensor_CoordinateConvert((sfe_deg + efe_deg),
+                                fs_x, fs_y, fs_z,
+                                &fs_x_c, &fs_y_c, &fs_z_c);
+
+  double goal_x;
+  double goal_y;
+  if (fs_x_c > FORCE_SENSOR_THRESHOLD_X)
+  {
+    goal_x = present_x + 5;
+  }
+  else if (fs_x_c < -FORCE_SENSOR_THRESHOLD_X)
+  {
+    goal_x = present_x - 5;
+  }
+  else
+  {
+    goal_x = present_x;
+  }
+
+  if (fs_y_c > FORCE_SENSOR_THRESHOLD_Y)
+  {
+    goal_y = present_y + 5;
+  }
+  else if (fs_y_c < -FORCE_SENSOR_THRESHOLD_Y)
+  {
+    goal_y = present_y - 5;
+  }
+  else
+  {
+    goal_y = present_y;
+  }
+
+  Arm_Move_Absolute(goal_x, goal_y);
+}
+
+void Arm_Move_Absolute(double x, double y)
+{
+  double sfe_deg, efe_deg;
+  InverseKinematics2(x, y, L1, L2, &sfe_deg, &efe_deg);
+
+  int32_t sfe_pos = -H54_DEGREE_TO_POSITION(sfe_deg);
+  int32_t efe_pos = -H42_DEGREE_TO_POSITION(efe_deg);
+
+  dynamixel2_set_goal_position(DYNAMIXEL_MOTOR_ID_SFE, sfe_pos);
+  HAL_Delay(100);
+  dynamixel2_set_goal_position(DYNAMIXEL_MOTOR_ID_EFE, efe_pos);
+  HAL_Delay(100);
+}
+
+void Arm_Move_Relative(double x, double y)
+{
+  double present_x, presetn_y;
+  Arm_Get(&present_x, &presetn_y);
+
+  double goal_x = present_x + x;
+  double goal_y = presetn_y + y;
+
+  Arm_Move_Absolute(goal_x, goal_y);
+}
+
+void Arm_Get(double *x, double *y)
+{
+  int32_t sfe_raw = dynamixel2_read_present_position(DYNAMIXEL_MOTOR_ID_SFE);
+  HAL_Delay(200);
+  int32_t efe_raw = dynamixel2_read_present_position(DYNAMIXEL_MOTOR_ID_EFE);
+
+  double sfe_deg = -H54_POSITION_TO_DEGREE(sfe_raw);
+  double efe_deg = -H42_POSITION_TO_DEGREE(efe_raw);
+
+  ForwardKinematics2(sfe_deg, efe_deg, L1, L2, x, y);
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
@@ -235,13 +326,13 @@ static void MX_ADC1_Init(void)
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
    */
-  sConfig.Channel = ADC_CHANNEL_0;
-  sConfig.Rank = 1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_28CYCLES;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
+  // sConfig.Channel = ADC_CHANNEL_0;
+  // sConfig.Rank = 1;
+  // sConfig.SamplingTime = ADC_SAMPLETIME_28CYCLES;
+  // if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  // {
+  //   Error_Handler();
+  // }
   /* USER CODE BEGIN ADC1_Init 2 */
 
   /* USER CODE END ADC1_Init 2 */

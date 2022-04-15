@@ -36,6 +36,7 @@ extern "C"
 #include "force_sensor.h"
 #include "kinematics.h"
 #include "dynamixel_2_0.h"
+#include "as5047p.h"
 
   /* USER CODE END Includes */
 

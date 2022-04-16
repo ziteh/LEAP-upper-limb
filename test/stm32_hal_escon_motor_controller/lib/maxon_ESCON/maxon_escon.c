@@ -10,11 +10,11 @@
 
 extern TIM_HandleTypeDef ESCON_PWM_Timer;
 
-void ESCON_Init(void)
+int ESCON_Init(void)
 {
   ESCON_SetFunctionState(Disable);
   ESCON_SetDirection(CW);
-  ESCON_SetSpeed(0);
+  ESCON_SetPwmDutyCycle(0);
   HAL_TIM_PWM_Start(&ESCON_PWM_Timer, ESCON_PWM_Channel);
 
   if (ESCON_GetFunctionState() != Disable)
@@ -54,19 +54,19 @@ void ESCON_SetDirection(ESCON_Direction_t direction)
   }
 }
 
-void ESCON_SetSpeed(float speed)
+void ESCON_SetPwmDutyCycle(float duty_cycle)
 {
-  if (speed > 100)
+  /* Limit. */
+  if (duty_cycle > 100)
   {
-    speed = 100;
+    duty_cycle = 100;
   }
-  else if (speed < 0)
+  else if (duty_cycle < 0)
   {
-    speed = 0;
+    duty_cycle = 0;
   }
 
-  ESCON_PWM_TIM->ESCON_PWM_CCR = (ESCON_PWM_Timer.Init.Period * (speed / 100.0));
-  HAL_TIM_PWM_Start(&ESCON_PWM_Timer, ESCON_PWM_Channel);
+  ESCON_PWM_TIM->ESCON_PWM_CCR = (ESCON_PWM_Timer.Init.Period * (duty_cycle / 100.0) + 1);
 }
 
 int ESCON_GetReadyState(void)

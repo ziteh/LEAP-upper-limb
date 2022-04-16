@@ -30,8 +30,9 @@ extern "C"
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
 
-  /* Private includes ----------------------------------------------------------*/
-  /* USER CODE BEGIN Includes */
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+#include "maxon_escon.h"
 
   /* USER CODE END Includes */
 
@@ -71,12 +72,19 @@ extern "C"
 #define USART_RX_Pin GPIO_PIN_3
 #define USART_RX_GPIO_Port GPIOA
 
+/* PB4 --> D5. */
 #define ESCON_PWM_Pin GPIO_PIN_4
 #define ESCON_PWM_GPIO_Port GPIOB
+
+/* PB10 --> D6. */
 #define ESCON_Direction_Pin GPIO_PIN_10
 #define ESCON_Direction_GPIO_Port GPIOB
+
+/* PA8 --> D7. */
 #define ESCON_Ready_Pin GPIO_PIN_8
 #define ESCON_Ready_GPIO_Port GPIOA
+
+/* PB5 --> D4. */
 #define ESCON_Enable_Pin GPIO_PIN_5
 #define ESCON_Enable_GPIO_Port GPIOB
 

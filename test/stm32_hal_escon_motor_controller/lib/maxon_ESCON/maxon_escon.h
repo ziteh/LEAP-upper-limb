@@ -55,7 +55,7 @@ extern "C"
 
   void ESCON_SetFunctionState(ESCON_FunctionalState_t state);
   void ESCON_SetDirection(ESCON_Direction_t direction);
-  void ESCON_SetSpeed(float speed);
+  void ESCON_SetPwmDutyCycle(float duty_cycle);
 
   /**
    * @brief

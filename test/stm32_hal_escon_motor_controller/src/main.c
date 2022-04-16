@@ -96,12 +96,27 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  if (ESCON_Init() != 0)
+  {
+    // Error_Handler();
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    ESCON_SetPwmDutyCycle(0.1);
+    ESCON_SetDirection(CCW);
+    ESCON_SetFunctionState(Enable);
+
+    HAL_Delay(1000);
+
+    ESCON_SetPwmDutyCycle(99.9);
+    ESCON_SetDirection(CW);
+    ESCON_SetFunctionState(Disable);
+
+    HAL_Delay(1000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -177,7 +192,7 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 84 - 1;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 100 - 1;
+  htim3.Init.Period = 1000 - 1;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
@@ -319,7 +334,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : ESCON_Ready_Pin */
   GPIO_InitStruct.Pin = ESCON_Ready_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(ESCON_Ready_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/

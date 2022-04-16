@@ -36,6 +36,8 @@
 #else
 #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
 #endif
+
+#define AS5047P_ENCODER_STEPS_PER_RECOLUTION (4096)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -54,9 +56,10 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 uint8_t rx_bufffer[1] = {0};
-float goal_angle = 10;
+float last_angle = 0;
 ESCON_Direction_t present_direction = CW;
-int32_t encoder_count = 0;
+int32_t goal_encoder_count = 0;
+int32_t present_encoder_count = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -112,16 +115,30 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_UART_Receive_IT(&huart2, rx_bufffer, 1);
   EFE_Joint_Init();
+  as5047p_get_angle(false, &last_angle);
+  present_encoder_count = last_angle * ((AS5047P_ENCODER_STEPS_PER_RECOLUTION - 1) / 360.0);
+  goal_encoder_count = present_encoder_count;
   printf("\r\nReady\r\n");
 
+  uint32_t t = 0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    printf("D: %1i, C: %li\r\n", present_direction, encoder_count);
-    HAL_Delay(500);
+    EFE_Joint_SetAngle(goal_encoder_count, present_encoder_count);
+
+    if (t > 50000)
+    {
+      printf("D: %1i, P: %5li, G: %5li\r\n", present_direction, present_encoder_count, goal_encoder_count);
+      t = 0;
+    }
+    else
+    {
+      t++;
+    }
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -133,7 +150,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
   if (huart->Instance == USART2)
   {
-    goal_angle = (float)rx_bufffer[0];
+    uint8_t goal_angle = rx_bufffer[0];
+    goal_encoder_count = goal_angle * ((AS5047P_ENCODER_STEPS_PER_RECOLUTION - 1) / 360.0);
     HAL_UART_Receive_IT(&huart2, rx_bufffer, 1);
   }
 }
@@ -148,12 +166,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     if (a != b)
     {
       present_direction = CW;
-      encoder_count++;
+      present_encoder_count++;
     }
     else
     {
       present_direction = CCW;
-      encoder_count--;
+      present_encoder_count--;
     }
   }
   else if (GPIO_Pin == AS5047P_ENCODER_B_Pin)
@@ -164,12 +182,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     if (a != b)
     {
       present_direction = CCW;
-      encoder_count--;
+      present_encoder_count--;
     }
     else
     {
       present_direction = CW;
-      encoder_count++;
+      present_encoder_count++;
     }
   }
 }

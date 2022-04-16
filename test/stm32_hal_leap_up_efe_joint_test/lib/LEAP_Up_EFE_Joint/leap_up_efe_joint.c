@@ -20,7 +20,7 @@
 int EFE_Joint_Init(void)
 {
   int as5047_state = as5047p_init();
-  as5047p_send_data(AS5047P_SETTINGS1, 0x0005);
+  as5047p_send_data(AS5047P_SETTINGS1, 0b00100101);
   int escon_state = ESCON_Init();
 
   if (as5047_state != 0 || escon_state != 0)
@@ -43,35 +43,35 @@ void EFE_Joint_SetDisable(void)
   ESCON_SetFunctionState(Disable);
 }
 
-void EFE_Joint_SetAngle(double goal_angle)
+void EFE_Joint_SetAngle(int32_t goal, int32_t present)
 {
   /* Limit. */
-  if (goal_angle > EFE_JOINT_ANGLE_MAX)
+  if (goal > EFE_JOINT_ANGLE_MAX)
   {
-    goal_angle = EFE_JOINT_ANGLE_MAX;
+    goal = EFE_JOINT_ANGLE_MAX;
   }
-  else if (goal_angle < EFE_JOINT_ANGLE_MIN)
+  else if (goal < EFE_JOINT_ANGLE_MIN)
   {
-    goal_angle = EFE_JOINT_ANGLE_MIN;
+    goal = EFE_JOINT_ANGLE_MIN;
   }
 
-  double present_angle = EFE_Joint_GetAngle();
   float speed = 0;
-  if ((goal_angle > present_angle) &&
-      ((goal_angle - present_angle) > EFE_JOINT_ALLOWABLE_ANGLE_ERROR))
+  if ((goal > present) &&
+      ((goal - present) > EFE_JOINT_ALLOWABLE_ANGLE_ERROR))
   {
     ESCON_SetDirection(EFE_JOINT_INCREASE_ANGLE_DIR);
-    speed = (goal_angle - present_angle) * (30 / 100.0);
+    speed = (goal - present) * (10 / 100.0);
   }
-  else if ((present_angle > goal_angle) &&
-           ((present_angle - goal_angle) > EFE_JOINT_ALLOWABLE_ANGLE_ERROR))
+  else if ((present > goal) &&
+           ((present - goal) > EFE_JOINT_ALLOWABLE_ANGLE_ERROR))
   {
     ESCON_SetDirection(EFE_JOINT_DECREASE_ANGLE_DIR);
-    speed = (present_angle - goal_angle) * (30 / 100.0);
+    speed = (present - goal) * (10 / 100.0);
   }
   else
   {
-    // ESCON_SetFunctionState(Disable);
+    ESCON_SetFunctionState(Disable);
+    return;
   }
 
   /* Limit. */

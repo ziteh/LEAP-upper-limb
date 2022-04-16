@@ -20,10 +20,10 @@ extern "C"
 #define EFE_JOINT_RIGHT
   // #define EFE_JOINT_LEFT
 
-#define EFE_JOINT_ALLOWABLE_ANGLE_ERROR (1.0)
-#define EFE_JOINT_ANGLE_MAX (70)
-#define EFE_JOINT_ANGLE_MIN (5)
-#define EFE_JOINT_PWM_DC_MAX (30)
+#define EFE_JOINT_ALLOWABLE_ANGLE_ERROR (5)
+#define EFE_JOINT_ANGLE_MAX (50 * (4095 / 360.0))
+#define EFE_JOINT_ANGLE_MIN (5 * (4095 / 360.0))
+#define EFE_JOINT_PWM_DC_MAX (20)
 #define EFE_JOINT_PWM_DC_MIN (1)
 #define EFE_JOINT_PWM_DC_OFFSET (10.1)
 
@@ -36,7 +36,7 @@ extern "C"
   void EFE_Joint_SetEnable(void);
   void EFE_Joint_SetDisable(void);
 
-  void EFE_Joint_SetAngle(double goal_angle);
+  void EFE_Joint_SetAngle(int32_t goal, int32_t present);
   double EFE_Joint_GetAngle(void);
 
 #ifdef __cplusplus

@@ -25,14 +25,14 @@ extern "C"
 #define ESCON_PWM_Pin GPIO_PIN_4
 #define ESCON_PWM_GPIO_Port GPIOB
 
-#define ESCON_Enable_Pin GPIO_PIN_5
+#define ESCON_Enable_Pin GPIO_PIN_10
 #define ESCON_Enable_GPIO_Port GPIOB
 
-#define ESCON_Direction_Pin GPIO_PIN_10
-#define ESCON_Direction_GPIO_Port GPIOB
+#define ESCON_Direction_Pin GPIO_PIN_8
+#define ESCON_Direction_GPIO_Port GPIOA
 
-#define ESCON_Ready_Pin GPIO_PIN_8
-#define ESCON_Ready_GPIO_Port GPIOA
+#define ESCON_Ready_Pin GPIO_PIN_5
+#define ESCON_Ready_GPIO_Port GPIOB
 
   typedef enum
   {

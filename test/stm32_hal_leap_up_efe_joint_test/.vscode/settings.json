@@ -1,0 +1,6 @@
+{
+  "files.associations": {
+    "*.ejs": "html",
+    "maxon_escon.h": "c"
+  }
+}

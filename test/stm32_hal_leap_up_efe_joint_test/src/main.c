@@ -55,6 +55,8 @@ UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 uint8_t rx_bufffer[1] = {0};
 float goal_angle = 10;
+ESCON_Direction_t present_direction = CW;
+int32_t encoder_count = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -118,6 +120,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    printf("D: %1i, C: %li\r\n", present_direction, encoder_count);
+    HAL_Delay(500);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -131,6 +135,42 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   {
     goal_angle = (float)rx_bufffer[0];
     HAL_UART_Receive_IT(&huart2, rx_bufffer, 1);
+  }
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  if (GPIO_Pin == AS5047P_ENCODER_A_Pin)
+  {
+    GPIO_PinState a = HAL_GPIO_ReadPin(AS5047P_ENCODER_A_GPIO_Port, AS5047P_ENCODER_A_Pin);
+    GPIO_PinState b = HAL_GPIO_ReadPin(AS5047P_ENCODER_B_GPIO_Port, AS5047P_ENCODER_B_Pin);
+
+    if (a != b)
+    {
+      present_direction = CW;
+      encoder_count++;
+    }
+    else
+    {
+      present_direction = CCW;
+      encoder_count--;
+    }
+  }
+  else if (GPIO_Pin == AS5047P_ENCODER_B_Pin)
+  {
+    GPIO_PinState a = HAL_GPIO_ReadPin(AS5047P_ENCODER_A_GPIO_Port, AS5047P_ENCODER_A_Pin);
+    GPIO_PinState b = HAL_GPIO_ReadPin(AS5047P_ENCODER_B_GPIO_Port, AS5047P_ENCODER_B_Pin);
+
+    if (a != b)
+    {
+      present_direction = CCW;
+      encoder_count--;
+    }
+    else
+    {
+      present_direction = CW;
+      encoder_count++;
+    }
   }
 }
 

@@ -48,6 +48,7 @@ SPI_HandleTypeDef hspi1;
 
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim10;
+TIM_HandleTypeDef htim11;
 
 UART_HandleTypeDef huart2;
 
@@ -63,6 +64,7 @@ static void MX_SPI1_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM10_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_TIM11_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -104,33 +106,18 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM10_Init();
   MX_USART2_UART_Init();
+  MX_TIM11_Init();
   /* USER CODE BEGIN 2 */
   HAL_UART_Receive_IT(&huart2, rx_bufffer, 1);
   EFE_Joint_Init();
   printf("\r\nReady\r\n");
 
-  uint64_t t = 0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    EFE_Joint_SetAngle(goal_angle);
-    double present_angle = EFE_Joint_GetAngle();
-    HAL_Delay(100);
-    printf("G: %3i, P: %3i\r\n", (int)goal_angle, (int)present_angle);
-
-    // if (t > 5000000)
-    // {
-    //   printf("G: %3i, P: %3i\r\n", (int)goal_angle, (int)present_angle);
-    //   t = 0;
-    // }
-    // else
-    // {
-    //   t++;
-    // }
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -350,6 +337,36 @@ static void MX_TIM10_Init(void)
 }
 
 /**
+ * @brief TIM11 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_TIM11_Init(void)
+{
+
+  /* USER CODE BEGIN TIM11_Init 0 */
+
+  /* USER CODE END TIM11_Init 0 */
+
+  /* USER CODE BEGIN TIM11_Init 1 */
+
+  /* USER CODE END TIM11_Init 1 */
+  htim11.Instance = TIM11;
+  htim11.Init.Prescaler = 84 - 1;
+  htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim11.Init.Period = 1000;
+  htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim11.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim11) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM11_Init 2 */
+
+  /* USER CODE END TIM11_Init 2 */
+}
+
+/**
  * @brief USART2 Initialization Function
  * @param None
  * @retval None
@@ -415,6 +432,18 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(ESCON_Enable_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : AS5047P_ENCODER_A_Pin */
+  GPIO_InitStruct.Pin = AS5047P_ENCODER_A_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(AS5047P_ENCODER_A_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : AS5047P_ENCODER_B_Pin */
+  GPIO_InitStruct.Pin = AS5047P_ENCODER_B_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(AS5047P_ENCODER_B_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pin : ESCON_Direction_Pin */
   GPIO_InitStruct.Pin = ESCON_Direction_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -436,6 +465,9 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(AS5047P_CS_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 1);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 }

@@ -20,9 +20,9 @@ extern "C"
 #define EFE_JOINT_RIGHT
   // #define EFE_JOINT_LEFT
 
-#define EFE_JOINT_ALLOWABLE_ANGLE_ERROR (5)
-#define EFE_JOINT_ANGLE_MAX (50 * (4095 / 360.0))
-#define EFE_JOINT_ANGLE_MIN (5 * (4095 / 360.0))
+#define EFE_JOINT_ALLOWABLE_ERROR (5)
+#define EFE_JOINT_MAX (45 * (4095 / 360.0))
+#define EFE_JOINT_MIN (15 * (4095 / 360.0))
 #define EFE_JOINT_PWM_DC_MAX (20)
 #define EFE_JOINT_PWM_DC_MIN (1)
 #define EFE_JOINT_PWM_DC_OFFSET (10.1)

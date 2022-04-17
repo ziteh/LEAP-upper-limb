@@ -116,7 +116,7 @@ int main(void)
   HAL_UART_Receive_IT(&huart2, rx_bufffer, 1);
   EFE_Joint_Init();
   as5047p_get_angle(false, &last_angle);
-  present_encoder_count = last_angle * ((AS5047P_ENCODER_STEPS_PER_RECOLUTION - 1) / 360.0);
+  present_encoder_count = last_angle * ((AS5047P_ENCODER_STEPS_PER_RECOLUTION) / 360.0);
   goal_encoder_count = present_encoder_count;
   printf("\r\nReady\r\n");
 
@@ -131,7 +131,8 @@ int main(void)
 
     if (t > 50000)
     {
-      printf("D: %1i, P: %5li, G: %5li\r\n", present_direction, present_encoder_count, goal_encoder_count);
+      uint16_t pos = as5047p_read_data(AS5047P_ANGLEUNC) & 0x3FFF;
+      printf("D: %1i, P: %5li, G: %5li, R: %i\r\n", present_direction, present_encoder_count, goal_encoder_count, pos);
       t = 0;
     }
     else
@@ -151,7 +152,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   if (huart->Instance == USART2)
   {
     uint8_t goal_angle = rx_bufffer[0];
-    goal_encoder_count = goal_angle * ((AS5047P_ENCODER_STEPS_PER_RECOLUTION - 1) / 360.0);
+    goal_encoder_count = goal_angle * ((AS5047P_ENCODER_STEPS_PER_RECOLUTION) / 360.0);
     HAL_UART_Receive_IT(&huart2, rx_bufffer, 1);
   }
 }

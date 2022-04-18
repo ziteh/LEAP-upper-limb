@@ -19,12 +19,7 @@
 
 int EFE_Joint_Init(void)
 {
-  /*
-   * The SETTINGS1 reg bit 5 of AS5047 is ABIBIN,
-   * in the datasheet, ABIBIN set 0 for binary, 1 for decimal,
-   * but it seems to be the opposite.
-   */
-  int as5047_state = as5047p_init(0b00000101, 0b00000000);
+  int as5047_state = as5047p_init(0b00100101, 0b00000000);
   as5047p_set_zero(AS5047P_ZERO_POSITION_VALUE);
 
   int escon_state = ESCON_Init();

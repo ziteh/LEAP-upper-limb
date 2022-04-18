@@ -17,11 +17,14 @@
 #error Select right or left in .h.
 #endif
 
-#define AS5047P_ZERO_POSITION_VALUE ((uint16_t)9836)
-
 int EFE_Joint_Init(void)
 {
-  int as5047_state = as5047p_init(0b00100101, 0b00000000);
+  /*
+   * The SETTINGS1 reg bit 5 of AS5047 is ABIBIN,
+   * in the datasheet, ABIBIN set 0 for binary, 1 for decimal,
+   * but it seems to be the opposite.
+   */
+  int as5047_state = as5047p_init(0b00000101, 0b00000000);
   as5047p_set_zero(AS5047P_ZERO_POSITION_VALUE);
 
   int escon_state = ESCON_Init();
@@ -58,18 +61,21 @@ void EFE_Joint_SetAngle(int32_t goal, int32_t present)
     goal = EFE_JOINT_MIN;
   }
 
-  float speed = 0;
-  if ((goal > present) &&
-      ((goal - present) > EFE_JOINT_ALLOWABLE_ERROR))
+  int32_t error = goal - present;
+  if (error < 0)
+  {
+    error = -error;
+    ESCON_SetDirection(EFE_JOINT_DECREASE_ANGLE_DIR);
+  }
+  else
   {
     ESCON_SetDirection(EFE_JOINT_INCREASE_ANGLE_DIR);
-    speed = (goal - present) * (10 / 100.0);
   }
-  else if ((present > goal) &&
-           ((present - goal) > EFE_JOINT_ALLOWABLE_ERROR))
+
+  float speed = 0;
+  if (error > EFE_JOINT_ALLOWABLE_ERROR)
   {
-    ESCON_SetDirection(EFE_JOINT_DECREASE_ANGLE_DIR);
-    speed = (present - goal) * (10 / 100.0);
+    speed = error * (10 / 100.0);
   }
   else
   {
@@ -96,6 +102,7 @@ double EFE_Joint_GetAngle(void)
   float angle;
   while (as5047p_get_angle(false, &angle) != 0)
   {
+    __asm__("nop"); /* Do nothing. */
   }
   return (double)angle;
 }

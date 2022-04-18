@@ -1,6 +1,7 @@
 {
   "files.associations": {
     "*.ejs": "html",
-    "maxon_escon.h": "c"
+    "maxon_escon.h": "c",
+    "as5047p.h": "c"
   }
 }

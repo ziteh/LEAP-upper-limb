@@ -37,7 +37,8 @@
 #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
 #endif
 
-#define AS5047P_ENCODER_STEPS_PER_RECOLUTION (4096)
+#define MONITOR_HZ (5)
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -56,10 +57,9 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 uint8_t rx_bufffer[1] = {0};
-float last_angle = 0;
-ESCON_Direction_t present_direction = CW;
-int32_t goal_encoder_count = 0;
-int32_t present_encoder_count = 0;
+volatile ESCON_Direction_t present_direction = CW;
+volatile int32_t goal_encoder_count = 0;
+volatile int32_t present_encoder_count = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -113,14 +113,16 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM11_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Receive_IT(&huart2, rx_bufffer, 1);
   EFE_Joint_Init();
-  as5047p_get_angle(false, &last_angle);
-  present_encoder_count = last_angle * ((AS5047P_ENCODER_STEPS_PER_RECOLUTION - 1) / 360.0);
+
+  double angle = EFE_Joint_GetAngle();
+  present_encoder_count = AS5047P_ANGLE_TO_COUNT(angle);
   goal_encoder_count = present_encoder_count;
+
+  HAL_TIM_Base_Start_IT(&htim10);
+  HAL_UART_Receive_IT(&huart2, rx_bufffer, 1);
   printf("\r\nReady\r\n");
 
-  uint32_t t = 0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -129,16 +131,6 @@ int main(void)
   {
     EFE_Joint_SetAngle(goal_encoder_count, present_encoder_count);
 
-    if (t > 50000)
-    {
-      printf("D: %1i, P: %5li, G: %5li\r\n", present_direction, present_encoder_count, goal_encoder_count);
-      t = 0;
-    }
-    else
-    {
-      t++;
-    }
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -146,16 +138,33 @@ int main(void)
   /* USER CODE END 3 */
 }
 
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  if (htim->Instance == TIM10)
+  {
+    double angle = EFE_Joint_GetAngle();
+
+    printf("D: %1i, P: %5li, G: %5li, A: %i\r\n",
+           present_direction,
+           present_encoder_count,
+           goal_encoder_count,
+           (int16_t)angle);
+
+    present_encoder_count = AS5047P_ANGLE_TO_COUNT(angle);
+  }
+}
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
   if (huart->Instance == USART2)
   {
     uint8_t goal_angle = rx_bufffer[0];
-    goal_encoder_count = goal_angle * ((AS5047P_ENCODER_STEPS_PER_RECOLUTION - 1) / 360.0);
+    goal_encoder_count = AS5047P_ANGLE_TO_COUNT(goal_angle);
     HAL_UART_Receive_IT(&huart2, rx_bufffer, 1);
   }
 }
 
+// FIXME: The value of encoder count does not match the actual angle.
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   if (GPIO_Pin == AS5047P_ENCODER_A_Pin)
@@ -380,9 +389,9 @@ static void MX_TIM10_Init(void)
 
   /* USER CODE END TIM10_Init 1 */
   htim10.Instance = TIM10;
-  htim10.Init.Prescaler = 84 - 1;
+  htim10.Init.Prescaler = 168000 - 1;
   htim10.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim10.Init.Period = 10;
+  htim10.Init.Period = (1000 / MONITOR_HZ) - 1;
   htim10.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim10.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim10) != HAL_OK)

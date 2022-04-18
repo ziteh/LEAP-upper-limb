@@ -70,14 +70,21 @@ extern "C"
 #define USART_RX_Pin GPIO_PIN_3
 #define USART_RX_GPIO_Port GPIOA
 
+/* D13. */
 #define AS5047P_SCK_Pin GPIO_PIN_5
 #define AS5047P_SCK_GPIO_Port GPIOA
-#define AS5047P_CS_Pin GPIO_PIN_6
-#define AS5047P_CS_GPIO_Port GPIOB
+
+/* D12. */
 #define AS5047P_MISO_Pin GPIO_PIN_6
 #define AS5047P_MISO_GPIO_Port GPIOA
+
+/* D11. */
 #define AS5047P_MOSI_Pin GPIO_PIN_7
 #define AS5047P_MOSI_GPIO_Port GPIOA
+
+/* D10. */
+#define AS5047P_CS_Pin GPIO_PIN_6
+#define AS5047P_CS_GPIO_Port GPIOB
 
 /* D8. */
 #define AS5047P_ENCODER_B_Pin GPIO_PIN_9

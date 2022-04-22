@@ -1,6 +1,6 @@
 include("pid.jl")
 
-function pid_run(kp, ki, kd, initInput, count, setpointGenerator, systemModel; max=10000, min=-10000)
+function pid_run(kp, ki, kd, initInput, count, setpointGenerator, systemModel; max=10000.0, min=-10000.0)
 
   time = 1:count
   setPoint = map(setpointGenerator, 1:count)

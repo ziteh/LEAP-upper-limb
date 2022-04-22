@@ -1,3 +1,4 @@
+using Printf
 using Plots
 
 include("pid_runner.jl")
@@ -37,6 +38,17 @@ system(lastInput, feedback) = lastInput + feedback * 0.3 + 1
 (setPoint_1, input_1, output_1, iTerm_1) = pid_run(kp_1, ki_1, kd_1, initInput, count, getSetPoint, system, max=pidMax_1, min=pidMin_1)
 
 (setPoint_2, input_2, output_2, iTerm_2) = pid_run(kp_2, ki_2, kd_2, initInput, count, getSetPoint, system, max=pidMax_2, min=pidMin_2)
+
+# Print info
+println("--- pid_simulator ---")
+println("1st config:")
+@printf("kp: %f, ki: %f, Kd: %f, max: %f, min: %f", kp_1, ki_1, kd_1, pidMax_1, pidMin_1)
+println("")
+println("")
+
+println("2nd config:")
+@printf("kp: %f, ki: %f, Kd: %f, max: %f, min: %f", kp_2, ki_2, kd_2, pidMax_2, pidMin_2)
+println("")
 
 # Plot out
 t = 1:count

@@ -54,14 +54,11 @@ println("")
 t = 1:count
 
 plotMain = plot(t, input_1, label="Input-1")
-
-# plot!(t, setPoint_2, label="Setpoint-2", linestyle=:dash)
 plot!(t, input_2, label="Input-2")
-plot!(t, setPoint_1, label="Setpoint-1", linestyle=:dash)
+plot!(t, setPoint_1, label="Setpoint", linestyle=:dash)
 
 plotSub = plot(t, output_1, label="Output-1", ls=:dash)
 plot!(t, iTerm_1, label="I Term-1")
-
 plot!(t, output_2, label="Output-2", ls=:dash)
 plot!(t, iTerm_2, label="I Term-1")
 

@@ -1,47 +1,31 @@
 include("pid.jl")
-using Plots
 
-function sp(np)
-  if np > 70
-    return -5
-  elseif np > 20
-    return 70
-  elseif np > 10
-    return 25
-  else
-    return 25
+function pid_run(kp, ki, kd, initInput, count, setpointGenerator, systemModel; max=10000, min=-10000)
+
+  time = 1:count
+  setPoint = map(setpointGenerator, 1:count)
+  input = fill(initInput, count + 2)
+  iTerm = fill(0.0, count + 1)
+  output = fill(0.0, count)
+
+  for i in time
+    (pidOut, lastITerm, lastInput) = pid_compute(
+      setPoint[i],
+      input[i+1],
+      kp, ki, kd,
+      iTerm[i],
+      input[i],
+      max,
+      min)
+
+    global iTerm[i+1] = lastITerm
+    global output[i] = pidOut
+
+    # PID control is closed-loop control,
+    # so the current output(pidOut) will be used as the parameter
+    # for the next input(input[i+2]) 
+    global input[i+2] = systemModel(lastInput, pidOut)
   end
+
+  return (setPoint, input[3:count+2], output, iTerm[2:count+1])
 end
-
-t = 1:100
-setpoint = Array{Int64}(undef, 100)
-value = Array{Float64}(undef, 100)
-it = Array{Float64}(undef, 100)
-pidout = Array{Float64}(undef, 100)
-
-kp = 150 / 100
-ki = 20 / 100
-kd = 80 / 100
-
-int = 25
-lsum = 0
-lin = int
-for i in t
-  nsp = sp(i)
-  setpoint[i] = nsp
-  (out, ls, li) = pid_compute(nsp, int, kp, ki, kd, lsum, lin, 15, -15)
-  global lsum = ls
-  global it[i] = ls
-  global lin = li
-
-  global pidout[i] = out
-  global int += out * 0.5 - 1
-
-  global value[i] = int
-
-end
-
-plot(t, setpoint, label="Setpoint")
-plot!(t, value, label="Value")
-plot!(t, it, label="I")
-plot!(t, pidout, label="Out")

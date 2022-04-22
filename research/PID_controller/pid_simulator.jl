@@ -9,9 +9,9 @@ kd_1 = 80 / 100
 pidMax_1 = 25
 pidMin_1 = -pidMax_1
 
-kp_2 = 120 / 100
-ki_2 = 10 / 100
-kd_2 = 100 / 100
+kp_2 = 250 / 100
+ki_2 = 4 / 100
+kd_2 = 5 / 100
 pidMax_2 = 25
 pidMin_2 = -pidMax_2
 
@@ -20,19 +20,19 @@ initInput = 25.0
 
 # Generate setpoint data
 function getSetPoint(t)
-  if t > 210
+  if t > 200
+    return 50
+  elseif t > 100
     return -5
-  elseif t > 120
+  elseif t > 50
     return 100
-  elseif t > 40
-    return 35
   else
     return 25
   end
 end
 
 # Describe how the system responds to the PID output. 
-system(lastInput, feedback) = lastInput + feedback * 0.5 + 1
+system(lastInput, feedback) = lastInput + feedback * 0.3 + 1
 
 (setPoint_1, input_1, output_1, iTerm_1) = pid_run(kp_1, ki_1, kd_1, initInput, count, getSetPoint, system, max=pidMax_1, min=pidMin_1)
 

@@ -15,8 +15,8 @@ function pid_run(kp, ki, kd, initInput, count, setpointGenerator, systemModel; m
       kp, ki, kd,
       iTerm[i],
       input[i],
-      pidMax,
-      pidMin)
+      max,
+      min)
 
     global iTerm[i+1] = lastITerm
     global output[i] = pidOut

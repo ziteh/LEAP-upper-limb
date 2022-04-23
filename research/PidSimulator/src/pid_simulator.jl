@@ -62,7 +62,7 @@ function run()
   plotSub = Plots.plot(t, output_1, label="Output-1", ls=:dash)
   Plots.plot!(t, iTerm_1, label="I Term-1")
   Plots.plot!(t, output_2, label="Output-2", ls=:dash)
-  Plots.plot!(t, iTerm_2, label="I Term-1")
+  Plots.plot!(t, iTerm_2, label="I Term-2")
 
   Plots.display(Plots.plot(plotMain, plotSub, layout=(2, 1)))
 end

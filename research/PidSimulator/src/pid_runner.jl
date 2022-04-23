@@ -1,4 +1,4 @@
-include("pid.jl")
+include("pid_compute.jl")
 
 function pid_run(kp, ki, kd, initInput, count, setpointGenerator, systemModel; max=10000.0, min=-10000.0)
 

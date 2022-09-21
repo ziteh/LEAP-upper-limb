@@ -2,5 +2,5 @@
 	path = stm32/leap_upper_limb_main/lib/stm32_oop_lib
 	url = https://github.com/ziteh/stm32-oop-lib.git
 [submodule "research/pid-simulator"]
-	path = research/pid-simulator
+	path = tool/pid-simulator
 	url = https://github.com/ziteh/pid-simulator.git

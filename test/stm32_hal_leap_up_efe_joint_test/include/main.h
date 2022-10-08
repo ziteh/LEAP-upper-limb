@@ -86,22 +86,29 @@ extern "C"
 #define AS5047P_CS_Pin GPIO_PIN_6
 #define AS5047P_CS_GPIO_Port GPIOB
 
-/* D8. */
-#define AS5047P_ENCODER_B_Pin GPIO_PIN_9
-#define AS5047P_ENCODER_B_GPIO_Port GPIOA
-#define AS5047P_ENCODER_B_EXTI_IRQn EXTI9_5_IRQn
-
 /* D9. */
 #define AS5047P_ENCODER_A_Pin GPIO_PIN_7
 #define AS5047P_ENCODER_A_GPIO_Port GPIOC
 #define AS5047P_ENCODER_A_EXTI_IRQn EXTI9_5_IRQn
 
-#define ESCON_PWM_Pin GPIO_PIN_4
-#define ESCON_PWM_GPIO_Port GPIOB
-#define ESCON_Enable_Pin GPIO_PIN_10
-#define ESCON_Enable_GPIO_Port GPIOB
+/* D8. */
+#define AS5047P_ENCODER_B_Pin GPIO_PIN_9
+#define AS5047P_ENCODER_B_GPIO_Port GPIOA
+#define AS5047P_ENCODER_B_EXTI_IRQn EXTI9_5_IRQn
+
+/* D7. */
 #define ESCON_Direction_Pin GPIO_PIN_8
 #define ESCON_Direction_GPIO_Port GPIOA
+
+/* D6. */
+#define ESCON_Enable_Pin GPIO_PIN_10
+#define ESCON_Enable_GPIO_Port GPIOB
+
+/* D5. */
+#define ESCON_PWM_Pin GPIO_PIN_4
+#define ESCON_PWM_GPIO_Port GPIOB
+
+/* D4. */
 #define ESCON_Ready_Pin GPIO_PIN_5
 #define ESCON_Ready_GPIO_Port GPIOB
 

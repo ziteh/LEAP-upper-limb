@@ -90,10 +90,11 @@ static void setup_encoder_exti(void);
 static void delay_ns(uint32_t ns);
 static void delay_ms(uint32_t ms);
 
-static void spi_as5047_select(void);
-static void spi_as5047_deselect(void);
-static void spi_as5047_send(uint16_t data);
-static uint16_t spi_as5047_read(void);
+void spi_as5047_select(void);
+void spi_as5047_deselect(void);
+void spi_as5047_send(uint16_t data);
+uint16_t spi_as5047_read(void);
+void spi_as5047_delay(void);
 
 static float pid_compute(float set_value,
                          float actual_value,

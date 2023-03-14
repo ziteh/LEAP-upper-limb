@@ -8,15 +8,18 @@
 
 #include "main.h"
 
+#define AS5047_ZERO_POSITION (0x275F)
+// #define AS5047_ZERO_POSITION (0x0)
+
 static volatile uint32_t systick_delay = 0;
 
-static as5047p_handle_t as5047;
+as5047p_handle_t as5047;
 float present_position_deg = 0;
 volatile float goal_position_deg = 0;
 volatile direction_t encoder_direction = CW;
 
-static float pid_kp = 0.25;
-static float pid_ki = 0.008;
+static float pid_kp = 1;
+static float pid_ki = 0.002;
 static float pid_kd = 0.001;
 static float pid_i_term_prev = 0;
 static float pid_error_prev = 0;
@@ -34,7 +37,11 @@ int main(void)
 
   setup_as5047();
 
-  update_present_position();
+  for (int i = 0; i < 3; i++)
+  {
+    update_present_position();
+    delay_ms(200);
+  }
   goal_position_deg = present_position_deg;
 
   usart_send_blocking(USART_CONSOLE_INSTANCE, 'O');
@@ -158,14 +165,14 @@ static void setup_spi(void)
   /*
    * Setup GPIO.
    */
-  gpio_mode_setup(GPIO_SPI_AS5047_MOSI_PIN,
+  gpio_mode_setup(GPIO_SPI_AS5047_SCK_MISO_MOSI_PORT,
                   GPIO_MODE_AF,
                   GPIO_PUPD_NONE,
                   GPIO_SPI_AS5047_SCK_PIN | GPIO_SPI_AS5047_MISO_PIN | GPIO_SPI_AS5047_MOSI_PIN);
 
   gpio_set_output_options(GPIO_SPI_AS5047_SCK_MISO_MOSI_PORT,
                           GPIO_OTYPE_PP,
-                          GPIO_OSPEED_25MHZ,
+                          GPIO_OSPEED_50MHZ,
                           GPIO_SPI_AS5047_SCK_PIN | GPIO_SPI_AS5047_MOSI_PIN);
 
   gpio_set_af(GPIO_SPI_AS5047_SCK_MISO_MOSI_PORT,
@@ -182,9 +189,6 @@ static void setup_spi(void)
                           GPIO_OSPEED_25MHZ,
                           GPIO_SPI_AS5047_SS_PIN);
 
-  /* Deselect. */
-  gpio_set(GPIO_SPI_AS5047_SS_PORT, GPIO_SPI_AS5047_SS_PIN);
-
   /*
    * Setup SPI parameters.
    */
@@ -192,16 +196,19 @@ static void setup_spi(void)
   spi_reset(SPI_AS5047_INSTANCE);
 
   spi_init_master(SPI_AS5047_INSTANCE,
-                  SPI_CR1_BAUDRATE_FPCLK_DIV_32,
+                  SPI_CR1_BAUDRATE_FPCLK_DIV_64,
                   SPI_CR1_CPOL_CLK_TO_0_WHEN_IDLE, /* CPOL=0. */
                   SPI_CR1_CPHA_CLK_TRANSITION_2,   /* CPHA=1. */
                   SPI_CR1_DFF_16BIT,
                   SPI_CR1_MSBFIRST);
-  spi_set_full_duplex_mode(SPI_AS5047_INSTANCE);
+  // spi_set_full_duplex_mode(SPI_AS5047_INSTANCE);
 
   /* For master device, set SSM=1 and SSI=1 to prevent any MODF error. */
   spi_enable_software_slave_management(SPI_AS5047_INSTANCE); /* Set SSM to 1. */
   spi_set_nss_high(SPI_AS5047_INSTANCE);                     /* Set SSI to 1. */
+
+  /* Deselect. */
+  gpio_set(GPIO_SPI_AS5047_SS_PORT, GPIO_SPI_AS5047_SS_PIN);
 
   spi_enable(SPI_AS5047_INSTANCE);
 }
@@ -223,7 +230,6 @@ static void setup_timer(void)
   timer_enable_irq(TIMER_ITERATION_INSTANCE, TIM_DIER_UIE);
   nvic_enable_irq(TIMER_ITERATION_IRQ);
 
-  // timer_enable_counter(TIMER_ITERATION_INSTANCE);
   timer_disable_counter(TIMER_ITERATION_INSTANCE);
 }
 
@@ -257,8 +263,8 @@ static void setup_others_gpio(void)
   gpio_mode_setup(GPIO_MOTOR_ENABLE_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_MOTOR_ENABLE_PIN);
   gpio_set_output_options(GPIO_MOTOR_ENABLE_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, GPIO_MOTOR_ENABLE_PIN);
 
-  gpio_mode_setup(GPIO_MOTOR_DIRECTION_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_MOTOR_ENABLE_PIN);
-  gpio_set_output_options(GPIO_MOTOR_DIRECTION_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, GPIO_MOTOR_ENABLE_PIN);
+  gpio_mode_setup(GPIO_MOTOR_DIRECTION_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_MOTOR_DIRECTION_PIN);
+  gpio_set_output_options(GPIO_MOTOR_DIRECTION_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, GPIO_MOTOR_DIRECTION_PIN);
 
   set_motor_status(false); /* Disable motor. */
 }
@@ -289,50 +295,65 @@ static void setup_encoder_exti(void)
 
 static void setup_as5047(void)
 {
-  as5047p_make_handle(
-      &spi_as5047_send,
-      &spi_as5047_read,
-      &spi_as5047_select,
-      &spi_as5047_deselect,
-      []()
-      { delay_ms(1); },
-      &as5047);
+  as5047p_make_handle(&spi_as5047_send,
+                      &spi_as5047_read,
+                      &spi_as5047_select,
+                      &spi_as5047_deselect,
+                      &spi_as5047_delay,
+                      &as5047);
 
   as5047p_config(&as5047, 0b00100101, 0b00000000);
-  as5047p_set_zero(&as5047, 0);
+  as5047p_set_zero(&as5047, AS5047_ZERO_POSITION);
 }
 
-static void spi_as5047_select(void)
+void spi_as5047_select(void)
 {
   gpio_clear(GPIO_SPI_AS5047_SS_PORT, GPIO_SPI_AS5047_SS_PIN);
 }
 
-static void spi_as5047_deselect(void)
+void spi_as5047_deselect(void)
 {
-  /* Wait for SPI transfer complete. */
-  while (!(SPI_SR(SPI_AS5047_INSTANCE) & SPI_SR_TXE))
-  {
-  }
-  while ((SPI_SR(SPI_AS5047_INSTANCE) & SPI_SR_BSY))
-  {
-  }
-
   gpio_set(GPIO_SPI_AS5047_SS_PORT, GPIO_SPI_AS5047_SS_PIN);
 }
 
-static void spi_as5047_send(uint16_t data)
+void spi_as5047_send(uint16_t data)
 {
   spi_send(SPI_AS5047_INSTANCE, data);
+
+  /*
+   * Wait for SPI transmit complete.
+   * Ref: https://controllerstech.com/spi-using-registers-in-stm32/.
+   */
+  while (!(SPI_SR(SPI_AS5047_INSTANCE) & SPI_SR_TXE)) /* Wait for 'Transmit buffer empty' flag to set. */
+  {
+  }
+  while ((SPI_SR(SPI_AS5047_INSTANCE) & SPI_SR_BSY)) /* Wait for 'Busy' flag to reset. */
+  {
+  }
 }
 
-static uint16_t spi_as5047_read(void)
+uint16_t spi_as5047_read(void)
 {
-  spi_send(SPI_AS5047_INSTANCE, 0);                  /* Just for beget clock signal. */
+  // for (int i = 0; i < 10; i++)
+  // {
+  //   __asm__("nop");
+  // }
+
+  spi_send(SPI_AS5047_INSTANCE, 0x0000);             /* Just for beget clock signal. */
   while ((SPI_SR(SPI_AS5047_INSTANCE) & SPI_SR_BSY)) /* Wait for 'Busy' flag to reset. */
   {
   }
 
-  return spi_read(SPI_AS5047_INSTANCE);
+  uint16_t data = spi_read(SPI_AS5047_INSTANCE);
+  while ((SPI_SR(SPI_AS5047_INSTANCE) & SPI_SR_BSY)) /* Wait for 'Busy' flag to reset. */
+  {
+  }
+  return data;
+}
+
+void spi_as5047_delay(void)
+{
+  delay_ms(1);
 }
 
 static void delay_ns(uint32_t ns)
@@ -360,7 +381,11 @@ static void delay_ms(uint32_t ms)
 
 static void update_present_position(void)
 {
-  as5047p_get_angle(&as5047, with_daec, &present_position_deg);
+  int8_t error = as5047p_get_angle(&as5047, without_daec, &present_position_deg);
+  if (error != 0)
+  {
+    usart_send_blocking(USART_CONSOLE_INSTANCE, 'E');
+  }
 }
 
 static void set_pwm_duty_cycle(float duty_cycle)
@@ -382,16 +407,6 @@ static void set_motor_status(bool enable)
     gpio_clear(GPIO_MOTOR_ENABLE_PORT, GPIO_MOTOR_ENABLE_PIN);
   }
 }
-
-// static bool get_motor_status(void)
-// {
-//   auto value = gpio_get(GPIO_MOTOR_ENABLE_PORT, GPIO_MOTOR_ENABLE_PIN);
-//   if (value == 1)
-//   {
-//     return true;
-//   }
-//   return false;
-// }
 
 static void set_motor_direction(direction_t dir)
 {
@@ -417,20 +432,43 @@ void sys_tick_handler(void)
 
 void usart2_isr(void)
 {
-  auto data = usart_recv(USART_CONSOLE_INSTANCE);
+  uint8_t data = usart_recv(USART_CONSOLE_INSTANCE);
 
-  if (data == 0xFF)
+  if (data == 0xFF) /* Disable. */
   {
     set_motor_status(false);
     timer_disable_counter(TIMER_ITERATION_INSTANCE);
   }
-  else if (data == 0xFE)
+  else if (data == 0xFE) /* Enable. */
   {
-    set_motor_status(true);
     timer_enable_counter(TIMER_ITERATION_INSTANCE);
+    delay_ms(250);
+    set_motor_status(true);
+  }
+  else if (data == 0xFA)
+  {
+    uint16_t position;
+    int8_t error = as5047p_get_position(&as5047, without_daec, &position);
+
+    if (error != 0)
+    {
+      usart_send_blocking(USART_CONSOLE_INSTANCE, 'E');
+    }
+    else
+    {
+      usart_send_blocking(USART_CONSOLE_INSTANCE, (position >> 8) & 0x00FF);
+      usart_send_blocking(USART_CONSOLE_INSTANCE, position & 0x00FF);
+    }
+  }
+  else /* Control. */
+  {
+    if (data > 0 && data < 70)
+    {
+      goal_position_deg = (float)data;
+    }
   }
 
-  usart_send(USART_CONSOLE_INSTANCE, '.');
+  usart_send_blocking(USART_CONSOLE_INSTANCE, '\n');
 
   /* Clear 'Read data register not empty' flag. */
   USART_SR(USART_CONSOLE_INSTANCE) &= ~USART_SR_RXNE;
@@ -501,7 +539,7 @@ void tim1_up_tim10_isr(void)
 #endif
     }
 
-    set_pwm_duty_cycle((output * 0.8) + 10.0);
+    set_pwm_duty_cycle(output + 10.0);
 
     /* Clear 'Update interrupt' flag. */
     timer_clear_flag(TIMER_ITERATION_INSTANCE, TIM_SR_UIF);

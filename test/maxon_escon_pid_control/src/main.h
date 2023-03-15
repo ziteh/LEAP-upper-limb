@@ -6,6 +6,8 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
+// #include <stdio.h>
+// #include <errno.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/usart.h>
@@ -114,5 +116,7 @@ static void update_present_position(void);
 static void set_pwm_duty_cycle(float duty_cycle);
 static void set_motor_status(bool enable);
 static void set_motor_direction(direction_t dir);
+
+// int _write(int file, char *ptr, int len);
 
 #endif /* MAIN_H_ */

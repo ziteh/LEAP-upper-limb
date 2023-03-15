@@ -50,6 +50,8 @@ int main(void)
   usart_send_blocking(USART_CONSOLE_INSTANCE, '\r');
   usart_send_blocking(USART_CONSOLE_INSTANCE, '\n');
 
+  // printf("OK\r\n");
+
   while (1)
   {
     __asm__("nop"); /* Do nothing, wait for ISRs. */
@@ -441,6 +443,27 @@ static void set_motor_direction(direction_t dir)
   }
   /* Else do nothing. */
 }
+
+/* BUG. */
+/**
+ * @brief For 'printf()'.
+ */
+// int _write(int file, char *ptr, int len)
+// {
+//   int i;
+
+//   if (file == 1)
+//   {
+//     for (i = 0; i < len; i++)
+//     {
+//       usart_send_blocking(USART_CONSOLE_INSTANCE, ptr[i]);
+//     }
+//     return i;
+//   }
+
+//   errno = EIO;
+//   return -1;
+// }
 
 /* -----ISRs----- */
 

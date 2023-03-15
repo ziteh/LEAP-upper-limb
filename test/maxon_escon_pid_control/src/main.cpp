@@ -14,7 +14,7 @@ as5047p_handle_t as5047;
 
 static volatile uint32_t systick_delay = 0;
 float present_position_deg = 0;
-float goal_position_deg = 0;
+volatile float goal_position_deg = 0;
 volatile direction_t encoder_direction = CW;
 
 /* PID controller paremeters. */
@@ -38,7 +38,7 @@ int main(void)
   setup_as5047();
 
   /* The first reading AS5047P value may always be 0. */
-  for (int i = 0; i < 3; i++)
+  for (int i = 0; i < 5; i++)
   {
     update_present_position();
     delay_ms(200);
@@ -207,7 +207,7 @@ static void setup_spi(void)
                   SPI_CR1_CPHA_CLK_TRANSITION_2,   /* CPHA=1. */
                   SPI_CR1_DFF_16BIT,
                   SPI_CR1_MSBFIRST);
-  // spi_set_full_duplex_mode(SPI_AS5047_INSTANCE);
+  spi_set_full_duplex_mode(SPI_AS5047_INSTANCE);
 
   /* For master device, set SSM=1 and SSI=1 to prevent any MODF error. */
   spi_enable_software_slave_management(SPI_AS5047_INSTANCE); /* Set SSM to 1. */
@@ -352,12 +352,15 @@ void spi_as5047_send(uint16_t data)
 
 uint16_t spi_as5047_read(void)
 {
-  spi_send(SPI_AS5047_INSTANCE, 0);                  /* Just for beget clock signal. */
-  while ((SPI_SR(SPI_AS5047_INSTANCE) & SPI_SR_BSY)) /* Wait for 'Busy' flag to reset. */
+  while (!(SPI_SR(SPI_AS5047_INSTANCE) & SPI_SR_TXE)) /* Wait for 'Transmit buffer empty' flag to set. */
   {
   }
 
+  spi_send(SPI_AS5047_INSTANCE, 0); /* Just for beget clock signal. */
   uint16_t data = spi_read(SPI_AS5047_INSTANCE);
+
+  // uint16_t data = spi_xfer(SPI_AS5047_INSTANCE, 0);
+
   while ((SPI_SR(SPI_AS5047_INSTANCE) & SPI_SR_BSY)) /* Wait for 'Busy' flag to reset. */
   {
   }

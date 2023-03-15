@@ -51,7 +51,7 @@
 
 #define TIMER_ITERATION_INSTANCE (TIM10)
 #define TIMER_ITERATION_IRQ (NVIC_TIM1_UP_TIM10_IRQ)
-#define TIMER_ITERATION_GOAL_FREQ (5)                 /* In Hz. */
+#define TIMER_ITERATION_GOAL_FREQ (2)                 /* In Hz. */
 #define TIMER_ITERATION_FREQ (rcc_apb2_frequency * 2) /* In Hz. */
 #define TIMER_ITERATION_COUNTER_FREQ (1e5)            /* In Hz. */
 

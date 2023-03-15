@@ -1,23 +1,23 @@
 /**
  * @file main.cpp
- * @brief
- * @author ZiTe (honmonoh@gmail.com)
+ * @brief maxon ESCON motor controller PID angle/position control program.
  */
-
-// #define INVERSE_DIRECTION
 
 #include "main.h"
 
-#define AS5047_ZERO_POSITION (0x275F)
-// #define AS5047_ZERO_POSITION (0x0)
-
-static volatile uint32_t systick_delay = 0;
+/* Timer macros. */
+#define TIMER_PRESCALER(f_tim, f_cnt) (f_tim / f_cnt - 1)                          /* PSC. */
+#define TIMER_AUTO_RELOAD(f_goal, f_tim, psc) ((f_tim / ((psc + 1) * f_goal)) - 1) /* ARR. */
+#define TIMER_PWM_CCR(arr, dc_goal) ((arr + 1) * dc_goal / 100.0)                  /* CCR. */
 
 as5047p_handle_t as5047;
+
+static volatile uint32_t systick_delay = 0;
 float present_position_deg = 0;
-volatile float goal_position_deg = 0;
+float goal_position_deg = 0;
 volatile direction_t encoder_direction = CW;
 
+/* PID controller paremeters. */
 static float pid_kp = 1;
 static float pid_ki = 0.002;
 static float pid_kd = 0.001;
@@ -37,6 +37,7 @@ int main(void)
 
   setup_as5047();
 
+  /* The first reading AS5047P value may always be 0. */
   for (int i = 0; i < 3; i++)
   {
     update_present_position();
@@ -51,7 +52,7 @@ int main(void)
 
   while (1)
   {
-    __asm__("nop");
+    __asm__("nop"); /* Do nothing, wait for ISRs. */
   }
 
   return 0;
@@ -99,6 +100,7 @@ static float pid_compute(float set_value,
     output = min;
   }
 
+  /* Output. */
   i_term_out = &i_term;
   error_out = &error;
   return output;
@@ -122,7 +124,7 @@ static void setup_rcc(void)
 
 static void setup_systick(void)
 {
-  systick_set_frequency(1e3, rcc_ahb_frequency); /* Set overflow frequency to 1 kHz. */
+  systick_set_frequency(1e6, rcc_ahb_frequency); /* Set overflow frequency to 1 MHz. */
 
   systick_interrupt_enable();
   systick_counter_enable();
@@ -179,6 +181,7 @@ static void setup_spi(void)
               GPIO_SPI_AS5047_AF,
               GPIO_SPI_AS5047_SCK_PIN | GPIO_SPI_AS5047_MISO_PIN | GPIO_SPI_AS5047_MOSI_PIN);
 
+  /* In master mode, control SS pin by user instead of AF. */
   gpio_mode_setup(GPIO_SPI_AS5047_SS_PORT,
                   GPIO_MODE_OUTPUT,
                   GPIO_PUPD_NONE,
@@ -188,6 +191,9 @@ static void setup_spi(void)
                           GPIO_OTYPE_PP,
                           GPIO_OSPEED_25MHZ,
                           GPIO_SPI_AS5047_SS_PIN);
+
+  /* Deselect. */
+  spi_as5047_deselect();
 
   /*
    * Setup SPI parameters.
@@ -207,14 +213,12 @@ static void setup_spi(void)
   spi_enable_software_slave_management(SPI_AS5047_INSTANCE); /* Set SSM to 1. */
   spi_set_nss_high(SPI_AS5047_INSTANCE);                     /* Set SSI to 1. */
 
-  /* Deselect. */
-  gpio_set(GPIO_SPI_AS5047_SS_PORT, GPIO_SPI_AS5047_SS_PIN);
-
   spi_enable(SPI_AS5047_INSTANCE);
 }
 
 static void setup_timer(void)
 {
+  /* Configure timer mode. */
   timer_set_mode(TIMER_ITERATION_INSTANCE,
                  TIM_CR1_CKD_CK_INT,
                  TIM_CR1_CMS_EDGE,
@@ -222,23 +226,28 @@ static void setup_timer(void)
   timer_disable_preload(TIMER_ITERATION_INSTANCE);
   timer_continuous_mode(TIMER_ITERATION_INSTANCE);
 
+  /* Setup frequency by PSC and ARR registers. */
   auto psc = TIMER_PRESCALER(TIMER_ITERATION_FREQ, TIMER_ITERATION_COUNTER_FREQ);
   auto arr = TIMER_AUTO_RELOAD(TIMER_ITERATION_GOAL_FREQ, TIMER_ITERATION_FREQ, psc);
   timer_set_prescaler(TIMER_ITERATION_INSTANCE, psc);
   timer_set_period(TIMER_ITERATION_INSTANCE, arr);
 
-  timer_enable_irq(TIMER_ITERATION_INSTANCE, TIM_DIER_UIE);
+  /* Enable interrupt. */
+  timer_enable_irq(TIMER_ITERATION_INSTANCE, TIM_DIER_UIE); /* Select 'Update interrupt'. */
   nvic_enable_irq(TIMER_ITERATION_IRQ);
 
+  /* Init disable. */
   timer_disable_counter(TIMER_ITERATION_INSTANCE);
 }
 
 static void setup_pwm(void)
 {
+  /* Setup GPIO. */
   gpio_mode_setup(GPIO_PWM_PORT, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO_PWM_PIN);
   gpio_set_output_options(GPIO_PWM_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_25MHZ, GPIO_PWM_PIN);
   gpio_set_af(GPIO_PWM_PORT, GPIO_PWM_AF, GPIO_PWM_PIN);
 
+  /* Configure timer mode. */
   timer_set_mode(TIMER_PWM_INSTANCE,
                  TIM_CR1_CKD_CK_INT,
                  TIM_CR1_CMS_EDGE,
@@ -247,26 +256,29 @@ static void setup_pwm(void)
   timer_continuous_mode(TIMER_PWM_INSTANCE);
   timer_set_oc_mode(TIMER_PWM_INSTANCE, TIMER_PWM_OC, TIM_OCM_PWM1);
 
+  /* Setup frequency and duty cycle by PSC, ARR and CCR registers. */
   auto psc = TIMER_PRESCALER(TIMER_PWM_FREQ, TIMER_PWM_COUNTER_FREQ);
   auto arr = TIMER_AUTO_RELOAD(TIMER_PWM_GOAL_FREQ, TIMER_PWM_FREQ, psc);
-  auto ccr = TIMER_PWM_CCR(arr, 0.0);
+  auto ccr = TIMER_PWM_CCR(arr, 0.0); /* Init set duty-cycle to 0%. */
   timer_set_prescaler(TIMER_PWM_INSTANCE, psc);
   timer_set_period(TIMER_PWM_INSTANCE, arr);
   timer_set_oc_value(TIMER_PWM_INSTANCE, TIMER_PWM_OC, ccr);
 
+  /* Enable. */
   timer_enable_oc_output(TIMER_PWM_INSTANCE, TIMER_PWM_OC);
   timer_enable_counter(TIMER_PWM_INSTANCE);
 }
 
 static void setup_others_gpio(void)
 {
+  /* Motor enable pin. */
   gpio_mode_setup(GPIO_MOTOR_ENABLE_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_MOTOR_ENABLE_PIN);
   gpio_set_output_options(GPIO_MOTOR_ENABLE_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, GPIO_MOTOR_ENABLE_PIN);
+  set_motor_status(false); /* Init disable motor. */
 
+  /* Motor direction pin. */
   gpio_mode_setup(GPIO_MOTOR_DIRECTION_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_MOTOR_DIRECTION_PIN);
   gpio_set_output_options(GPIO_MOTOR_DIRECTION_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, GPIO_MOTOR_DIRECTION_PIN);
-
-  set_motor_status(false); /* Disable motor. */
 }
 
 static void setup_encoder_exti(void)
@@ -293,6 +305,10 @@ static void setup_encoder_exti(void)
   nvic_enable_irq(ENCODER_I_IRQ);
 }
 
+/**
+ * @brief Set the up as5047 object
+ * @note Ref: https://github.com/ziteh/as5047p-driver
+ */
 static void setup_as5047(void)
 {
   as5047p_make_handle(&spi_as5047_send,
@@ -308,11 +324,13 @@ static void setup_as5047(void)
 
 void spi_as5047_select(void)
 {
+  /* Low to select. */
   gpio_clear(GPIO_SPI_AS5047_SS_PORT, GPIO_SPI_AS5047_SS_PIN);
 }
 
 void spi_as5047_deselect(void)
 {
+  /* High to deselect. */
   gpio_set(GPIO_SPI_AS5047_SS_PORT, GPIO_SPI_AS5047_SS_PIN);
 }
 
@@ -334,12 +352,7 @@ void spi_as5047_send(uint16_t data)
 
 uint16_t spi_as5047_read(void)
 {
-  // for (int i = 0; i < 10; i++)
-  // {
-  //   __asm__("nop");
-  // }
-
-  spi_send(SPI_AS5047_INSTANCE, 0x0000);             /* Just for beget clock signal. */
+  spi_send(SPI_AS5047_INSTANCE, 0);                  /* Just for beget clock signal. */
   while ((SPI_SR(SPI_AS5047_INSTANCE) & SPI_SR_BSY)) /* Wait for 'Busy' flag to reset. */
   {
   }
@@ -348,32 +361,37 @@ uint16_t spi_as5047_read(void)
   while ((SPI_SR(SPI_AS5047_INSTANCE) & SPI_SR_BSY)) /* Wait for 'Busy' flag to reset. */
   {
   }
+
   return data;
 }
 
+/**
+ * @brief For 't_CSn': High time of CSn between two transmissions, >350 ns.
+ */
 void spi_as5047_delay(void)
 {
   delay_ms(1);
 }
 
+/* BUG: SysTick System Timer Does Not Generate Interrupts (https://developer.arm.com/documentation/ka002893/latest). */
 static void delay_ns(uint32_t ns)
 {
   systick_delay = ns;
   while (systick_delay != 0)
   {
-    /* Do nothing and wait. */
+    __asm__("nop"); /* Do nothing and wait. */
   }
 }
 
 static void delay_ms(uint32_t ms)
 {
-  // systick_delay = ms;
-  // while (systick_delay > 0)
+  /* BUG. */
+  // for (uint16_t i = 0; i < 1000; i++)
   // {
-  //   __asm__("nop"); /* Do nothing and wait. */
+  //   delay_ns(ms);
   // }
-  uint32_t t = ms * 5000;
-  while (t--)
+
+  for (uint32_t i = ms * 5000; i > 0; i--)
   {
     __asm__("nop"); /* Do nothing and wait. */
   }
@@ -400,11 +418,11 @@ static void set_motor_status(bool enable)
 {
   if (enable)
   {
-    gpio_set(GPIO_MOTOR_ENABLE_PORT, GPIO_MOTOR_ENABLE_PIN);
+    gpio_set(GPIO_MOTOR_ENABLE_PORT, GPIO_MOTOR_ENABLE_PIN); /* High to enable. */
   }
   else
   {
-    gpio_clear(GPIO_MOTOR_ENABLE_PORT, GPIO_MOTOR_ENABLE_PIN);
+    gpio_clear(GPIO_MOTOR_ENABLE_PORT, GPIO_MOTOR_ENABLE_PIN); /* Low to disable. */
   }
 }
 
@@ -412,40 +430,33 @@ static void set_motor_direction(direction_t dir)
 {
   if (dir == CW)
   {
-    gpio_clear(GPIO_MOTOR_DIRECTION_PORT, GPIO_MOTOR_DIRECTION_PIN);
+    gpio_clear(GPIO_MOTOR_DIRECTION_PORT, GPIO_MOTOR_DIRECTION_PIN); /* Low for CW. */
   }
   else if (dir == CCW)
   {
-    gpio_set(GPIO_MOTOR_DIRECTION_PORT, GPIO_MOTOR_DIRECTION_PIN);
+    gpio_set(GPIO_MOTOR_DIRECTION_PORT, GPIO_MOTOR_DIRECTION_PIN); /* High for CCW. */
   }
+  /* Else do nothing. */
 }
 
-/* -----ISR----- */
-
-void sys_tick_handler(void)
-{
-  if (systick_delay > 0)
-  {
-    systick_delay--;
-  }
-}
+/* -----ISRs----- */
 
 void usart2_isr(void)
 {
   uint8_t data = usart_recv(USART_CONSOLE_INSTANCE);
 
-  if (data == 0xFF) /* Disable. */
+  if (data == 0xFF) /* Disable motor. */
   {
     set_motor_status(false);
     timer_disable_counter(TIMER_ITERATION_INSTANCE);
   }
-  else if (data == 0xFE) /* Enable. */
+  else if (data == 0xFE) /* Enable motor. */
   {
     timer_enable_counter(TIMER_ITERATION_INSTANCE);
     delay_ms(250);
     set_motor_status(true);
   }
-  else if (data == 0xFA)
+  else if (data == 0xFA) /* Read angle. */
   {
     uint16_t position;
     int8_t error = as5047p_get_position(&as5047, without_daec, &position);
@@ -472,6 +483,59 @@ void usart2_isr(void)
 
   /* Clear 'Read data register not empty' flag. */
   USART_SR(USART_CONSOLE_INSTANCE) &= ~USART_SR_RXNE;
+}
+
+void tim1_up_tim10_isr(void)
+{
+  if (timer_get_flag(TIMER_ITERATION_INSTANCE, TIM_SR_UIF)) /* Check 'Update interrupt' flag. */
+  {
+    update_present_position();
+    auto output = pid_compute(goal_position_deg,
+                              present_position_deg,
+                              pid_kp,
+                              pid_ki,
+                              pid_kd,
+                              pid_i_term_prev,
+                              pid_error_prev,
+                              1,
+                              100,
+                              -100,
+                              0,
+                              &pid_i_term_prev,
+                              &pid_error_prev);
+
+    if (output < 0)
+    {
+      output *= -1;
+
+#ifdef INVERSE_DIRECTION
+      set_motor_direction(CW);
+#else
+      set_motor_direction(CCW);
+#endif
+    }
+    else
+    {
+#ifdef INVERSE_DIRECTION
+      set_motor_direction(CCW);
+#else
+      set_motor_direction(CW);
+#endif
+    }
+
+    set_pwm_duty_cycle(output + PWM_DC_OFFSET);
+
+    /* Clear 'Update interrupt' flag. */
+    timer_clear_flag(TIMER_ITERATION_INSTANCE, TIM_SR_UIF);
+  }
+}
+
+void sys_tick_handler(void)
+{
+  if (systick_delay != 0)
+  {
+    systick_delay--;
+  }
 }
 
 /* Encoder A. */
@@ -501,47 +565,4 @@ void exti9_5_isr(void)
 void exti3_isr(void)
 {
   exti_reset_request(EXTI_ENCODER_I);
-}
-
-void tim1_up_tim10_isr(void)
-{
-  if (timer_get_flag(TIMER_ITERATION_INSTANCE, TIM_SR_UIF))
-  {
-    update_present_position();
-    auto output = pid_compute(goal_position_deg,
-                              present_position_deg,
-                              pid_kp,
-                              pid_ki,
-                              pid_kd,
-                              pid_i_term_prev,
-                              pid_error_prev,
-                              1,
-                              100,
-                              -100,
-                              0,
-                              &pid_i_term_prev,
-                              &pid_error_prev);
-    if (output < 0)
-    {
-      output *= -1;
-#ifdef INVERSE_DIRECTION
-      set_motor_direction(CW);
-#else
-      set_motor_direction(CCW);
-#endif
-    }
-    else
-    {
-#ifdef INVERSE_DIRECTION
-      set_motor_direction(CCW);
-#else
-      set_motor_direction(CW);
-#endif
-    }
-
-    set_pwm_duty_cycle(output + 10.0);
-
-    /* Clear 'Update interrupt' flag. */
-    timer_clear_flag(TIMER_ITERATION_INSTANCE, TIM_SR_UIF);
-  }
 }

@@ -1,7 +1,6 @@
 /**
  * @file main.h
- * @brief
- * @author ZiTe (honmonoh@gmail.com)
+ * @brief maxon ESCON motor controller PID angle/position control program.
  */
 
 #ifndef MAIN_H_
@@ -17,12 +16,13 @@
 #include <libopencm3/cm3/systick.h>
 #include "as5047p.h"
 
-#define TIMER_PRESCALER(f_tim, f_cnt) (f_tim / f_cnt - 1)                          /* PSC. */
-#define TIMER_AUTO_RELOAD(f_goal, f_tim, psc) ((f_tim / ((psc + 1) * f_goal)) - 1) /* ARR. */
-#define TIMER_PWM_CCR(arr, dc_goal) ((arr + 1) * dc_goal / 100)                    /* CCR. */
+// #define INVERSE_DIRECTION
 
-#define USART_CONSOLE_INSTANCE (USART2)
+#define AS5047_ZERO_POSITION (0x275F)
+#define PWM_DC_OFFSET (10) /* The minimum PWM duty cycle % value. */
+
 #define USART_CONSOLE_BAUDRATE (115200)
+#define USART_CONSOLE_INSTANCE (USART2)
 #define USART_CONSOLE_IRQ (NVIC_USART2_IRQ)
 #define GPIO_USART_CONSOLE_TXRX_PORT (GPIOA)
 #define GPIO_USART_CONSOLE_TX_PIN (GPIO2) /* ST-Link (D1). */
@@ -51,7 +51,7 @@
 
 #define TIMER_ITERATION_INSTANCE (TIM10)
 #define TIMER_ITERATION_IRQ (NVIC_TIM1_UP_TIM10_IRQ)
-#define TIMER_ITERATION_GOAL_FREQ (2)              /* In Hz. */
+#define TIMER_ITERATION_GOAL_FREQ (5)                 /* In Hz. */
 #define TIMER_ITERATION_FREQ (rcc_apb2_frequency * 2) /* In Hz. */
 #define TIMER_ITERATION_COUNTER_FREQ (1e5)            /* In Hz. */
 
@@ -113,7 +113,6 @@ static float pid_compute(float set_value,
 static void update_present_position(void);
 static void set_pwm_duty_cycle(float duty_cycle);
 static void set_motor_status(bool enable);
-// static bool get_motor_status(void);
 static void set_motor_direction(direction_t dir);
 
 #endif /* MAIN_H_ */

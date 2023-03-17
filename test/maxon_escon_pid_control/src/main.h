@@ -18,10 +18,13 @@
 #include <libopencm3/cm3/systick.h>
 #include "as5047p.h"
 
-// #define INVERSE_DIRECTION
+// #define INVERSE_DIRECTION /* Inverse motor direction. */
 
 #define AS5047_ZERO_POSITION (0x275F)
-#define PWM_DC_OFFSET (10) /* The minimum PWM duty cycle % value. */
+#define PWM_DC_OFFSET (10)               /* The minimum PWM duty cycle % value. */
+#define PWM_PID_DC_MAX (90 + 0.5)        /* The allowed maximum duty cycle % of PWM PID algo. */
+#define PWM_PID_DC_MIN (-PWM_PID_DC_MAX) /* The allowed minimum duty cycle % of PWM PID algo. */
+#define PWM_PID_BIAS (0)                 /* The bias value of PWM PID algo. */
 
 #define USART_CONSOLE_BAUDRATE (115200)
 #define USART_CONSOLE_INSTANCE (USART2)

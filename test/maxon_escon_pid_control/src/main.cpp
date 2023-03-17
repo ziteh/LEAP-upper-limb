@@ -26,6 +26,7 @@ static float pid_error_prev = 0;
 
 int main(void)
 {
+  /* Init. */
   setup_rcc();
   setup_systick();
   setup_others_gpio();
@@ -34,11 +35,10 @@ int main(void)
   setup_usart();
   setup_pwm();
   setup_timer();
-
   setup_as5047();
 
-  /* The first reading AS5047P value may always be 0. */
-  for (int i = 0; i < 5; i++)
+  /* The first reading AS5047P value may be 0. */
+  for (int i = 0; i < 3; i++)
   {
     update_present_position();
     delay_ms(200);
@@ -60,6 +60,9 @@ int main(void)
   return 0;
 }
 
+/**
+ * @brief PID controller algorithm.
+ */
 static float pid_compute(float set_value,
                          float actual_value,
                          float kp,
@@ -166,9 +169,7 @@ static void setup_usart(void)
 
 static void setup_spi(void)
 {
-  /*
-   * Setup GPIO.
-   */
+  /* Setup GPIO. */
   gpio_mode_setup(GPIO_SPI_AS5047_SCK_MISO_MOSI_PORT,
                   GPIO_MODE_AF,
                   GPIO_PUPD_NONE,
@@ -197,9 +198,7 @@ static void setup_spi(void)
   /* Deselect. */
   spi_as5047_deselect();
 
-  /*
-   * Setup SPI parameters.
-   */
+  /* Setup SPI parameters. */
   spi_disable(SPI_AS5047_INSTANCE);
   spi_reset(SPI_AS5047_INSTANCE);
 
@@ -261,7 +260,7 @@ static void setup_pwm(void)
   /* Setup frequency and duty cycle by PSC, ARR and CCR registers. */
   auto psc = TIMER_PRESCALER(TIMER_PWM_FREQ, TIMER_PWM_COUNTER_FREQ);
   auto arr = TIMER_AUTO_RELOAD(TIMER_PWM_GOAL_FREQ, TIMER_PWM_FREQ, psc);
-  auto ccr = TIMER_PWM_CCR(arr, 0.0); /* Init set duty-cycle to 0%. */
+  auto ccr = TIMER_PWM_CCR(arr, 0.0); /* Init set duty cycle to 0%. */
   timer_set_prescaler(TIMER_PWM_INSTANCE, psc);
   timer_set_period(TIMER_PWM_INSTANCE, arr);
   timer_set_oc_value(TIMER_PWM_INSTANCE, TIMER_PWM_OC, ccr);
@@ -308,7 +307,7 @@ static void setup_encoder_exti(void)
 }
 
 /**
- * @brief Set the up as5047 object
+ * @brief Set the up as5047 sensor.
  * @note Ref: https://github.com/ziteh/as5047p-driver
  */
 static void setup_as5047(void)
@@ -324,18 +323,27 @@ static void setup_as5047(void)
   as5047p_set_zero(&as5047, AS5047_ZERO_POSITION);
 }
 
+/**
+ * @brief Callback function for SPI select.
+ */
 void spi_as5047_select(void)
 {
   /* Low to select. */
   gpio_clear(GPIO_SPI_AS5047_SS_PORT, GPIO_SPI_AS5047_SS_PIN);
 }
 
+/**
+ * @brief Callback function for SPI deselect.
+ */
 void spi_as5047_deselect(void)
 {
   /* High to deselect. */
   gpio_set(GPIO_SPI_AS5047_SS_PORT, GPIO_SPI_AS5047_SS_PIN);
 }
 
+/**
+ * @brief Callback function for SPI send data.
+ */
 void spi_as5047_send(uint16_t data)
 {
   spi_send(SPI_AS5047_INSTANCE, data);
@@ -352,16 +360,14 @@ void spi_as5047_send(uint16_t data)
   }
 }
 
+/**
+ * @brief Callback function for SPI read data.
+ */
 uint16_t spi_as5047_read(void)
 {
-  while (!(SPI_SR(SPI_AS5047_INSTANCE) & SPI_SR_TXE)) /* Wait for 'Transmit buffer empty' flag to set. */
-  {
-  }
-
+  // uint16_t data = spi_xfer(SPI_AS5047_INSTANCE, 0);
   spi_send(SPI_AS5047_INSTANCE, 0); /* Just for beget clock signal. */
   uint16_t data = spi_read(SPI_AS5047_INSTANCE);
-
-  // uint16_t data = spi_xfer(SPI_AS5047_INSTANCE, 0);
 
   while ((SPI_SR(SPI_AS5047_INSTANCE) & SPI_SR_BSY)) /* Wait for 'Busy' flag to reset. */
   {
@@ -467,6 +473,9 @@ static void set_motor_direction(direction_t dir)
 
 /* -----ISRs----- */
 
+/**
+ * @brief Main communication procedures. USART2 ISR.
+ */
 void usart2_isr(void)
 {
   uint8_t data = usart_recv(USART_CONSOLE_INSTANCE);
@@ -511,10 +520,14 @@ void usart2_isr(void)
   USART_SR(USART_CONSOLE_INSTANCE) &= ~USART_SR_RXNE;
 }
 
+/**
+ * @brief Main loop, running PID algorithm and control motor. Timer10 ISR.
+ */
 void tim1_up_tim10_isr(void)
 {
   if (timer_get_flag(TIMER_ITERATION_INSTANCE, TIM_SR_UIF)) /* Check 'Update interrupt' flag. */
   {
+    /* Running PID algo. */
     update_present_position();
     auto output = pid_compute(goal_position_deg,
                               present_position_deg,
@@ -523,16 +536,17 @@ void tim1_up_tim10_isr(void)
                               pid_kd,
                               pid_i_term_prev,
                               pid_error_prev,
-                              1,
-                              100,
-                              -100,
-                              0,
+                              (1.0 / TIMER_ITERATION_GOAL_FREQ),
+                              PWM_PID_DC_MAX,
+                              PWM_PID_DC_MIN,
+                              PWM_PID_BIAS,
                               &pid_i_term_prev,
                               &pid_error_prev);
 
+    /* Direction output. */
     if (output < 0)
     {
-      output *= -1;
+      output *= -1; /* Absolute value. */
 
 #ifdef INVERSE_DIRECTION
       set_motor_direction(CW);
@@ -549,6 +563,7 @@ void tim1_up_tim10_isr(void)
 #endif
     }
 
+    /* Update PWM duty cycle. */
     set_pwm_duty_cycle(output + PWM_DC_OFFSET);
 
     /* Clear 'Update interrupt' flag. */
@@ -556,6 +571,9 @@ void tim1_up_tim10_isr(void)
   }
 }
 
+/**
+ * @brief SysTick ISR.
+ */
 void sys_tick_handler(void)
 {
   if (systick_delay != 0)

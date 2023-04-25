@@ -491,19 +491,21 @@ void usart2_isr(void)
     delay_ms(250);
     set_motor_status(true);
   }
-  else if (data == 0xFA) /* Read angle. */
+  else if (data == 0xFA) /* Read raw position. */
   {
     uint16_t position;
     int8_t error = as5047p_get_position(&as5047, without_daec, &position);
 
     if (error != 0)
     {
-      usart_send_blocking(USART_CONSOLE_INSTANCE, 'E');
+      /* Error occurred. */
+      usart_send_blocking(USART_CONSOLE_INSTANCE, 0xFE);
+      usart_send_blocking(USART_CONSOLE_INSTANCE, 0xFE);
     }
     else
     {
-      usart_send_blocking(USART_CONSOLE_INSTANCE, (position >> 8) & 0x00FF);
-      usart_send_blocking(USART_CONSOLE_INSTANCE, position & 0x00FF);
+      usart_send_blocking(USART_CONSOLE_INSTANCE, (position >> 8) & 0x00FF); /* High 8 bits. */
+      usart_send_blocking(USART_CONSOLE_INSTANCE, position & 0x00FF);        /* Low 8 bits. */
     }
   }
   else /* Control. */

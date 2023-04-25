@@ -6,12 +6,31 @@
 #include <Arduino.h>
 #include <SimpleFOC.h>
 
+/* Motor selection. */
+// #define T_MOTOR_U8
+#define T_MOTOR_U10II
+// #define AK10_9
+
+// #define OPENLOOP
+
 #define BAUDRATE (115200) /* Serial port baudrate. */
 
 /* Motor parameters. */
-#define MOTOR_POLE_PAIRS (21)
-#define MOTOR_PHASE_RESISTANCE (0.137) /* Unit in ohm. */
-#define MOTOR_KV (135 * 1.5)           /* Unit in rpm/V. SimpleFOC suggest to set the KV value provided to the library to 50-70% higher than the one given in the datasheet. */
+#if defined(T_MOTOR_U8)
+  #define MOTOR_POLE_PAIRS (21)
+  #define MOTOR_PHASE_RESISTANCE (0.137) /* Unit in ohm. */
+  #define MOTOR_KV (135)                 /* Unit in rpm/V. */
+#elif defined(T_MOTOR_U10II)
+  #define MOTOR_POLE_PAIRS (21)
+  #define MOTOR_PHASE_RESISTANCE (0.101) /* Unit in ohm. */
+  #define MOTOR_KV (100)                 /* Unit in rpm/V. */
+#elif defined(AK10_9)
+  #define MOTOR_POLE_PAIRS (21)
+  #define MOTOR_PHASE_RESISTANCE (0.090) /* Unit in ohm. */
+  #define MOTOR_KV (100)                 /* Unit in rpm/V. */
+#else
+  #error No Motor Selected
+#endif
 
 /* Power. */
 #define VOLTAGE_SUPPLY (22.2) /* Unit in V. */
@@ -38,7 +57,7 @@
 #define AS5047P_REG_ANGLECOM (0x3FFF) /* Measured angle with dynamic angle error compensation(DAEC). */
 #define AS5047P_REG_ANGLEUNC (0x3FFE) /* Measured angle without DAEC. */
 
-#define LIMIT_SWITCH_PIN (PC13)
+#define LIMIT_SWITCH_PIN (PA0)
 
 BLDCMotor motor = BLDCMotor(MOTOR_POLE_PAIRS);
 BLDCDriver3PWM driver = BLDCDriver3PWM(INH_A, INH_B, INH_C, EN_GATE);
@@ -64,8 +83,30 @@ void onMotor(char *cmd) { command.motor(&motor, cmd); }
 
 void onReadAngle(char *)
 {
+#ifndef OPENLOOP
   angleSensor.update();
-  Serial.println(angleSensor.getAngle(), 3);
+  float angle = angleSensor.getAngle();
+
+  char sign;
+  if(angle >= 0){
+    sign = '+';
+  }else
+  {
+    sign = '-';
+  }
+
+  angle = fabs(angle);
+
+  Serial.printf("%c%d%d%d.%d%d%d\r\n",
+                sign,
+                (int)((int)(angle) / 100 % 10),
+                (int)((int)(angle) / 10 % 10),
+                (int)((int)(angle) / 1 % 10),
+                (int)((int)(angle * 10) / 1 % 10),
+                (int)((int)(angle * 100) / 1 % 10),
+                (int)((int)(angle * 1000) / 1 % 10));
+
+#endif
 }
 
 void onLimitSwitchTriggered(void);
@@ -73,14 +114,13 @@ void drv8302Setup(void);
 
 void setup()
 {
-  /* Configure limit switch interrupt. */
-  attachInterrupt(LIMIT_SWITCH_PIN, onLimitSwitchTriggered, FALLING);
-
+#ifndef OPENLOOP
   /* Configure angle/Position sensor. */
   angleSensor.spi_mode = SPI_MODE1; /* CPOL=0, CPHA=1. */
   angleSensor.clock_speed = 1e6;    /* 10 MHz max. */
   angleSensor.init();
   motor.linkSensor(&angleSensor);
+#endif
 
   /* Configure driver. */
   drv8302Setup();
@@ -91,7 +131,7 @@ void setup()
 
   /* Configure motor parameters. */
   motor.phase_resistance = MOTOR_PHASE_RESISTANCE;
-  motor.KV_rating = MOTOR_KV;
+  motor.KV_rating = MOTOR_KV * 1.5f; /* SimpleFOC suggest to set the KV value provided to the library to 50-70% higher than the one given in the datasheet.. */
   motor.voltage_limit = VOLTAGE_SUPPLY;
   motor.current_limit = CURRENT_LIMIT;
   // motor.motion_downsample = 5;
@@ -99,8 +139,11 @@ void setup()
   /* Algorithms and controllers setup. */
   motor.foc_modulation = FOCModulationType::SpaceVectorPWM;
   motor.torque_controller = TorqueControlType::voltage;
-  // motor.controller = MotionControlType::angle_openloop;
+#ifdef OPENLOOP
+  motor.controller = MotionControlType::angle_openloop;
+#else
   motor.controller = MotionControlType::angle;
+#endif
 
   /* Velocity control loop setup. */
   motor.PID_velocity.P = 0.2;
@@ -108,7 +151,7 @@ void setup()
   // motor.PID_velocity.D = 0.001;
   motor.PID_velocity.output_ramp = 500; /* Unit in volts/s. */
   motor.LPF_velocity.Tf = 0.01;
-  motor.velocity_limit = 20; /* Unit in rad/s. */
+  motor.velocity_limit = 15; /* Unit in rad/s. */
 
   /* Angle/Position control loop setup. */
   motor.P_angle.P = 5;
@@ -125,10 +168,19 @@ void setup()
   motor.init();    /* Initialize motor. */
   motor.initFOC(); /* Start FOC and aligh encoder. */
 
+#ifndef OPENLOOP
   angleSensor.update();
   motor.target = angleSensor.getAngle(); /* Set the initial target value. */
+#else
+  motor.target = 0;
+#endif
 
   Serial.println(motor.target, 3);
+
+  /* Configure limit switch interrupt. */
+  pinMode(LIMIT_SWITCH_PIN, INPUT_PULLDOWN);
+  attachInterrupt(LIMIT_SWITCH_PIN, onLimitSwitchTriggered, FALLING);
+  // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN), onLimitSwitchTriggered, FALLING);
 
   _delay(1000);
 }
@@ -139,6 +191,15 @@ void loop()
   motor.move();    /* Motion control. */
 
   command.run();
+
+  // if (digitalRead(LIMIT_SWITCH_PIN) == LOW)
+  // {
+  //   angleSensor.update();
+  //   motor.target = angleSensor.getAngle();
+  //   motor.sensor_offset = motor.target;
+
+  //   Serial.println("limit switch triggered.");
+  // }
 }
 
 /* DRV8302 specific setup. */
@@ -171,11 +232,30 @@ void drv8302Setup(void)
 
 void onLimitSwitchTriggered(void)
 {
-  motor.disable();
-  _delay(10);
+  /* Debounce. */
+  // for (int i = 0; i < 3; i++)
+  // {
+  //   /* Delay. */
+  //   for (unsigned int j = 0; j < 5e4; j++)
+  //   {
+  //     __ASM("nop");
+  //   }
 
-  angleSensor.update();
-  motor.target = angleSensor.getAngle();
+  //   if (digitalRead(LIMIT_SWITCH_PIN) == HIGH)
+  //   {
+  //     return;
+  //   }
+  // }
 
-  Serial.println("LS");
+  if (digitalRead(LIMIT_SWITCH_PIN) == LOW)
+  {
+    motor.disable();
+
+    //   angleSensor.update();
+    //   float angle = angleSensor.getAngle();
+    //   motor.sensor_offset = angle;
+    //   motor.target = 0;
+
+    Serial.println("LST"); /* Limit switch triggered. */
+  }
 }

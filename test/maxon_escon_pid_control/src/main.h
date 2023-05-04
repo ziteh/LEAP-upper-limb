@@ -20,7 +20,10 @@
 
 // #define INVERSE_DIRECTION /* Inverse motor direction. */
 
-#define AS5047_ZERO_POSITION (0x275F)
+// #define AS5047_ZERO_POSITION (0x0000)
+#define AS5047_ZERO_POSITION (0x2AB2)
+// #define AS5047_ZERO_POSITION (0x275F)
+
 #define PWM_DC_OFFSET (10)               /* The minimum PWM duty cycle % value. */
 #define PWM_PID_DC_MAX (90 + 0.5)        /* The allowed maximum duty cycle % of PWM PID algo. */
 #define PWM_PID_DC_MIN (-PWM_PID_DC_MAX) /* The allowed minimum duty cycle % of PWM PID algo. */
@@ -53,6 +56,11 @@
 #define ENCODER_A_IRQ (NVIC_EXTI4_IRQ)
 #define ENCODER_B_IRQ (NVIC_EXTI9_5_IRQ)
 #define ENCODER_I_IRQ (NVIC_EXTI3_IRQ)
+
+#define GPIO_LIMIT_SWITCH_PORT (GPIOA)
+#define GPIO_LIMIT_SWITCH_PIN (GPIO0)
+#define EXTI_LIMIT_SWITCH (EXTI0)
+#define LIMIT_SWITCH_IRQ (NVIC_EXTI0_IRQ)
 
 #define TIMER_ITERATION_INSTANCE (TIM10)
 #define TIMER_ITERATION_IRQ (NVIC_TIM1_UP_TIM10_IRQ)
@@ -91,6 +99,7 @@ static void setup_others_gpio(void);
 
 static void setup_as5047(void);
 static void setup_encoder_exti(void);
+static void setup_limit_switch_exti(void);
 
 static void delay_ns(uint32_t ns);
 static void delay_ms(uint32_t ms);
@@ -117,7 +126,7 @@ static float pid_compute(float set_value,
 
 static void update_present_position(void);
 static void set_pwm_duty_cycle(float duty_cycle);
-static void set_motor_status(bool enable);
+static void set_motor_enable(bool enable);
 static void set_motor_direction(direction_t dir);
 
 // int _write(int file, char *ptr, int len);

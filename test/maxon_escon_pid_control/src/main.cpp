@@ -36,7 +36,7 @@ int main(void)
   setup_pwm();
   setup_timer();
   setup_as5047();
-
+  setup_limit_switch_exti();
   /* The first reading AS5047P value may be 0. */
   for (int i = 0; i < 3; i++)
   {
@@ -275,7 +275,7 @@ static void setup_others_gpio(void)
   /* Motor enable pin. */
   gpio_mode_setup(GPIO_MOTOR_ENABLE_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_MOTOR_ENABLE_PIN);
   gpio_set_output_options(GPIO_MOTOR_ENABLE_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, GPIO_MOTOR_ENABLE_PIN);
-  set_motor_status(false); /* Init disable motor. */
+  set_motor_enable(false); /* Init disable motor. */
 
   /* Motor direction pin. */
   gpio_mode_setup(GPIO_MOTOR_DIRECTION_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO_MOTOR_DIRECTION_PIN);
@@ -304,6 +304,20 @@ static void setup_encoder_exti(void)
   nvic_enable_irq(ENCODER_A_IRQ);
   nvic_enable_irq(ENCODER_B_IRQ);
   nvic_enable_irq(ENCODER_I_IRQ);
+}
+
+static void setup_limit_switch_exti(void)
+{
+  gpio_mode_setup(GPIO_LIMIT_SWITCH_PORT,
+                  GPIO_MODE_INPUT,
+                  GPIO_PUPD_PULLDOWN,
+                  GPIO_LIMIT_SWITCH_PIN);
+
+  exti_select_source(EXTI_LIMIT_SWITCH, GPIO_LIMIT_SWITCH_PORT);
+  exti_set_trigger(EXTI_LIMIT_SWITCH, EXTI_TRIGGER_FALLING);
+
+  exti_enable_request(EXTI_LIMIT_SWITCH);
+  nvic_enable_irq(LIMIT_SWITCH_IRQ);
 }
 
 /**
@@ -425,7 +439,7 @@ static void set_pwm_duty_cycle(float duty_cycle)
   timer_set_oc_value(TIMER_PWM_INSTANCE, TIMER_PWM_OC, ccr);
 }
 
-static void set_motor_status(bool enable)
+static void set_motor_enable(bool enable)
 {
   if (enable)
   {
@@ -482,14 +496,14 @@ void usart2_isr(void)
 
   if (data == 0xFF) /* Disable motor. */
   {
-    set_motor_status(false);
+    set_motor_enable(false);
     timer_disable_counter(TIMER_ITERATION_INSTANCE);
   }
   else if (data == 0xFE) /* Enable motor. */
   {
     timer_enable_counter(TIMER_ITERATION_INSTANCE);
     delay_ms(250);
-    set_motor_status(true);
+    set_motor_enable(true);
   }
   else if (data == 0xFA) /* Read raw position. */
   {
@@ -611,4 +625,31 @@ void exti9_5_isr(void)
 void exti3_isr(void)
 {
   exti_reset_request(EXTI_ENCODER_I);
+}
+
+/* Limit switch. */
+void exti0_isr(void)
+{
+  /* Clear flag. */
+  exti_reset_request(EXTI_LIMIT_SWITCH);
+
+  /* Debounce. */
+  for (int i = 0; i < 3; i++)
+  {
+    delay_ms(10);
+    if (gpio_get(GPIO_LIMIT_SWITCH_PORT, GPIO_LIMIT_SWITCH_PIN) != 0)
+    {
+      return;
+    }
+  }
+  
+  set_motor_enable(false);
+  set_pwm_duty_cycle(0);
+
+  /* Limit switch triggered. */
+  usart_send_blocking(USART_CONSOLE_INSTANCE, 'L');
+  usart_send_blocking(USART_CONSOLE_INSTANCE, 'S');
+  usart_send_blocking(USART_CONSOLE_INSTANCE, 'T');
+  usart_send_blocking(USART_CONSOLE_INSTANCE, '\r');
+  usart_send_blocking(USART_CONSOLE_INSTANCE, '\n');
 }

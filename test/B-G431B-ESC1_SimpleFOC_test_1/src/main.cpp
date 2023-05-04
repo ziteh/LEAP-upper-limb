@@ -12,8 +12,8 @@
 #define MOTOR_POLE_PAIRS (21)
 #define MOTOR_PHASE_RESISTANCE (0.137) // Unit in ohm.
 #define MOTOR_KV (135)
-#define MOTOR_CURRENT_LIMIT (7) // Unit in A.
-#define MOTOR_VOLTAGE (12)      // Unit in V.
+#define MOTOR_CURRENT_LIMIT (5) // Unit in A.
+#define MOTOR_VOLTAGE (22.2)    // Unit in V.
 
 BLDCMotor motor = BLDCMotor(MOTOR_POLE_PAIRS);
 BLDCDriver6PWM driver = BLDCDriver6PWM(A_PHASE_UH,
@@ -30,14 +30,14 @@ void setup()
 {
   // Driver setup.
   driver.voltage_power_supply = MOTOR_VOLTAGE;
-  driver.pwm_frequency = 35000;
-  driver.dead_zone = 0.01; // x100%
+  // driver.pwm_frequency = 35000;
+  // driver.dead_zone = 0.01; // x100%
   driver.init();
   motor.linkDriver(&driver);
 
   // Motor parameters setup.
   motor.phase_resistance = MOTOR_PHASE_RESISTANCE;
-  motor.KV_rating = MOTOR_KV;
+  // motor.KV_rating = MOTOR_KV * 1.5; /* SimpleFOC suggest to set the KV value provided to the library to 50-70% higher than the one given in the datasheet. */
   motor.voltage_limit = MOTOR_VOLTAGE;
   motor.current_limit = MOTOR_CURRENT_LIMIT;
 
@@ -66,9 +66,9 @@ void setup()
   commander.add('M', onMotor, "motor");
 
   // Init.
+  // motor.target = 0; // Set the initial target.
   motor.init();
   motor.initFOC();
-  motor.target = 3.14; // Set the initial target.
 
   // Serial2.println("Ready\n");
   delay(1000);

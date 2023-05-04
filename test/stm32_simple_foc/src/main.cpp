@@ -12,6 +12,8 @@
 // #define AK10_9
 
 // #define OPENLOOP
+#define LIMIT_SWITCH
+#define LIMIT_T0_ZERO_DIFF (8) /* The diff between limit switch triggered and zero position in Rad. */
 
 #define BAUDRATE (115200) /* Serial port baudrate. */
 
@@ -59,6 +61,9 @@
 
 #define LIMIT_SWITCH_PIN (PA0)
 
+bool limited = false;
+bool homing = false;
+
 BLDCMotor motor = BLDCMotor(MOTOR_POLE_PAIRS);
 BLDCDriver3PWM driver = BLDCDriver3PWM(INH_A, INH_B, INH_C, EN_GATE);
 MagneticSensorSPI angleSensor = MagneticSensorSPI(AS5047P_SPI_CS, 14, AS5047P_REG_ANGLECOM);
@@ -87,15 +92,20 @@ void onReadAngle(char *)
   angleSensor.update();
   float angle = angleSensor.getAngle();
 
+  angle += motor.sensor_offset;
+  angle *= -1;
+
   char sign;
-  if(angle >= 0){
+  if (angle >= 0)
+  {
     sign = '+';
-  }else
+  }
+  else
   {
     sign = '-';
   }
 
-  angle = fabs(angle);
+  angle = fabs(angle); /* Absolute value. */
 
   Serial.printf("%c%d%d%d.%d%d%d\r\n",
                 sign,
@@ -177,10 +187,54 @@ void setup()
 
   Serial.println(motor.target, 3);
 
+#ifdef LIMIT_SWITCH
   /* Configure limit switch interrupt. */
   pinMode(LIMIT_SWITCH_PIN, INPUT_PULLDOWN);
   attachInterrupt(LIMIT_SWITCH_PIN, onLimitSwitchTriggered, FALLING);
-  // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN), onLimitSwitchTriggered, FALLING);
+  _delay(10);
+
+  /* Find limit switch triggered position. */
+  homing = true;
+  Serial.printf("Find limit switch... ");
+  motor.controller = MotionControlType::velocity;
+  // motor.velocity_limit = 20; /* Unit in rad/s. */
+  motor.enable();
+  while (!limited)
+  {
+    motor.move(-12.5);
+    motor.loopFOC(); /* Main FOC algorithm. */
+  }
+
+  /* Limit switch triggered posision finded. */
+  motor.disable();
+  _delay(10);
+
+  /* Update zero position offset. */
+  angleSensor.update();
+  motor.sensor_offset = -angleSensor.getAngle() + LIMIT_T0_ZERO_DIFF;
+
+  /* Move to zero (zero position != limit switch triggered position). */
+  Serial.printf("Go to zero... ");
+  motor.controller = MotionControlType::angle;
+  motor.target = 0;
+  motor.enable();
+  while (1)
+  {
+    angleSensor.update();
+    if (angleSensor.getAngle() + motor.sensor_offset < 0.1) /* 0.1 allowable error. */
+    {
+      break; /* Move done. */
+    }
+
+    motor.move();
+    motor.loopFOC(); /* Main FOC algorithm. */
+  }
+
+  homing = false;  /* Reset flag. */
+  limited = false; /* Reset flag. */
+  Serial.printf("Done!\r\n");
+#endif
+  // motor.velocity_limit = 15; /* Unit in rad/s. */
 
   _delay(1000);
 }
@@ -246,16 +300,22 @@ void onLimitSwitchTriggered(void)
   //     return;
   //   }
   // }
+  limited = true;
+  if (homing)
+  {
+    return;
+  }
+
+  /* Delay. */
+  for (unsigned int i = 0; i < 5e5; i++)
+  {
+    __ASM("nop");
+  }
 
   if (digitalRead(LIMIT_SWITCH_PIN) == LOW)
   {
     motor.disable();
-
-    //   angleSensor.update();
-    //   float angle = angleSensor.getAngle();
-    //   motor.sensor_offset = angle;
-    //   motor.target = 0;
-
+    limited = true;
     Serial.println("LST"); /* Limit switch triggered. */
   }
 }

@@ -188,9 +188,7 @@ void setup()
   Serial.println(motor.target, 3);
 
 #ifdef LIMIT_SWITCH
-  /* Configure limit switch interrupt. */
   pinMode(LIMIT_SWITCH_PIN, INPUT_PULLDOWN);
-  attachInterrupt(LIMIT_SWITCH_PIN, onLimitSwitchTriggered, FALLING);
   _delay(10);
 
   /* Find limit switch triggered position. */
@@ -199,7 +197,7 @@ void setup()
   motor.controller = MotionControlType::velocity;
   // motor.velocity_limit = 20; /* Unit in rad/s. */
   motor.enable();
-  while (!limited)
+  while (digitalRead(LIMIT_SWITCH_PIN) != LOW)
   {
     motor.move(-12.5);
     motor.loopFOC(); /* Main FOC algorithm. */
@@ -233,6 +231,10 @@ void setup()
   homing = false;  /* Reset flag. */
   limited = false; /* Reset flag. */
   Serial.printf("Done!\r\n");
+
+  /* Configure limit switch interrupt. */
+  // attachInterrupt(LIMIT_SWITCH_PIN, onLimitSwitchTriggered, FALLING);
+  // attachInterrupt(digitalPinToInterrupt(LIMIT_SWITCH_PIN), onLimitSwitchTriggered, FALLING);
 #endif
   // motor.velocity_limit = 15; /* Unit in rad/s. */
 
@@ -246,14 +248,12 @@ void loop()
 
   command.run();
 
-  // if (digitalRead(LIMIT_SWITCH_PIN) == LOW)
-  // {
-  //   angleSensor.update();
-  //   motor.target = angleSensor.getAngle();
-  //   motor.sensor_offset = motor.target;
-
-  //   Serial.println("limit switch triggered.");
-  // }
+  if (digitalRead(LIMIT_SWITCH_PIN) == LOW)
+  {
+    motor.disable();
+    limited = true;
+    Serial.println("LST"); /* Limit switch triggered. */
+  }
 }
 
 /* DRV8302 specific setup. */
@@ -300,22 +300,24 @@ void onLimitSwitchTriggered(void)
   //     return;
   //   }
   // }
-  limited = true;
+
   if (homing)
   {
     return;
   }
 
   /* Delay. */
-  for (unsigned int i = 0; i < 5e5; i++)
+  for (unsigned int i = 0; i < 5e4; i++)
   {
     __ASM("nop");
   }
 
   if (digitalRead(LIMIT_SWITCH_PIN) == LOW)
   {
-    motor.disable();
     limited = true;
+
+    motor.disable();
+    // limited = true;
     Serial.println("LST"); /* Limit switch triggered. */
   }
 }

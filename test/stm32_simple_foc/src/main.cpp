@@ -3,17 +3,18 @@
  * @brief STM32 SimpleFOC basic test.
  */
 
+#define SERIAL_UART_INSTANCE 1 /* Comment out to use the default UART. */
+
 #include <Arduino.h>
 #include <SimpleFOC.h>
 
 /* Motor selection. */
-// #define T_MOTOR_U8
-#define T_MOTOR_U10II
+#define T_MOTOR_U8
+// #define T_MOTOR_U10II
 // #define AK10_9
 
-// #define OPENLOOP
-#define LIMIT_SWITCH
-#define LIMIT_T0_ZERO_DIFF (8) /* The diff between limit switch triggered and zero position in Rad. */
+#define OPENLOOP
+// #define LIMIT_SWITCH
 
 #define BAUDRATE (115200) /* Serial port baudrate. */
 
@@ -34,32 +35,56 @@
   #error No Motor Selected
 #endif
 
+/* DRV8302 pins. */
+#if defined(NUCLEO_L432KC)
+  #define INH_A (9)
+  #define INH_B (A2)
+  #define INH_C (A1)
+
+  #define EN_GATE (2)
+  #define OC_ADJ (3)
+  #define M_OC (4)
+  #define M_PWM (5)
+
+  #define LIMIT_SWITCH_PIN (A0)
+
+  /*
+   * SPI SCLK: D13 pin.
+   * SPI MISO: D12 pin.
+   * SPI MOSI: D11 pin.
+   */
+  #define AS5047P_SPI_CS (10)
+#elif defined(NUCLEO_F446RE) || defined(NUCLEO_F401RE)
+  #define INH_A (6)
+  #define INH_B (5)
+  #define INH_C (3)
+
+  #define EN_GATE (8)
+  #define OC_ADJ (7)
+  #define M_OC (PB13)
+  #define M_PWM (PB14)
+
+  #define LIMIT_SWITCH_PIN (A0)
+
+  /*
+   * SPI SCLK: D13 pin.
+   * SPI MISO: D12 pin.
+   * SPI MOSI: D11 pin.
+   */
+  #define AS5047P_SPI_CS (10)
+#else
+  #error No Board Selected
+#endif
+
 /* Power. */
 #define VOLTAGE_SUPPLY (22.2) /* Unit in V. */
-#define CURRENT_LIMIT (7)     /* Unit in A. */
+#define CURRENT_LIMIT (7.5)   /* Unit in A. */
 
-/* DRV8302 pins. */
-#define INH_A (6)
-#define INH_B (5)
-#define INH_C (3)
-// #define INL_A (9)
-// #define INL_B (10)
-// #define INL_C (11)
-#define EN_GATE (8)
-#define M_PWM (PB14)
-#define M_OC (PB13)
-#define OC_ADJ (7)
-
-/*
- * SPI SCLK: D13 pin.
- * SPI MISO: D12 pin.
- * SPI MOSI: D11 pin.
- */
-#define AS5047P_SPI_CS (10)
 #define AS5047P_REG_ANGLECOM (0x3FFF) /* Measured angle with dynamic angle error compensation(DAEC). */
 #define AS5047P_REG_ANGLEUNC (0x3FFE) /* Measured angle without DAEC. */
+#define LIMIT_T0_ZERO_DIFF (9)        /* The diff between limit switch triggered and zero position in Rad. */
 
-#define LIMIT_SWITCH_PIN (PA0)
+HardwareSerial Serial1(USART1);
 
 bool limited = false;
 bool homing = false;
@@ -67,21 +92,6 @@ bool homing = false;
 BLDCMotor motor = BLDCMotor(MOTOR_POLE_PAIRS);
 BLDCDriver3PWM driver = BLDCDriver3PWM(INH_A, INH_B, INH_C, EN_GATE);
 MagneticSensorSPI angleSensor = MagneticSensorSPI(AS5047P_SPI_CS, 14, AS5047P_REG_ANGLECOM);
-
-// encoder instance
-// Encoder encoder = Encoder(2, 3, 4000);
-// channel A and B callbacks
-// void doA() { encoder.handleA(); }
-// void doB() { encoder.handleB(); }
-// void doIndex() { encoder.handleIndex(); }
-
-// InlineCurrentSensor constructor
-//  - shunt_resistor  - shunt resistor value
-//  - gain  - current-sense op-amp gain
-//  - phA   - A phase adc pin
-//  - phB   - B phase adc pin
-//  - phC   - C phase adc pin (optional)
-// InlineCurrentSense current_sense = InlineCurrentSense(0.005, 12.22, A0, A1, A2);
 
 Commander command = Commander(Serial);
 void onMotor(char *cmd) { command.motor(&motor, cmd); }
@@ -92,8 +102,8 @@ void onReadAngle(char *)
   angleSensor.update();
   float angle = angleSensor.getAngle();
 
-  angle += motor.sensor_offset;
-  angle *= -1;
+  angle -= motor.sensor_offset;
+  // angle *= -1;
 
   char sign;
   if (angle >= 0)
@@ -124,6 +134,12 @@ void drv8302Setup(void);
 
 void setup()
 {
+  /* Communication setup. */
+  Serial.begin(BAUDRATE);
+  motor.useMonitoring(Serial);
+  command.add('M', onMotor, "motor");
+  command.add('A', onReadAngle, "angle");
+
 #ifndef OPENLOOP
   /* Configure angle/Position sensor. */
   angleSensor.spi_mode = SPI_MODE1; /* CPOL=0, CPHA=1. */
@@ -169,12 +185,6 @@ void setup()
   motor.P_angle.D = 0.05;
   motor.P_angle.output_ramp = 500; /* Acceleration limit(?), unit in rad/s^2. */
 
-  /* Communication setup. */
-  Serial.begin(BAUDRATE);
-  motor.useMonitoring(Serial);
-  command.add('M', onMotor, "motor");
-  command.add('A', onReadAngle, "angle");
-
   motor.init();    /* Initialize motor. */
   motor.initFOC(); /* Start FOC and aligh encoder. */
 
@@ -199,7 +209,7 @@ void setup()
   motor.enable();
   while (digitalRead(LIMIT_SWITCH_PIN) != LOW)
   {
-    motor.move(-12.5);
+    motor.move(12.5);
     motor.loopFOC(); /* Main FOC algorithm. */
   }
 
@@ -209,7 +219,7 @@ void setup()
 
   /* Update zero position offset. */
   angleSensor.update();
-  motor.sensor_offset = -angleSensor.getAngle() + LIMIT_T0_ZERO_DIFF;
+  motor.sensor_offset = +angleSensor.getAngle() - LIMIT_T0_ZERO_DIFF;
 
   /* Move to zero (zero position != limit switch triggered position). */
   Serial.printf("Go to zero... ");
@@ -219,7 +229,7 @@ void setup()
   while (1)
   {
     angleSensor.update();
-    if (angleSensor.getAngle() + motor.sensor_offset < 0.1) /* 0.1 allowable error. */
+    if (angleSensor.getAngle() - motor.sensor_offset < 0.25) /* 0.1 allowable error. */
     {
       break; /* Move done. */
     }
@@ -230,7 +240,7 @@ void setup()
 
   homing = false;  /* Reset flag. */
   limited = false; /* Reset flag. */
-  Serial.printf("Done!\r\n");
+  Serial.println("Done.");
 
   /* Configure limit switch interrupt. */
   // attachInterrupt(LIMIT_SWITCH_PIN, onLimitSwitchTriggered, FALLING);
@@ -238,6 +248,7 @@ void setup()
 #endif
   // motor.velocity_limit = 15; /* Unit in rad/s. */
 
+  Serial.println("All Ready!");
   _delay(1000);
 }
 
@@ -248,12 +259,14 @@ void loop()
 
   command.run();
 
+#ifdef LIMIT_SWITCH
   if (digitalRead(LIMIT_SWITCH_PIN) == LOW)
   {
     motor.disable();
     limited = true;
     Serial.println("LST"); /* Limit switch triggered. */
   }
+#endif
 }
 
 /* DRV8302 specific setup. */

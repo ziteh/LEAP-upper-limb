@@ -334,7 +334,7 @@ static void setup_as5047(void)
                       &as5047);
 
   as5047p_config(&as5047, 0b00100101, 0b00000000);
-  as5047p_set_zero(&as5047, AS5047_ZERO_POSITION);
+  as5047p_set_zero(&as5047, AS5047_HOME_POSITION);
 }
 
 /**
@@ -524,9 +524,10 @@ void usart2_isr(void)
   }
   else /* Control. */
   {
-    if (data > 0 && data < 70)
+    float goal_angle = data;
+    if (goal_angle >= 0 && goal_angle <= 65)
     {
-      goal_position_deg = (float)data;
+      goal_position_deg = goal_angle;
     }
   }
 
@@ -642,7 +643,7 @@ void exti0_isr(void)
       return;
     }
   }
-  
+
   set_motor_enable(false);
   set_pwm_duty_cycle(0);
 

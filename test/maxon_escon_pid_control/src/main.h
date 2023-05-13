@@ -20,9 +20,9 @@
 
 // #define INVERSE_DIRECTION /* Inverse motor direction. */
 
-// #define AS5047_ZERO_POSITION (0x0000)
-#define AS5047_ZERO_POSITION (0x2AB2)
-// #define AS5047_ZERO_POSITION (0x275F)
+// #define AS5047_HOME_POSITION (0x0000)
+#define AS5047_HOME_POSITION (0x2AB2)
+// #define AS5047_HOME_POSITION (0x275F)
 
 #define PWM_DC_OFFSET (10)               /* The minimum PWM duty cycle % value. */
 #define PWM_PID_DC_MAX (90 + 0.5)        /* The allowed maximum duty cycle % of PWM PID algo. */

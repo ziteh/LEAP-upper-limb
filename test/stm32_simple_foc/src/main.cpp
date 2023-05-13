@@ -9,12 +9,12 @@
 #include <SimpleFOC.h>
 
 /* Motor selection. */
-#define T_MOTOR_U8
-// #define T_MOTOR_U10II
+// #define T_MOTOR_U8
+#define T_MOTOR_U10II
 // #define AK10_9
 
-#define OPENLOOP
-// #define LIMIT_SWITCH
+// #define OPENLOOP
+#define LIMIT_SWITCH
 
 #define BAUDRATE (115200) /* Serial port baudrate. */
 

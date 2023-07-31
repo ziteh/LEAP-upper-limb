@@ -1,11 +1,14 @@
 /**
  * @file main.cpp
- * @brief maxon ESCON motor controller PID angle/position control program.
+ * @brief EFE joint for LEAP-Up.
+ *        maxon ESCON motor controller PID angle/position control program.
+ * @note  https://github.com/ziteh/stm32-examples
+ *        https://ziteh.github.io/series/%E7%B0%A1%E5%96%AE%E5%85%A5%E9%96%80-libopencm3-stm32-%E5%B5%8C%E5%85%A5%E5%BC%8F%E7%B3%BB%E7%B5%B1%E9%96%8B%E7%99%BC/
  */
 
 #include "main.h"
 
-/* Timer macros. */
+/* Timer/PWM macros. https://ziteh.github.io/posts/libopencm3-stm32-14/ */
 #define TIMER_PRESCALER(f_tim, f_cnt) (f_tim / f_cnt - 1)                          /* PSC. */
 #define TIMER_AUTO_RELOAD(f_goal, f_tim, psc) ((f_tim / ((psc + 1) * f_goal)) - 1) /* ARR. */
 #define TIMER_PWM_CCR(arr, dc_goal) ((arr + 1) * dc_goal / 100.0)                  /* CCR. */
@@ -54,7 +57,7 @@ int main(void)
 
   while (1)
   {
-    __asm__("nop"); /* Do nothing, wait for ISRs. */
+    __asm__("nop"); /* Do nothing, wait for ISRs (e.g. Timer, UART, EXTI). */
   }
 
   return 0;
@@ -127,6 +130,7 @@ static void setup_rcc(void)
   rcc_periph_reset_pulse(RST_TIM10);
 }
 
+/* https://ziteh.github.io/posts/libopencm3-stm32-15/. */
 static void setup_systick(void)
 {
   systick_set_frequency(1e6, rcc_ahb_frequency); /* Set overflow frequency to 1 MHz. */
@@ -135,6 +139,7 @@ static void setup_systick(void)
   systick_counter_enable();
 }
 
+/* https://ziteh.github.io/posts/libopencm3-stm32-10/. */
 static void setup_usart(void)
 {
   /* Set Tx and Rx pin to push-pull alternate function. */
@@ -167,6 +172,7 @@ static void setup_usart(void)
   usart_enable(USART_CONSOLE_INSTANCE);
 }
 
+/* https://ziteh.github.io/posts/libopencm3-stm32-24/. */
 static void setup_spi(void)
 {
   /* Setup GPIO. */
@@ -217,6 +223,7 @@ static void setup_spi(void)
   spi_enable(SPI_AS5047_INSTANCE);
 }
 
+/* https://ziteh.github.io/posts/libopencm3-stm32-12/. */
 static void setup_timer(void)
 {
   /* Configure timer mode. */
@@ -241,6 +248,7 @@ static void setup_timer(void)
   timer_disable_counter(TIMER_ITERATION_INSTANCE);
 }
 
+/* https://ziteh.github.io/posts/libopencm3-stm32-14/. */
 static void setup_pwm(void)
 {
   /* Setup GPIO. */
@@ -270,6 +278,10 @@ static void setup_pwm(void)
   timer_enable_counter(TIMER_PWM_INSTANCE);
 }
 
+/*
+ * https://ziteh.github.io/posts/libopencm3-stm32-4/.
+ * https://ziteh.github.io/posts/libopencm3-stm32-5/.
+ */
 static void setup_others_gpio(void)
 {
   /* Motor enable pin. */
@@ -282,6 +294,7 @@ static void setup_others_gpio(void)
   gpio_set_output_options(GPIO_MOTOR_DIRECTION_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, GPIO_MOTOR_DIRECTION_PIN);
 }
 
+/* https://ziteh.github.io/posts/libopencm3-stm32-8/. */
 static void setup_encoder_exti(void)
 {
   gpio_mode_setup(GPIO_ENCODER_PORT,
@@ -306,6 +319,7 @@ static void setup_encoder_exti(void)
   nvic_enable_irq(ENCODER_I_IRQ);
 }
 
+/* https://ziteh.github.io/posts/libopencm3-stm32-8/. */
 static void setup_limit_switch_exti(void)
 {
   gpio_mode_setup(GPIO_LIMIT_SWITCH_PORT,
@@ -485,7 +499,7 @@ static void set_motor_direction(direction_t dir)
 //   return -1;
 // }
 
-/* -----ISRs----- */
+/* ----------ISRs---------- */
 
 /**
  * @brief Main communication procedures. USART2 ISR.

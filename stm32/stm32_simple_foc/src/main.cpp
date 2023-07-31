@@ -1,20 +1,27 @@
 /**
  * @file main.cpp
- * @brief STM32 SimpleFOC basic test.
+ * @brief SIE and SFE joints of LEAP-Up.
+ *        STM32 SimpleFOC basic test.
+ * @note  https://docs.simplefoc.com/
  */
 
-#define SERIAL_UART_INSTANCE 1 /* Comment out to use the default UART. */
+/*
+ * Comment out to use the default UART (i.e. ST-Link UART).
+ * For F446 aways comment out.
+ * For L432 only comment out when test to ues ST-Link virtual COM port from USB.
+ */
+// #define SERIAL_UART_INSTANCE 1
 
 #include <Arduino.h>
 #include <SimpleFOC.h>
 
 /* Motor selection. */
-// #define T_MOTOR_U8
-#define T_MOTOR_U10II
-// #define AK10_9
+#define T_MOTOR_U8 /* SIE joint. */
+// #define T_MOTOR_U10II   /* SFE joint. */
+// #define AK10_9 /* Test. */
 
-// #define OPENLOOP
-#define LIMIT_SWITCH
+#define OPENLOOP /* Comment out to use close-loop control. */
+// #define LIMIT_SWITCH /* EXTI. Aways comment out. */
 
 #define BAUDRATE (115200) /* Serial port baudrate. */
 
@@ -35,25 +42,29 @@
   #error No Motor Selected
 #endif
 
-/* DRV8302 pins. */
+/*
+ * DRV8302 pins.
+ * Select board/MCU from PlatformIO env (platformio.ini).
+ * The pins named without "P" prefix are Arduino pin number，otherwise are STM32 pin name.
+ */
 #if defined(NUCLEO_L432KC)
-  #define INH_A (9)
-  #define INH_B (A2)
-  #define INH_C (A1)
+  #define INH_A (9)  /* PA8. */
+  #define INH_B (A2) /* PA3. */
+  #define INH_C (A1) /* PA1. */
 
-  #define EN_GATE (2)
-  #define OC_ADJ (3)
-  #define M_OC (4)
-  #define M_PWM (5)
+  #define EN_GATE (2) /* PA12. */
+  #define OC_ADJ (3)  /* PB0. */
+  #define M_OC (4)    /* PB7. */
+  #define M_PWM (5)   /* PB6. */
 
-  #define LIMIT_SWITCH_PIN (A0)
+  #define LIMIT_SWITCH_PIN (A0) /* PA0. */
 
   /*
-   * SPI SCLK: D13 pin.
-   * SPI MISO: D12 pin.
-   * SPI MOSI: D11 pin.
+   * SPI SCLK: D13 pin (PB3).
+   * SPI MISO: D12 pin (PB4).
+   * SPI MOSI: D11 pin (PB5).
    */
-  #define AS5047P_SPI_CS (10)
+  #define AS5047P_SPI_CS (10) /* PA11. */
 #elif defined(NUCLEO_F446RE) || defined(NUCLEO_F401RE)
   #define INH_A (6)
   #define INH_B (5)
@@ -78,11 +89,13 @@
 
 /* Power. */
 #define VOLTAGE_SUPPLY (22.2) /* Unit in V. */
-#define CURRENT_LIMIT (7.5)   /* Unit in A. */
+#define CURRENT_LIMIT (10)    /* Unit in A. */
 
+/* AS5047P encoder. */
 #define AS5047P_REG_ANGLECOM (0x3FFF) /* Measured angle with dynamic angle error compensation(DAEC). */
 #define AS5047P_REG_ANGLEUNC (0x3FFE) /* Measured angle without DAEC. */
-#define LIMIT_T0_ZERO_DIFF (9)        /* The diff between limit switch triggered and zero position in Rad. */
+
+#define LIMIT_T0_ZERO_DIFF (9) /* The diff between limit switch triggered and zero position in Rad. */
 
 HardwareSerial Serial1(USART1);
 
@@ -117,6 +130,7 @@ void onReadAngle(char *)
 
   angle = fabs(angle); /* Absolute value. */
 
+  /* Send. */
   Serial.printf("%c%d%d%d.%d%d%d\r\n",
                 sign,
                 (int)((int)(angle) / 100 % 10),
@@ -134,37 +148,46 @@ void drv8302Setup(void);
 
 void setup()
 {
-  /* Communication setup. */
+  /*
+   * Communication setup.
+   * ME0: Disable, ME1: Enable, ME: Check enable state
+   * E3.14: move to 3.14 rad, E-2: move to -2 rad
+   * A: Read present position
+   * newline "\n (LF)" at the end is required.
+   * https://docs.simplefoc.com/commander_interface
+   */
   Serial.begin(BAUDRATE);
   motor.useMonitoring(Serial);
   command.add('M', onMotor, "motor");
   command.add('A', onReadAngle, "angle");
 
 #ifndef OPENLOOP
-  /* Configure angle/Position sensor. */
+  /* Configure angle/Position sensor. https://docs.simplefoc.com/magnetic_sensor_spi */
   angleSensor.spi_mode = SPI_MODE1; /* CPOL=0, CPHA=1. */
   angleSensor.clock_speed = 1e6;    /* 10 MHz max. */
   angleSensor.init();
   motor.linkSensor(&angleSensor);
 #endif
 
-  /* Configure driver. */
+  /* Configure driver. https://docs.simplefoc.com/bldcdriver3pwm */
   drv8302Setup();
-  // driver.pwm_frequency = 35000;
+  driver.pwm_frequency = 20000;
   driver.voltage_power_supply = VOLTAGE_SUPPLY;
   driver.init();
   motor.linkDriver(&driver);
 
+  /* Motor code: https://docs.simplefoc.com/bldcmotor. */
+
   /* Configure motor parameters. */
-  motor.phase_resistance = MOTOR_PHASE_RESISTANCE;
-  motor.KV_rating = MOTOR_KV * 1.5f; /* SimpleFOC suggest to set the KV value provided to the library to 50-70% higher than the one given in the datasheet.. */
+  // motor.phase_resistance = MOTOR_PHASE_RESISTANCE;
+  // motor.KV_rating = MOTOR_KV * 1.5f; /* SimpleFOC suggest to set the KV value provided to the library to 50-70% higher than the one given in the datasheet.. */
   motor.voltage_limit = VOLTAGE_SUPPLY;
   motor.current_limit = CURRENT_LIMIT;
   // motor.motion_downsample = 5;
 
   /* Algorithms and controllers setup. */
-  motor.foc_modulation = FOCModulationType::SpaceVectorPWM;
-  motor.torque_controller = TorqueControlType::voltage;
+  motor.foc_modulation = FOCModulationType::SpaceVectorPWM; /* SVPWM. */
+  motor.torque_controller = TorqueControlType::voltage;     /* No current sensing so only voltage controller. */
 #ifdef OPENLOOP
   motor.controller = MotionControlType::angle_openloop;
 #else
@@ -175,15 +198,15 @@ void setup()
   motor.PID_velocity.P = 0.2;
   motor.PID_velocity.I = 20;
   // motor.PID_velocity.D = 0.001;
-  motor.PID_velocity.output_ramp = 500; /* Unit in volts/s. */
+  // motor.PID_velocity.output_ramp = 500; /* Unit in volts/s. */
   motor.LPF_velocity.Tf = 0.01;
-  motor.velocity_limit = 15; /* Unit in rad/s. */
+  // motor.velocity_limit = 15; /* Unit in rad/s. */
 
   /* Angle/Position control loop setup. */
   motor.P_angle.P = 5;
-  motor.P_angle.I = 0.5;
-  motor.P_angle.D = 0.05;
-  motor.P_angle.output_ramp = 500; /* Acceleration limit(?), unit in rad/s^2. */
+  // motor.P_angle.I = 0.5;
+  // motor.P_angle.D = 0.05;
+  // motor.P_angle.output_ramp = 500; /* Acceleration limit(?), unit in rad/s^2. */
 
   motor.init();    /* Initialize motor. */
   motor.initFOC(); /* Start FOC and aligh encoder. */
@@ -269,7 +292,10 @@ void loop()
 #endif
 }
 
-/* DRV8302 specific setup. */
+/*
+ * DRV8302 specific setup.
+ * https://docs.simplefoc.com/drv8302_example
+ */
 void drv8302Setup(void)
 {
   /*

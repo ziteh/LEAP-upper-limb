@@ -1,5 +1,8 @@
 # LEAP Upper Limb
 
+> **Note**
+> This study has ended and is no longer updated.
+
 ***LEAP-Up***, or "Lightweight Exoskeleton with Assistive Power, Upper Limb" is an upper limb powered exoskeleton based on the experience of develop [LEAP](https://github.com/ziteh/LEAP).  
 
 - Firmware

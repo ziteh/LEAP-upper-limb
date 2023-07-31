@@ -240,6 +240,7 @@ EOT (End of transmission) symbol = `0xFF`.
     - MX: `Ver 6.7.0`
     - IDE: `Ver 1.12.0`
   - SimpleFOC: `Ver 2.2.3`
+- Autodesk Inventor professional 2022
 
 # Reference
 
